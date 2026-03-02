@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+dev-dist/
+
+# Large video files — store separately (not on GitHub)
+GameVideos/
+*.mp4
+
+# Accidental npm installs in asset folders — exclude all subdirs and dotfiles
+BrandLogos/*/
+BrandLogos/.*/
+BrandLogos/.package-lock.json
+
+# Environment variables — never commit API keys
+.env
+.env.local
+.env.*.local
+
+# Editor
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

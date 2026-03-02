@@ -1,0 +1,95 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
+
+:root {
+  /* VZ Brand — official palette (Logo concept & design, dic. 2023) */
+  --vz-magenta: #E6007E;           /* r230 g0 b126 */
+  --vz-magenta-glow: #FF1A95;
+  --vz-magenta-dim: #7A0044;
+  --vz-purple: #523189;            /* r82 g49 b137  — viola */
+  --vz-lilac: #7B64A9;             /* r123 g100 b169 — lilla */
+  --vz-dark-blue: #191832;         /* r25 g24 b50   — blu scuro */
+  --vz-white: #FFFFFF;             /* r255 g255 b255 */
+  --vz-off-white: #F5F5F5;
+  --vz-red: #FF2D2D;
+  --vz-green: #00E676;
+  --vz-grey: #2A2A2A;
+  --vz-muted: #888888;
+  /* Derived surface colors */
+  --vz-black: #0D0C1A;             /* dark-blue tinted background */
+  --vz-dark: #151429;              /* slightly lighter surface */
+
+  /* shadcn/ui CSS variables — mapped to VZ brand */
+  --background: 244 36% 8%;        /* #0D0C1A — dark blue tint */
+  --foreground: 0 0% 100%;         /* #FFFFFF */
+  --card: 244 36% 11%;             /* #151429 */
+  --card-foreground: 0 0% 100%;
+  --popover: 244 36% 11%;
+  --popover-foreground: 0 0% 100%;
+  --primary: 326 100% 45%;         /* #E6007E — official magenta */
+  --primary-foreground: 0 0% 100%;
+  --secondary: 262 47% 36%;        /* #523189 — viola */
+  --secondary-foreground: 0 0% 100%;
+  --muted: 244 20% 18%;
+  --muted-foreground: 0 0% 53%;    /* #888888 */
+  --accent: 262 31% 53%;           /* #7B64A9 — lilla */
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 100% 59%;       /* #FF2D2D */
+  --destructive-foreground: 0 0% 100%;
+  --border: 244 20% 18%;
+  --input: 244 20% 18%;
+  --ring: 326 100% 45%;
+  --radius: 0.75rem;
+}
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  background-color: var(--vz-dark-blue);
+  color: var(--vz-white);
+  font-family: 'Outfit', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--vz-dark); }
+::-webkit-scrollbar-thumb { background: var(--vz-grey); border-radius: 2px; }
+
+*:focus-visible {
+  outline: 2px solid var(--vz-magenta);
+  outline-offset: 2px;
+}
