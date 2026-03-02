@@ -1,73 +1,60 @@
-# React + TypeScript + Vite
+# VZLAUNCHER
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Arcade game launcher for VZ Italia — built with React 19, TypeScript, Vite, Tailwind v4, and shadcn/ui.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Frontend**: React 19 + TypeScript + Vite + Tailwind v4 + shadcn/ui (New York)
+- **State**: Zustand + persist
+- **Routing**: React Router v7
+- **Bridge**: Express server (`localhost:3001`) — launches HeroZone / VEX Play via automation
+- **PWA**: vite-plugin-pwa
 
-## React Compiler
+## Getting Started
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+To also run the bridge server:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+```bash
+cd bridge
+npm install
+node server.js
+```
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Or use the included `start.bat` to launch everything at once.
+
+## Video Assets (not in repo)
+
+Game promo videos are **not committed to git** due to file size. After cloning, manually copy the following folders from the shared drive or the arcade PC:
+
+- `GameVideos/` — source trailer files
+- `public/assets/games/*/promo.mp4` — in-app promo clips per game
+
+The app works without them but video previews will be missing.
+
+## Project Structure
+
+```
+src/
+  components/
+    catalog/     # TopBar, CatalogGameCard, BottomBar
+    game/        # GameCard, QuickStartCard
+    layout/      # SideNav, Layout
+    ui/          # shadcn components
+  pages/         # CatalogPage, GameDetailPage, LoginPage, etc.
+  store/         # Zustand stores (auth, config, session)
+  services/      # bridge.ts (health check + game launch)
+  data/          # games.ts, tutorials.ts
+bridge/
+  server.js      # Express bridge server
+  config/
+    games.json   # Per-game launcher config (exePath, steps)
+public/
+  assets/
+    brand/       # VZ logos
+    games/       # Per-game posters and logos
 ```
