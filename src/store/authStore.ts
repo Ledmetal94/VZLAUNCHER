@@ -1,14 +1,16 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { cloudLogin, setCloudToken } from '../services/cloudApi'
+import { login as cloudLogin, setToken } from '../services/cloudApi'
 
 interface AuthState {
   isAuthenticated: boolean
-  operatorId: string | null
-  operatorName: string | null
-  role: string | null
+  userId: string | null
+  name: string | null
+  role: string | null       // 'admin' | 'normal'
+  venueId: string | null
+  venueName: string | null
   token: string | null
-  login: (pin: string) => Promise<boolean>
+  login: (username: string, password: string) => Promise<boolean>
   logout: () => void
 }
 
@@ -16,20 +18,24 @@ export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       isAuthenticated: false,
-      operatorId: null,
-      operatorName: null,
+      userId: null,
+      name: null,
       role: null,
+      venueId: null,
+      venueName: null,
       token: null,
 
-      login: async (pin: string) => {
+      login: async (username: string, password: string) => {
         try {
-          const { token, operator } = await cloudLogin(pin)
-          setCloudToken(token)
+          const { token, user } = await cloudLogin(username, password)
+          setToken(token)
           set({
             isAuthenticated: true,
-            operatorId: operator.id,
-            operatorName: operator.name,
-            role: operator.role,
+            userId: user.id,
+            name: user.name,
+            role: user.role,
+            venueId: user.venueId,
+            venueName: user.venueName,
             token,
           })
           return true
@@ -39,15 +45,22 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: () => {
-        setCloudToken(null)
-        set({ isAuthenticated: false, operatorId: null, operatorName: null, role: null, token: null })
+        setToken(null)
+        set({
+          isAuthenticated: false,
+          userId: null,
+          name: null,
+          role: null,
+          venueId: null,
+          venueName: null,
+          token: null,
+        })
       },
     }),
     {
       name: 'vz-auth',
-      // Rehydrate token into memory on load
       onRehydrateStorage: () => (state) => {
-        if (state?.token) setCloudToken(state.token)
+        if (state?.token) setToken(state.token)
       },
     }
   )

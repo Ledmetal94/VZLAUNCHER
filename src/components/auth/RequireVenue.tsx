@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react'
 import { Navigate } from 'react-router-dom'
-import { useVenueStore } from '../../store/venueStore'
+import { useAuthStore } from '../../store/authStore'
 
-export function RequireVenue({ children }: { children: ReactNode }) {
-  const isLoggedIn = useVenueStore((s) => s.isLoggedIn)
-  if (!isLoggedIn) return <Navigate to="/venue-login" replace />
+export function RequireAuth({ children }: { children: ReactNode }) {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  if (!isAuthenticated) return <Navigate to="/login" replace />
   return <>{children}</>
 }

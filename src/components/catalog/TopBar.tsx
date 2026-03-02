@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Buildings, SignOut, Sliders, ClockCounterClockwise, BookOpen } from '@phosphor-icons/react'
-import { useVenueStore } from '../../store/venueStore'
+import { useAuthStore } from '../../store/authStore'
 
 interface TopBarProps {
   showBack?: boolean
@@ -8,8 +8,7 @@ interface TopBarProps {
 
 export function TopBar({ showBack = false }: TopBarProps) {
   const navigate = useNavigate()
-  const venue = useVenueStore((s) => s.venue)
-  const logout = useVenueStore((s) => s.logout)
+  const { venueName, logout } = useAuthStore()
 
   return (
     <div className="flex items-center justify-between px-4 h-11 bg-black/60 backdrop-blur-sm border-b border-white/[0.05] flex-shrink-0 z-20">
@@ -33,10 +32,10 @@ export function TopBar({ showBack = false }: TopBarProps) {
 
       {/* Right */}
       <div className="flex items-center gap-1">
-        {venue && (
+        {venueName && (
           <div className="flex items-center gap-2 px-3 py-1 rounded-lg text-[#888888] text-sm">
             <Buildings size={18} weight="thin" />
-            <span>{venue.name}</span>
+            <span>{venueName}</span>
           </div>
         )}
 

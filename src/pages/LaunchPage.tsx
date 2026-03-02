@@ -5,7 +5,7 @@ import { GAMES } from '../data/games'
 import { checkBridgeHealth, prepareGame, startGame } from '../services/bridge'
 import { Button } from '../components/ui/Button'
 import { useSessionStore } from '../store/sessionStore'
-import { useVenueStore } from '../store/venueStore'
+import { useAuthStore } from '../store/authStore'
 
 type LaunchStatus = 'checking' | 'preparing' | 'ready' | 'starting' | 'error' | 'bridge_offline'
 type Difficulty = 'easy' | 'normal' | 'hard' | 'nightmare'
@@ -29,9 +29,9 @@ export function LaunchPage() {
   const game = GAMES.find((g) => g.slug === slug)
 
   const startSession = useSessionStore((s) => s.startSession)
-  const venue = useVenueStore((s) => s.venue)
-  const operatorId = venue?.id ?? ''
-  const operatorName = venue?.name ?? ''
+  const { userId, name } = useAuthStore()
+  const operatorId = userId ?? ''
+  const operatorName = name ?? ''
 
   const [status, setStatus] = useState<LaunchStatus>('checking')
   const [stepIndex, setStepIndex] = useState(0)

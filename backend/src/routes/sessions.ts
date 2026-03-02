@@ -1,9 +1,9 @@
 import { Router } from 'express'
 import { supabase } from '../db/supabase.js'
-import { requireVenueKey } from '../middleware/auth.js'
+import { requireOperator } from '../middleware/auth.js'
 
 export const sessionsRouter = Router()
-sessionsRouter.use(requireVenueKey)
+sessionsRouter.use(requireOperator)
 
 // POST /sessions — save a completed session (idempotent via upsert on id)
 sessionsRouter.post('/', async (req, res) => {
@@ -26,13 +26,15 @@ sessionsRouter.post('/', async (req, res) => {
     return
   }
 
+  const venueId = req.operator!.venueId
+
   const { data, error } = await supabase
     .from('sessions')
     .upsert(
       {
         id,
-        venue_id: req.venueId,
-        operator_id: req.operator?.id ?? null,
+        venue_id: venueId,
+        operator_id: req.operator!.id,
         game_id: gameId ?? null,
         game_slug: gameSlug,
         game_name: gameName ?? gameSlug,
@@ -61,11 +63,12 @@ sessionsRouter.post('/', async (req, res) => {
 // GET /sessions — list sessions for this venue (paginated)
 sessionsRouter.get('/', async (req, res) => {
   const { startDate, endDate, gameSlug, operatorId, page = '1', limit = '20' } = req.query
+  const venueId = req.operator!.venueId
 
   let query = supabase
     .from('sessions')
     .select('*', { count: 'exact' })
-    .eq('venue_id', req.venueId!)
+    .eq('venue_id', venueId)
     .order('start_time', { ascending: false })
 
   if (operatorId) {
@@ -92,11 +95,12 @@ sessionsRouter.get('/', async (req, res) => {
 // GET /sessions/stats — aggregated analytics
 sessionsRouter.get('/stats', async (req, res) => {
   const { startDate, endDate, gameSlug, operatorId } = req.query
+  const venueId = req.operator!.venueId
 
   let query = supabase
     .from('sessions')
     .select('game_slug, game_name, operator_id, duration_seconds, price, start_time')
-    .eq('venue_id', req.venueId!)
+    .eq('venue_id', venueId)
     .not('end_time', 'is', null)
 
   if (operatorId) {
@@ -119,7 +123,6 @@ sessionsRouter.get('/stats', async (req, res) => {
     ? sessions.reduce((sum, s) => sum + (s.duration_seconds ?? 0), 0) / sessions.length
     : 0
 
-  // By game
   const byGameMap: Record<string, { slug: string; name: string; count: number; revenue: number; totalDuration: number }> = {}
   for (const s of sessions) {
     if (!byGameMap[s.game_slug]) {
@@ -130,7 +133,6 @@ sessionsRouter.get('/stats', async (req, res) => {
     byGameMap[s.game_slug].totalDuration += s.duration_seconds ?? 0
   }
 
-  // By operator
   const byOperatorMap: Record<string, { id: string; count: number; revenue: number }> = {}
   for (const s of sessions) {
     if (!byOperatorMap[s.operator_id]) {
@@ -140,7 +142,6 @@ sessionsRouter.get('/stats', async (req, res) => {
     byOperatorMap[s.operator_id].revenue += s.price ?? 0
   }
 
-  // By day
   const byDayMap: Record<string, { date: string; count: number; revenue: number }> = {}
   for (const s of sessions) {
     const day = s.start_time.slice(0, 10)
@@ -161,14 +162,13 @@ sessionsRouter.get('/stats', async (req, res) => {
 
 // GET /sessions/:id — single session detail
 sessionsRouter.get('/:id', async (req, res) => {
-  const isAdmin = req.operator!.role === 'admin'
-
   const { data, error } = await supabase
     .from('sessions')
     .select('*')
     .eq('id', req.params.id)
-    .eq('venue_id', req.venueId!)
+    .eq('venue_id', req.operator!.venueId)
     .single()
+
   if (error || !data) {
     res.status(404).json({ error: 'Session not found' })
     return

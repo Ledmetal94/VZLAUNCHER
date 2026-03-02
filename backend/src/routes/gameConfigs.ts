@@ -1,9 +1,8 @@
 import { Router } from 'express'
 import { supabase } from '../db/supabase.js'
-import { requireVenueKey, requireOperator, requireAdmin } from '../middleware/auth.js'
+import { requireOperator, requireAdmin } from '../middleware/auth.js'
 
 export const gameConfigsRouter = Router()
-gameConfigsRouter.use(requireVenueKey)
 gameConfigsRouter.use(requireOperator)
 
 // GET /game-configs — fetch all game configs for this venue
@@ -11,7 +10,7 @@ gameConfigsRouter.get('/', async (req, res) => {
   const { data, error } = await supabase
     .from('game_configs')
     .select('game_slug, enabled, launcher, price, updated_at')
-    .eq('venue_id', req.venueId!)
+    .eq('venue_id', req.operator!.venueId)
     .order('game_slug')
 
   if (error) {
@@ -33,7 +32,7 @@ gameConfigsRouter.put('/:gameSlug', requireAdmin, async (req, res) => {
   const { data, error } = await supabase
     .from('game_configs')
     .upsert(
-      { venue_id: req.venueId!, game_slug: req.params.gameSlug, ...updates },
+      { venue_id: req.operator!.venueId, game_slug: req.params.gameSlug, ...updates },
       { onConflict: 'venue_id,game_slug' }
     )
     .select()
@@ -46,12 +45,12 @@ gameConfigsRouter.put('/:gameSlug', requireAdmin, async (req, res) => {
   res.json(data)
 })
 
-// POST /game-configs/reset — delete all custom configs for this venue (reverts to defaults)
+// POST /game-configs/reset — delete all custom configs for this venue (admin only)
 gameConfigsRouter.post('/reset', requireAdmin, async (req, res) => {
   const { error } = await supabase
     .from('game_configs')
     .delete()
-    .eq('venue_id', req.venueId!)
+    .eq('venue_id', req.operator!.venueId)
 
   if (error) {
     res.status(500).json({ error: error.message })

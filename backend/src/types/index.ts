@@ -15,8 +15,9 @@ export interface Operator {
   id: string
   venue_id: string
   name: string
-  pin_hash: string
-  role: 'operator' | 'admin'
+  username: string
+  password_hash: string
+  role: 'admin' | 'normal' | 'operator'
   active: boolean
   created_at: string
 }
@@ -52,7 +53,6 @@ export interface GameConfig {
 declare global {
   namespace Express {
     interface Request {
-      venueId?: string
       operator?: {
         id: string
         name: string

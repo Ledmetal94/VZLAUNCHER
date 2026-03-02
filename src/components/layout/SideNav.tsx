@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom'
 import { GameController, ClockCounterClockwise, SignOut, DownloadSimple, Sliders, BookOpen } from '@phosphor-icons/react'
-import { useVenueStore } from '../../store/venueStore'
+import { useAuthStore } from '../../store/authStore'
 import { usePWAInstall } from '../../hooks/usePWAInstall'
 
 const NAV_ITEMS = [
@@ -16,7 +16,7 @@ const ADMIN_ITEMS = [
 export function SideNav() {
   const location = useLocation()
   const navigate = useNavigate()
-  const logout = useVenueStore((s) => s.logout)
+  const logout = useAuthStore((s) => s.logout)
   const { canInstall, install } = usePWAInstall()
 
   const navButton = (path: string, label: string, Icon: React.ElementType) => {
