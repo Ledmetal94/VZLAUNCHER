@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "concurrently -n vite,bridge -c cyan,magenta \"vite\" \"node bridge/server.js\"",
-    "build": "tsc -b tsconfig.app.json tsconfig.node.json && vite build",
+    "build": "vite build",
+    "typecheck": "tsc -b tsconfig.app.json tsconfig.node.json",
     "lint": "eslint .",
     "preview": "vite preview"
   },
