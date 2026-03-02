@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom'
 import { GameController, ClockCounterClockwise, SignOut, DownloadSimple, Sliders, BookOpen } from '@phosphor-icons/react'
-import { useAuthStore } from '../../store/authStore'
+import { useVenueStore } from '../../store/venueStore'
 import { usePWAInstall } from '../../hooks/usePWAInstall'
 
 const NAV_ITEMS = [
@@ -16,11 +16,8 @@ const ADMIN_ITEMS = [
 export function SideNav() {
   const location = useLocation()
   const navigate = useNavigate()
-  const logout = useAuthStore((s) => s.logout)
-  const operatorId = useAuthStore((s) => s.operatorId)
+  const logout = useVenueStore((s) => s.logout)
   const { canInstall, install } = usePWAInstall()
-
-  const isAdmin = operatorId === 'admin'
 
   const navButton = (path: string, label: string, Icon: React.ElementType) => {
     const active = location.pathname.startsWith(path)
@@ -47,13 +44,11 @@ export function SideNav() {
         {NAV_ITEMS.map(({ path, label, Icon }) => navButton(path, label, Icon))}
 
         {/* Admin section */}
-        {isAdmin && (
-          <>
-            <div className="mx-3 my-3 border-t border-white/[0.06]" />
-            <p className="px-3 text-[#444] text-xs font-semibold uppercase tracking-widest mb-1">Admin</p>
-            {ADMIN_ITEMS.map(({ path, label, Icon }) => navButton(path, label, Icon))}
-          </>
-        )}
+        <>
+          <div className="mx-3 my-3 border-t border-white/[0.06]" />
+          <p className="px-3 text-[#444] text-xs font-semibold uppercase tracking-widest mb-1">Admin</p>
+          {ADMIN_ITEMS.map(({ path, label, Icon }) => navButton(path, label, Icon))}
+        </>
       </div>
 
       {/* Install PWA */}

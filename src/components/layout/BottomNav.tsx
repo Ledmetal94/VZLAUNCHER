@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom'
 import { GameController, ClockCounterClockwise, SignOut } from '@phosphor-icons/react'
-import { useAuthStore } from '../../store/authStore'
+import { useVenueStore } from '../../store/venueStore'
 
 const NAV_ITEMS = [
   { path: '/catalog', label: 'Games', Icon: GameController },
@@ -10,7 +10,7 @@ const NAV_ITEMS = [
 export function BottomNav() {
   const location = useLocation()
   const navigate = useNavigate()
-  const logout = useAuthStore((s) => s.logout)
+  const logout = useVenueStore((s) => s.logout)
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-[#141414] border-t border-[#2A2A2A] flex items-center justify-around px-4 py-2 z-50">

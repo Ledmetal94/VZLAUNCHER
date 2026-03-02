@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { LoginPage } from './pages/LoginPage'
+import { VenueLoginPage } from './pages/VenueLoginPage'
 import { CatalogPage } from './pages/CatalogPage'
 import { GameDetailPage } from './pages/GameDetailPage'
 import { LaunchPage } from './pages/LaunchPage'
@@ -8,8 +8,7 @@ import { ActiveSessionPage } from './pages/ActiveSessionPage'
 import { TutorialPage } from './pages/TutorialPage'
 import { AdminConfigPage } from './pages/AdminConfigPage'
 import { AdminTutorialsPage } from './pages/AdminTutorialsPage'
-import { RequireAuth } from './components/auth/RequireAuth'
-import { RequireAdmin } from './components/auth/RequireAdmin'
+import { RequireVenue } from './components/auth/RequireVenue'
 import { usePWAUpdate } from './hooks/usePWAUpdate'
 
 export default function App() {
@@ -18,19 +17,18 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/login" element={<LoginPage />} />
+        <Route path="/venue-login" element={<VenueLoginPage />} />
 
-        <Route path="/catalog" element={<RequireAuth><CatalogPage /></RequireAuth>} />
-        <Route path="/game/:slug" element={<RequireAuth><GameDetailPage /></RequireAuth>} />
-        <Route path="/launch/:slug" element={<RequireAuth><LaunchPage /></RequireAuth>} />
-        <Route path="/session/active" element={<RequireAuth><ActiveSessionPage /></RequireAuth>} />
-        <Route path="/sessions" element={<RequireAuth><SessionsPage /></RequireAuth>} />
-        <Route path="/tutorial/:slug" element={<RequireAuth><TutorialPage /></RequireAuth>} />
+        <Route path="/catalog" element={<RequireVenue><CatalogPage /></RequireVenue>} />
+        <Route path="/game/:slug" element={<RequireVenue><GameDetailPage /></RequireVenue>} />
+        <Route path="/launch/:slug" element={<RequireVenue><LaunchPage /></RequireVenue>} />
+        <Route path="/session/active" element={<RequireVenue><ActiveSessionPage /></RequireVenue>} />
+        <Route path="/sessions" element={<RequireVenue><SessionsPage /></RequireVenue>} />
+        <Route path="/tutorial/:slug" element={<RequireVenue><TutorialPage /></RequireVenue>} />
+        <Route path="/admin/config" element={<RequireVenue><AdminConfigPage /></RequireVenue>} />
+        <Route path="/admin/tutorials" element={<RequireVenue><AdminTutorialsPage /></RequireVenue>} />
 
-        <Route path="/admin/config" element={<RequireAuth><RequireAdmin><AdminConfigPage /></RequireAdmin></RequireAuth>} />
-        <Route path="/admin/tutorials" element={<RequireAuth><RequireAdmin><AdminTutorialsPage /></RequireAdmin></RequireAuth>} />
-
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to="/venue-login" replace />} />
       </Routes>
     </BrowserRouter>
   )

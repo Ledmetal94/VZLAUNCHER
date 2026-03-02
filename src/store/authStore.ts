@@ -1,20 +1,16 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { cloudLogin, setCloudToken } from '../services/cloudApi'
 
 interface AuthState {
   isAuthenticated: boolean
   operatorId: string | null
   operatorName: string | null
-  login: (pin: string) => boolean
+  role: string | null
+  token: string | null
+  login: (pin: string) => Promise<boolean>
   logout: () => void
 }
-
-// Mock operators — replace with API call later
-const OPERATORS = [
-  { id: 'op1', name: 'Operator 1', pin: '1234' },
-  { id: 'op2', name: 'Operator 2', pin: '5678' },
-  { id: 'admin', name: 'Admin', pin: '0000' },
-]
 
 export const useAuthStore = create<AuthState>()(
   persist(
@@ -22,20 +18,37 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       operatorId: null,
       operatorName: null,
+      role: null,
+      token: null,
 
-      login: (pin: string) => {
-        const operator = OPERATORS.find((o) => o.pin === pin)
-        if (operator) {
-          set({ isAuthenticated: true, operatorId: operator.id, operatorName: operator.name })
+      login: async (pin: string) => {
+        try {
+          const { token, operator } = await cloudLogin(pin)
+          setCloudToken(token)
+          set({
+            isAuthenticated: true,
+            operatorId: operator.id,
+            operatorName: operator.name,
+            role: operator.role,
+            token,
+          })
           return true
+        } catch {
+          return false
         }
-        return false
       },
 
       logout: () => {
-        set({ isAuthenticated: false, operatorId: null, operatorName: null })
+        setCloudToken(null)
+        set({ isAuthenticated: false, operatorId: null, operatorName: null, role: null, token: null })
       },
     }),
-    { name: 'vz-auth' }
+    {
+      name: 'vz-auth',
+      // Rehydrate token into memory on load
+      onRehydrateStorage: () => (state) => {
+        if (state?.token) setCloudToken(state.token)
+      },
+    }
   )
 )
