@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
+    "vercel-build": "echo 'Backend runs on Railway, not Vercel'",
     "build": "tsc",
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit"
