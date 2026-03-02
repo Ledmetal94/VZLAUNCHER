@@ -1,6 +1,19 @@
 import { Request, Response, NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
 
+declare global {
+  namespace Express {
+    interface Request {
+      operator?: {
+        id: string
+        name: string
+        role: string
+        venueId: string
+      }
+    }
+  }
+}
+
 // ─── Operator JWT ─────────────────────────────────────────────────────────────
 // After login the PWA receives a JWT. Include it as: Authorization: Bearer <token>
 export function requireOperator(req: Request, res: Response, next: NextFunction) {
