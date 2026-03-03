@@ -26,12 +26,18 @@ app.use(express.json())
 app.use(morgan('dev'))
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
-app.use('/health', healthRouter)
-app.use('/auth', authRouter)
-app.use('/sessions', sessionsRouter)
-app.use('/operators', operatorsRouter)
-app.use('/venues', venuesRouter)
-app.use('/game-configs', gameConfigsRouter)
+// Mounted under /api so that Vercel rewrites (/api/*) and local dev both work.
+// Local dev: VITE_CLOUD_URL=http://localhost:3002/api
+// Production: VITE_CLOUD_URL not set → cloudApi.ts falls back to '/api'
+const apiRouter = express.Router()
+apiRouter.use('/health', healthRouter)
+apiRouter.use('/auth', authRouter)
+apiRouter.use('/sessions', sessionsRouter)
+apiRouter.use('/operators', operatorsRouter)
+apiRouter.use('/venues', venuesRouter)
+apiRouter.use('/game-configs', gameConfigsRouter)
+
+app.use('/api', apiRouter)
 
 // ─── 404 ─────────────────────────────────────────────────────────────────────
 app.use((_req, res) => {
