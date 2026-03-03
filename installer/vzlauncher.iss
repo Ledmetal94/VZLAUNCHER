@@ -65,14 +65,19 @@ Name: "{app}\bridge\data"
 
 [Icons]
 ; Shortcut Desktop pubblico (tutti gli utenti)
+; Usa cmd.exe /c per eseguire il bat in modo affidabile
 Name: "{commondesktop}\VZLAUNCHER Arcade"; \
-  Filename: "{app}\start-vzlauncher.bat"; \
+  Filename: "cmd.exe"; \
+  Parameters: "/c ""{app}\start-vzlauncher.bat"""; \
+  WorkingDir: "{app}"; \
   IconFilename: "{app}\bridge\icon.ico"; \
   Comment: "Avvia VZLAUNCHER Arcade"
 
 ; Shortcut aggiornamento nel menu Start
 Name: "{commonstartmenu}\VZLAUNCHER\Aggiorna Bridge"; \
-  Filename: "{app}\update.bat"; \
+  Filename: "cmd.exe"; \
+  Parameters: "/k ""{app}\update.bat"""; \
+  WorkingDir: "{app}"; \
   Comment: "Aggiorna il bridge all'ultima versione"
 
 [Run]

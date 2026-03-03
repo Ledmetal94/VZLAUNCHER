@@ -19,6 +19,14 @@ if %errorLevel% neq 0 (
     exit /b 1
 )
 
+:: --- Verifica che VZLAUNCHER sia installato ---
+if not exist "%BASE%\bridge\server.js" (
+    echo [ERRORE] VZLAUNCHER non risulta installato in %BASE%
+    echo Esegui prima vzlauncher-setup.exe su questo PC.
+    pause
+    exit /b 1
+)
+
 :: --- Ferma il bridge se in esecuzione ---
 echo [1/4] Arresto bridge in esecuzione...
 taskkill /FI "WINDOWTITLE eq VZLAUNCHER Bridge" /F >nul 2>&1
