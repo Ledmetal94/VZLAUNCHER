@@ -1,0 +1,38 @@
+name: Release Bridge
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install bridge dependencies
+        working-directory: bridge
+        run: npm install --omit=dev
+
+      - name: Package bridge
+        run: |
+          zip -r bridge.zip bridge/ \
+            --exclude "bridge/config/games.local.json" \
+            --exclude "bridge/data/*" \
+            --exclude "bridge/.env"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: bridge.zip
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

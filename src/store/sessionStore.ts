@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { Game } from '../types'
 import { syncSession } from '../services/cloudApi'
+import { pushSessionToBridge } from '../services/bridge'
 
 export type SyncStatus = 'pending' | 'synced' | 'error'
 
@@ -75,6 +76,9 @@ export const useSessionStore = create<SessionState>()(
         const duration = Math.floor((endTime - current.startTime) / 1000)
         const completed: SessionRecord = { ...current, endTime, duration, syncStatus: 'pending' }
         set({ current: null, history: [completed, ...history] })
+
+        // Persist to local bridge (best-effort)
+        pushSessionToBridge(completed).catch(() => {})
 
         // Sync to cloud (best-effort)
         pushToCloud(completed)

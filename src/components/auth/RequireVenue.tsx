@@ -7,3 +7,10 @@ export function RequireAuth({ children }: { children: ReactNode }) {
   if (!isAuthenticated) return <Navigate to="/login" replace />
   return <>{children}</>
 }
+
+export function RequireAdmin({ children }: { children: ReactNode }) {
+  const { isAuthenticated, role } = useAuthStore()
+  if (!isAuthenticated) return <Navigate to="/login" replace />
+  if (role !== 'admin') return <Navigate to="/catalog" replace />
+  return <>{children}</>
+}

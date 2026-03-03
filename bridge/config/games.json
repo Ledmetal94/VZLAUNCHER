@@ -1,7 +1,7 @@
 {
   "terminator-uprising": {
     "launcher": "herozone",
-    "exePath": "C:\\Users\\giaco\\AppData\\Local\\Programs\\hero-launcher\\Hero Launcher.exe",
+    "exePath": "C:\\VZArcade\\herozone\\Hero Launcher.exe",
     "windowTitle": "Hero Launcher",
     "windowWaitMs": 5000,
     "tileX": 683,
@@ -9,7 +9,7 @@
   },
   "cyber-shock": {
     "launcher": "herozone",
-    "exePath": "C:\\Users\\giaco\\AppData\\Local\\Programs\\hero-launcher\\Hero Launcher.exe",
+    "exePath": "C:\\VZArcade\\herozone\\Hero Launcher.exe",
     "windowTitle": "Hero Launcher",
     "windowWaitMs": 5000,
     "tileX": 1235,
@@ -17,7 +17,7 @@
   },
   "dead-ahead": {
     "launcher": "herozone",
-    "exePath": "C:\\Users\\giaco\\AppData\\Local\\Programs\\hero-launcher\\Hero Launcher.exe",
+    "exePath": "C:\\VZArcade\\herozone\\Hero Launcher.exe",
     "windowTitle": "Hero Launcher",
     "windowWaitMs": 5000,
     "tileX": 516,
@@ -25,7 +25,7 @@
   },
   "quantum-arena": {
     "launcher": "herozone",
-    "exePath": "C:\\Users\\giaco\\AppData\\Local\\Programs\\hero-launcher\\Hero Launcher.exe",
+    "exePath": "C:\\VZArcade\\herozone\\Hero Launcher.exe",
     "windowTitle": "Hero Launcher",
     "windowWaitMs": 5000,
     "tileX": 1413,
@@ -33,7 +33,7 @@
   },
   "arrowsong": {
     "launcher": "herozone",
-    "exePath": "C:\\Users\\giaco\\AppData\\Local\\Programs\\hero-launcher\\Hero Launcher.exe",
+    "exePath": "C:\\VZArcade\\herozone\\Hero Launcher.exe",
     "windowTitle": "Hero Launcher",
     "windowWaitMs": 5000,
     "tileX": 1049,
@@ -41,7 +41,7 @@
   },
   "wayfinders": {
     "launcher": "herozone",
-    "exePath": "C:\\Users\\giaco\\AppData\\Local\\Programs\\hero-launcher\\Hero Launcher.exe",
+    "exePath": "C:\\VZArcade\\herozone\\Hero Launcher.exe",
     "windowTitle": "Hero Launcher",
     "windowWaitMs": 5000,
     "tileX": 725,
@@ -49,7 +49,7 @@
   },
   "cops-vs-robbers": {
     "launcher": "herozone",
-    "exePath": "C:\\Users\\giaco\\AppData\\Local\\Programs\\hero-launcher\\Hero Launcher.exe",
+    "exePath": "C:\\VZArcade\\herozone\\Hero Launcher.exe",
     "windowTitle": "Hero Launcher",
     "windowWaitMs": 5000,
     "tileX": 1046,
@@ -57,7 +57,7 @@
   },
   "wizard-academy": {
     "launcher": "herozone",
-    "exePath": "C:\\Users\\giaco\\AppData\\Local\\Programs\\hero-launcher\\Hero Launcher.exe",
+    "exePath": "C:\\VZArcade\\herozone\\Hero Launcher.exe",
     "windowTitle": "Hero Launcher",
     "windowWaitMs": 5000,
     "tileX": 497,
@@ -65,7 +65,7 @@
   },
   "monkey-madness": {
     "launcher": "herozone",
-    "exePath": "C:\\Users\\giaco\\AppData\\Local\\Programs\\hero-launcher\\Hero Launcher.exe",
+    "exePath": "C:\\VZArcade\\herozone\\Hero Launcher.exe",
     "windowTitle": "Hero Launcher",
     "windowWaitMs": 5000,
     "tileX": 863,
@@ -73,7 +73,7 @@
   },
   "plush-rush": {
     "launcher": "herozone",
-    "exePath": "C:\\Users\\giaco\\AppData\\Local\\Programs\\hero-launcher\\Hero Launcher.exe",
+    "exePath": "C:\\VZArcade\\herozone\\Hero Launcher.exe",
     "windowTitle": "Hero Launcher",
     "windowWaitMs": 5000,
     "tileX": 865,
@@ -81,7 +81,7 @@
   },
   "cookd-up": {
     "launcher": "herozone",
-    "exePath": "C:\\Users\\giaco\\AppData\\Local\\Programs\\hero-launcher\\Hero Launcher.exe",
+    "exePath": "C:\\VZArcade\\herozone\\Hero Launcher.exe",
     "windowTitle": "Hero Launcher",
     "windowWaitMs": 5000,
     "tileX": 1226,

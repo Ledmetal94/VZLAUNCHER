@@ -19,6 +19,21 @@ BrandLogos/.package-lock.json
 .env.local
 .env.*.local
 
+# Machine-specific bridge config overrides
+bridge/config/games.local.json
+bridge/.env
+
+# Bridge runtime data
+bridge/data/
+
+# Installer binaries (large files — copy manually before compiling)
+installer/herozone/
+installer/vexplay/
+installer/node/
+installer/media/
+installer/output/
+installer/assets/icon.ico
+
 # Editor
 .vscode/
 .idea/

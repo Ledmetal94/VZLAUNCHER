@@ -1,11 +1,12 @@
 import { useLocation, useNavigate } from 'react-router-dom'
-import { GameController, ClockCounterClockwise, SignOut, DownloadSimple, Sliders, BookOpen } from '@phosphor-icons/react'
+import { GameController, ClockCounterClockwise, SignOut, DownloadSimple, Sliders, BookOpen, ChartBar } from '@phosphor-icons/react'
 import { useAuthStore } from '../../store/authStore'
 import { usePWAInstall } from '../../hooks/usePWAInstall'
 
 const NAV_ITEMS = [
   { path: '/catalog', label: 'Games', Icon: GameController },
   { path: '/sessions', label: 'Sessions', Icon: ClockCounterClockwise },
+  { path: '/analytics', label: 'Analytics', Icon: ChartBar },
 ]
 
 const ADMIN_ITEMS = [

@@ -8,7 +8,11 @@ import { ActiveSessionPage } from './pages/ActiveSessionPage'
 import { TutorialPage } from './pages/TutorialPage'
 import { AdminConfigPage } from './pages/AdminConfigPage'
 import { AdminTutorialsPage } from './pages/AdminTutorialsPage'
-import { RequireAuth } from './components/auth/RequireVenue'
+import { AdminUsersPage } from './pages/AdminUsersPage'
+import { AdminVenuePage } from './pages/AdminVenuePage'
+import { AnalyticsPage } from './pages/AnalyticsPage'
+import { RequireAuth, RequireAdmin } from './components/auth/RequireVenue'
+import { SettingsPanel } from './components/settings/SettingsPanel'
 import { usePWAUpdate } from './hooks/usePWAUpdate'
 
 export default function App() {
@@ -16,6 +20,7 @@ export default function App() {
 
   return (
     <BrowserRouter>
+      <SettingsPanel />
       <Routes>
         <Route path="/login" element={<LoginPage />} />
 
@@ -24,9 +29,12 @@ export default function App() {
         <Route path="/launch/:slug" element={<RequireAuth><LaunchPage /></RequireAuth>} />
         <Route path="/session/active" element={<RequireAuth><ActiveSessionPage /></RequireAuth>} />
         <Route path="/sessions" element={<RequireAuth><SessionsPage /></RequireAuth>} />
+        <Route path="/analytics" element={<RequireAdmin><AnalyticsPage /></RequireAdmin>} />
         <Route path="/tutorial/:slug" element={<RequireAuth><TutorialPage /></RequireAuth>} />
-        <Route path="/admin/config" element={<RequireAuth><AdminConfigPage /></RequireAuth>} />
-        <Route path="/admin/tutorials" element={<RequireAuth><AdminTutorialsPage /></RequireAuth>} />
+        <Route path="/admin/config" element={<RequireAdmin><AdminConfigPage /></RequireAdmin>} />
+        <Route path="/admin/tutorials" element={<RequireAdmin><AdminTutorialsPage /></RequireAdmin>} />
+        <Route path="/admin/users" element={<RequireAdmin><AdminUsersPage /></RequireAdmin>} />
+        <Route path="/admin/venue" element={<RequireAdmin><AdminVenuePage /></RequireAdmin>} />
 
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
