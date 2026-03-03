@@ -5,14 +5,13 @@ node_modules/
 dist/
 dev-dist/
 
-# Large video files — store separately (not on GitHub)
+# Large asset folders — source material, not part of the web bundle
 GameVideos/
+GamePosters/
+GameLogos/
+VZLogos/
+BrandLogos/
 *.mp4
-
-# Accidental npm installs in asset folders — exclude all subdirs and dotfiles
-BrandLogos/*/
-BrandLogos/.*/
-BrandLogos/.package-lock.json
 
 # Environment variables — never commit API keys
 .env
