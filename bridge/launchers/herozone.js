@@ -52,15 +52,17 @@ export async function prepareHerozone(gameConfig) {
   }
 
   console.log(`[HeroZone] Clicking Quick Play (waiting room)...`)
+  // Chrome is already minimized + un-topmost by setTopmostChrome(false) in server.js
   await runAutomation([
-    { type: 'minimize_window', title: 'chrome' },  // hide Chrome so HeroZone is visible
+    { type: 'minimize_window', title: 'chrome' },  // ensure Chrome is minimized (belt & suspenders)
+    { type: 'wait', ms: 300 },
     { type: 'focus_window', title: windowTitle },
     { type: 'wait', ms: 2000 },
     { type: 'click', ...HZ.quickPlay },
     { type: 'wait', ms: 500 },
     { type: 'click', x: tileX, y: tileY },
     { type: 'wait', ms: 500 },
-    { type: 'restore_window', title: 'chrome' },   // bring Chrome back for difficulty input
+    // Chrome restore handled by setTopmostChrome(true) in server.js
   ])
 
   console.log(`[HeroZone] Prepare complete — waiting room open, game tile selected.`)
@@ -69,11 +71,12 @@ export async function prepareHerozone(gameConfig) {
 
 // Phase 2: set difficulty (if not normal) → Launch Game
 export async function startHerozone(difficulty = 'normal') {
-  // Minimize Chrome, bring Hero Launcher to foreground, then click
+  // Chrome is already minimized + un-topmost by setTopmostChrome(false) in server.js
   const steps = [
-    { type: 'minimize_window', title: 'chrome' },
+    { type: 'minimize_window', title: 'chrome' },  // ensure Chrome is minimized
+    { type: 'wait', ms: 300 },
     { type: 'focus_window', title: 'Hero Launcher' },
-    { type: 'wait', ms: 400 },
+    { type: 'wait', ms: 500 },
   ]
 
   if (difficulty !== 'normal') {
@@ -105,11 +108,12 @@ export async function openWaitingRoom(gameConfig) {
 
   await runAutomation([
     { type: 'minimize_window', title: 'chrome' },
+    { type: 'wait', ms: 300 },
     { type: 'focus_window', title: windowTitle },
     { type: 'wait', ms: 2000 },
     { type: 'click', ...HZ.quickPlay },
     { type: 'wait', ms: 500 },
-    { type: 'restore_window', title: 'chrome' },
+    // Chrome restore handled by caller
   ])
 
   console.log(`[HeroZone] Waiting room open.`)
