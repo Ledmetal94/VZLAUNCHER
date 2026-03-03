@@ -43,11 +43,12 @@ if %errorLevel% neq 0 (
     start /min "VZLAUNCHER Bridge" "%NODE%" "%BRIDGE%"
 )
 
-:: --- Attendi che il bridge sia up (max 15 tentativi) ---
+:: --- Attendi che il bridge sia up (max 20 tentativi) ---
+:: Usa PowerShell per il check HTTP (sempre disponibile, evita dipendenza da curl)
 echo Attendo bridge su localhost:3001...
-for /L %%i in (1,1,15) do (
+for /L %%i in (1,1,20) do (
     timeout /t 1 /nobreak >nul
-    curl -s http://localhost:3001/health >nul 2>&1
+    powershell -NoProfile -Command "try { $null = Invoke-WebRequest http://localhost:3001/health -UseBasicParsing; exit 0 } catch { exit 1 }" >nul 2>&1
     if !errorLevel! == 0 goto :bridge_ready
 )
 echo [ERRORE] Bridge non risponde dopo 15s.
