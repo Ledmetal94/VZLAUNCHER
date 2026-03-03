@@ -4,7 +4,7 @@ setlocal
 set BASE=C:\VZArcade
 set BRIDGE_DIR=%BASE%\bridge
 set TMP_ZIP=%TEMP%\vzlauncher-bridge.zip
-set RELEASE_URL=https://github.com/vzitalia/vzlauncher/releases/latest/download/bridge.zip
+set RELEASE_URL=https://github.com/Ledmetal94/VZLAUNCHER/releases/latest/download/bridge.zip
 
 echo ============================================
 echo   VZLAUNCHER - Aggiornamento Bridge
@@ -33,9 +33,10 @@ if %errorLevel% neq 0 (
     exit /b 1
 )
 
-:: --- Estrai sovrascrivendo i file (preserva config/ e data/) ---
+:: --- Estrai in C:\VZArcade\ (il zip contiene bridge/ come cartella root) ---
+:: Preserva config/games.json e data/ che sono specifici della macchina
 echo [3/4] Estrazione file...
-tar -xf "%TMP_ZIP%" -C "%BRIDGE_DIR%" --overwrite --exclude="config/games.json" --exclude="data/*"
+tar -xf "%TMP_ZIP%" -C "%BASE%" --exclude="bridge/config/games.json" --exclude="bridge/config/games.local.json" --exclude="bridge/data/*"
 if %errorLevel% neq 0 (
     echo [ERRORE] Estrazione fallita.
     pause

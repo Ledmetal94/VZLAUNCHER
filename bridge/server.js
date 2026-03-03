@@ -196,7 +196,7 @@ app.get('/version', async (req, res) => {
 app.post('/update', async (req, res) => {
   const TMP = path.join(os.tmpdir(), 'vzlauncher-bridge-update.zip')
   const ROOT = path.resolve(__dirname, '..')
-  const RELEASE_URL = 'https://github.com/vzitalia/vzlauncher/releases/latest/download/bridge.zip'
+  const RELEASE_URL = 'https://github.com/Ledmetal94/VZLAUNCHER/releases/latest/download/bridge.zip'
 
   try {
     console.log('[bridge] Downloading update...')
@@ -204,7 +204,7 @@ app.post('/update', async (req, res) => {
 
     console.log('[bridge] Extracting...')
     execSync(
-      `tar -xf "${TMP}" -C "${ROOT}" --overwrite --exclude=bridge/config/games.json --exclude=bridge/config/games.local.json --exclude="bridge/data/*"`,
+      `tar -xf "${TMP}" -C "${ROOT}" --exclude=bridge/config/games.json --exclude=bridge/config/games.local.json --exclude="bridge/data/*"`,
       { stdio: 'inherit' }
     )
 
