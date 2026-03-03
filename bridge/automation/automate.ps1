@@ -36,9 +36,10 @@ Add-Type -TypeDefinition @"
       IntPtr foreHwnd = GetForegroundWindow();
       if (foreHwnd == targetHwnd) return true;
 
+      uint pid = 0;
       uint currentThread = GetCurrentThreadId();
-      uint foreThread = GetWindowThreadProcessId(foreHwnd, out _);
-      uint targetThread = GetWindowThreadProcessId(targetHwnd, out _);
+      uint foreThread = GetWindowThreadProcessId(foreHwnd, out pid);
+      uint targetThread = GetWindowThreadProcessId(targetHwnd, out pid);
 
       // Attach to foreground thread to gain focus-change permission
       if (foreThread != currentThread)
