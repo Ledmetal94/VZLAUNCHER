@@ -1,5 +1,5 @@
 #define AppName "VZLAUNCHER"
-#define AppVersion "1.0.3"
+#define AppVersion "1.0.4"
 #define AppPublisher "Virtual Zone"
 #define AppURL "https://vzlauncher.vercel.app/"
 #define InstallDir "C:\VZArcade"
@@ -79,6 +79,11 @@ Name: "{commonstartmenu}\VZLAUNCHER\Aggiorna Bridge"; \
   Parameters: "/k ""{app}\update.bat"""; \
   WorkingDir: "{app}"; \
   Comment: "Aggiorna il bridge all'ultima versione"
+
+[UninstallRun]
+; Termina il bridge (node.exe) prima di rimuovere i file
+Filename: "{sys}\taskkill.exe"; Parameters: "/FI ""WINDOWTITLE eq VZLAUNCHER Bridge"" /F"; Flags: runhidden; RunOnceId: "KillBridgeByTitle"
+Filename: "{sys}\taskkill.exe"; Parameters: "/FI ""IMAGENAME eq node.exe"" /FI ""COMMANDLINE eq *VZArcade*"" /F"; Flags: runhidden; RunOnceId: "KillBridgeByPath"
 
 [Run]
 ; Avvia VZLAUNCHER subito dopo l'installazione (opzionale)
