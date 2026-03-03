@@ -86,6 +86,17 @@ Filename: "{sys}\taskkill.exe"; Parameters: "/IM chrome.exe /F"; Flags: runhidde
 ; Termina il bridge — kill diretto per image name (filtri WINDOWTITLE/COMMANDLINE non affidabili)
 Filename: "{sys}\taskkill.exe"; Parameters: "/IM node.exe /F"; Flags: runhidden; RunOnceId: "KillNode"
 
+[UninstallDelete]
+; Rimuovi file creati a runtime e l'intera directory di installazione
+Type: filesandordirs; Name: "{app}\bridge\data"
+Type: filesandordirs; Name: "{app}\bridge\config"
+Type: filesandordirs; Name: "{app}\bridge\node_modules"
+Type: filesandordirs; Name: "{app}\bridge"
+Type: filesandordirs; Name: "{app}\node"
+Type: filesandordirs; Name: "{app}\herozone"
+Type: files; Name: "{app}\launcher.log"
+Type: filesandordirs; Name: "{app}"
+
 [Run]
 ; Avvia VZLAUNCHER subito dopo l'installazione (opzionale)
 Filename: "{app}\start-vzlauncher.bat"; \
