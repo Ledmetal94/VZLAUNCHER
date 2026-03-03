@@ -45,11 +45,45 @@ function Invoke-Step($step) {
           using System.Runtime.InteropServices;
           public class WinFocus {
             [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hWnd);
+            [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
           }
 "@ -ErrorAction SilentlyContinue
+        [WinFocus]::ShowWindow($hwnd, 9)  # SW_RESTORE (in case minimized)
         [WinFocus]::SetForegroundWindow($hwnd)
         Start-Sleep -Milliseconds 500
       }
+    }
+    "minimize_window" {
+      Add-Type -TypeDefinition @"
+        using System;
+        using System.Runtime.InteropServices;
+        public class WinMinimize {
+          [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+        }
+"@ -ErrorAction SilentlyContinue
+      Get-Process | Where-Object {
+        ($_.MainWindowTitle -like "*$($step.title)*" -or $_.ProcessName -like "*$($step.title)*") -and $_.MainWindowHandle -ne 0
+      } | ForEach-Object {
+        [WinMinimize]::ShowWindow([IntPtr]$_.MainWindowHandle, 6)  # SW_MINIMIZE
+      }
+      Start-Sleep -Milliseconds 400
+    }
+    "restore_window" {
+      Add-Type -TypeDefinition @"
+        using System;
+        using System.Runtime.InteropServices;
+        public class WinRestore {
+          [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+          [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hWnd);
+        }
+"@ -ErrorAction SilentlyContinue
+      Get-Process | Where-Object {
+        ($_.MainWindowTitle -like "*$($step.title)*" -or $_.ProcessName -like "*$($step.title)*") -and $_.MainWindowHandle -ne 0
+      } | ForEach-Object {
+        [WinRestore]::ShowWindow([IntPtr]$_.MainWindowHandle, 9)   # SW_RESTORE
+        [WinRestore]::SetForegroundWindow([IntPtr]$_.MainWindowHandle)
+      }
+      Start-Sleep -Milliseconds 400
     }
   }
 }

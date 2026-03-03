@@ -53,11 +53,14 @@ export async function prepareHerozone(gameConfig) {
 
   console.log(`[HeroZone] Clicking Quick Play (waiting room)...`)
   await runAutomation([
+    { type: 'minimize_window', title: 'chrome' },  // hide Chrome so HeroZone is visible
     { type: 'focus_window', title: windowTitle },
     { type: 'wait', ms: 2000 },
     { type: 'click', ...HZ.quickPlay },
     { type: 'wait', ms: 500 },
     { type: 'click', x: tileX, y: tileY },
+    { type: 'wait', ms: 500 },
+    { type: 'restore_window', title: 'chrome' },   // bring Chrome back for difficulty input
   ])
 
   console.log(`[HeroZone] Prepare complete — waiting room open, game tile selected.`)
@@ -66,8 +69,9 @@ export async function prepareHerozone(gameConfig) {
 
 // Phase 2: set difficulty (if not normal) → Launch Game
 export async function startHerozone(difficulty = 'normal') {
-  // Bring Hero Launcher to foreground before clicking
+  // Minimize Chrome, bring Hero Launcher to foreground, then click
   const steps = [
+    { type: 'minimize_window', title: 'chrome' },
     { type: 'focus_window', title: 'Hero Launcher' },
     { type: 'wait', ms: 400 },
   ]
@@ -100,9 +104,12 @@ export async function openWaitingRoom(gameConfig) {
   }
 
   await runAutomation([
+    { type: 'minimize_window', title: 'chrome' },
     { type: 'focus_window', title: windowTitle },
     { type: 'wait', ms: 2000 },
     { type: 'click', ...HZ.quickPlay },
+    { type: 'wait', ms: 500 },
+    { type: 'restore_window', title: 'chrome' },
   ])
 
   console.log(`[HeroZone] Waiting room open.`)
