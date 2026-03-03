@@ -1,5 +1,5 @@
 #define AppName "VZLAUNCHER"
-#define AppVersion "1.0.4"
+#define AppVersion "1.0.5"
 #define AppPublisher "Virtual Zone"
 #define AppURL "https://vzlauncher.vercel.app/"
 #define InstallDir "C:\VZArcade"

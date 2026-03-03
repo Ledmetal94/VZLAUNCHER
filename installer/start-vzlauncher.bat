@@ -59,6 +59,6 @@ exit /b 1
 
 :bridge_ready
 echo [%date% %time%] Bridge OK - apro Chrome >> "%LOG%"
-start "" "%CHROME%" --app=%APP_URL% --start-fullscreen --no-default-browser-check --disable-infobars
+start "" "%CHROME%" --app=%APP_URL% --start-maximized --no-default-browser-check --disable-infobars
 
 endlocal
