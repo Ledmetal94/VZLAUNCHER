@@ -81,9 +81,10 @@ Name: "{commonstartmenu}\VZLAUNCHER\Aggiorna Bridge"; \
   Comment: "Aggiorna il bridge all'ultima versione"
 
 [UninstallRun]
-; Termina il bridge (node.exe) prima di rimuovere i file
-Filename: "{sys}\taskkill.exe"; Parameters: "/FI ""WINDOWTITLE eq VZLAUNCHER Bridge"" /F"; Flags: runhidden; RunOnceId: "KillBridgeByTitle"
-Filename: "{sys}\taskkill.exe"; Parameters: "/FI ""IMAGENAME eq node.exe"" /FI ""COMMANDLINE eq *VZArcade*"" /F"; Flags: runhidden; RunOnceId: "KillBridgeByPath"
+; Chiudi Chrome (usato come app shell del launcher)
+Filename: "{sys}\taskkill.exe"; Parameters: "/IM chrome.exe /F"; Flags: runhidden; RunOnceId: "KillChrome"
+; Termina il bridge — kill diretto per image name (filtri WINDOWTITLE/COMMANDLINE non affidabili)
+Filename: "{sys}\taskkill.exe"; Parameters: "/IM node.exe /F"; Flags: runhidden; RunOnceId: "KillNode"
 
 [Run]
 ; Avvia VZLAUNCHER subito dopo l'installazione (opzionale)
