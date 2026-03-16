@@ -1,4 +1,12 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
+import { loadStripe } from '@stripe/stripe-js'
+import {
+  EmbeddedCheckoutProvider,
+  EmbeddedCheckout,
+} from '@stripe/react-stripe-js'
+import { purchaseTokens } from '@/services/cloudApi'
+
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY)
 
 interface TokenModalProps {
   balance: number
@@ -21,8 +29,79 @@ const SAVE_STYLES: Record<string, { bg: string; color: string; border: string }>
 
 export default function TokenModal({ balance, onClose }: TokenModalProps) {
   const [selectedPkg, setSelectedPkg] = useState<number | null>(null)
+  const [customQty, setCustomQty] = useState(3500)
   const [payTab, setPayTab] = useState(0)
+  const [checkoutActive, setCheckoutActive] = useState(false)
+  const [checkoutPkgId, setCheckoutPkgId] = useState<number | null>(null)
+  const [checkoutQty, setCheckoutQty] = useState<number | undefined>(undefined)
 
+  const fetchClientSecret = useCallback(() => {
+    if (!checkoutPkgId) return Promise.reject(new Error('No package selected'))
+    return purchaseTokens(checkoutPkgId, checkoutQty).then((data) => data.clientSecret)
+  }, [checkoutPkgId, checkoutQty])
+
+  const handlePayClick = () => {
+    if (!selectedPkg) return
+    if (selectedPkg === 4 && customQty < 3001) return
+    setCheckoutPkgId(selectedPkg)
+    setCheckoutQty(selectedPkg === 4 ? customQty : undefined)
+    setCheckoutActive(true)
+  }
+
+  // Stripe Embedded Checkout view
+  if (checkoutActive && checkoutPkgId) {
+    return (
+      <div
+        className="absolute inset-0 z-[200] flex items-center justify-center"
+        style={{ background: 'rgba(10,8,30,0.92)', backdropFilter: 'blur(16px)' }}
+      >
+        <div
+          style={{
+            width: 700,
+            maxHeight: '90vh',
+            padding: '32px 38px',
+            background: 'rgba(22,20,45,0.98)',
+            border: '1px solid rgba(123,100,169,0.25)',
+            borderRadius: 20,
+            boxShadow: '0 40px 100px rgba(0,0,0,0.6),0 0 80px rgba(82,49,137,0.1)',
+            overflow: 'auto',
+          }}
+        >
+          <div className="flex items-center justify-between" style={{ marginBottom: 16 }}>
+            <button
+              onClick={() => setCheckoutActive(false)}
+              style={{
+                padding: '6px 16px', borderRadius: 8, border: '1px solid rgba(123,100,169,0.2)',
+                background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.6)',
+                fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'Outfit, sans-serif',
+              }}
+            >
+              ← Torna ai pacchetti
+            </button>
+            <button
+              onClick={onClose}
+              style={{
+                width: 32, height: 32, borderRadius: '50%', border: 'none',
+                background: 'rgba(255,255,255,0.05)', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div id="checkout" style={{ minHeight: 300 }}>
+            <EmbeddedCheckoutProvider stripe={stripePromise} options={{ fetchClientSecret }}>
+              <EmbeddedCheckout />
+            </EmbeddedCheckoutProvider>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Package selection view (original)
   return (
     <div
       className="absolute inset-0 z-[200] flex items-center justify-center"
@@ -200,8 +279,31 @@ export default function TokenModal({ balance, onClose }: TokenModalProps) {
             <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginBottom: 16 }}>
               Carta di credito/debito o addebito SEPA
             </div>
+            {selectedPkg === 4 && (
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: 6 }}>
+                  Quantità gettoni (min. 3.001)
+                </label>
+                <input
+                  type="number"
+                  min={3001}
+                  value={customQty}
+                  onChange={(e) => setCustomQty(Math.max(3001, parseInt(e.target.value) || 3001))}
+                  style={{
+                    width: 160, padding: '8px 12px', borderRadius: 8,
+                    border: '1px solid rgba(123,100,169,0.3)', background: 'rgba(255,255,255,0.05)',
+                    color: '#fff', fontSize: 16, fontWeight: 700, fontFamily: 'Outfit, sans-serif',
+                    textAlign: 'center',
+                  }}
+                />
+                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginLeft: 10 }}>
+                  = €{(customQty * 0.85).toLocaleString('it-IT', { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+            )}
             <button
-              disabled={!selectedPkg}
+              disabled={!selectedPkg || (selectedPkg === 4 && customQty < 3001)}
+              onClick={handlePayClick}
               style={{
                 padding: '12px 36px', borderRadius: 10, border: 'none',
                 background: 'linear-gradient(135deg, #E6007E, #523189)',

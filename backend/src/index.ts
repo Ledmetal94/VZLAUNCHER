@@ -22,6 +22,9 @@ app.use(cors({
   credentials: true,
 }))
 
+// Webhook route needs raw body for Stripe signature verification — mount before json parser
+app.use(webhooksRouter)
+
 app.use(express.json({ limit: '1mb' }))
 app.use(cookieParser())
 
@@ -34,7 +37,6 @@ app.use(gamesRouter)
 app.use(adminGamesRouter)
 app.use(tokensRouter)
 app.use(adminTokensRouter)
-app.use(webhooksRouter)
 
 // Error handler (must be last)
 app.use(errorHandler)

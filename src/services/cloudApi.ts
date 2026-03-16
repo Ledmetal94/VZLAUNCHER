@@ -174,3 +174,30 @@ export async function getGames(): Promise<CloudGame[]> {
   const data = await request<{ games: CloudGame[] }>('/games')
   return data.games
 }
+
+// ─── Tokens / Checkout ──────────────────────────────────────
+
+export async function purchaseTokens(
+  packageId: number,
+  quantity?: number,
+): Promise<{ clientSecret: string }> {
+  return request<{ clientSecret: string }>('/tokens/purchase', {
+    method: 'POST',
+    body: JSON.stringify({ packageId, ...(quantity ? { quantity } : {}) }),
+  })
+}
+
+export interface CheckoutSessionStatus {
+  status: string
+  paymentStatus: string
+  customerEmail: string | null
+  tokens: number | null
+}
+
+export async function getCheckoutSessionStatus(
+  sessionId: string,
+): Promise<CheckoutSessionStatus> {
+  return request<CheckoutSessionStatus>(
+    `/checkout/session-status?session_id=${sessionId}`,
+  )
+}

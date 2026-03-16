@@ -1,9 +1,23 @@
 import { Router } from 'express'
+import Stripe from 'stripe'
 import { supabase } from '../lib/supabase'
 import { consumeSchema } from '../schemas/tokens'
 import { createError } from '../middleware/errorHandler'
 import { requireAuth } from '../middleware/auth'
 import type { Request, Response, NextFunction } from 'express'
+
+let _stripe: Stripe | null = null
+function getStripe(): Stripe {
+  if (!_stripe) {
+    if (!process.env.STRIPE_SECRET_KEY) {
+      throw new Error('STRIPE_SECRET_KEY is not configured')
+    }
+    _stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
+  }
+  return _stripe
+}
+const CHECKOUT_RETURN_URL = process.env.CHECKOUT_RETURN_URL
+  || (process.env.FRONTEND_URL || 'http://localhost:5173').split(',')[0].trim()
 
 const router = Router()
 
@@ -65,15 +79,13 @@ router.post(
         return next(createError(402, 'INSUFFICIENT_TOKENS', `Insufficient token balance. Current: ${venue.token_balance}, required: ${amount}`))
       }
 
-      const newBalance = venue.token_balance - amount
+      // Atomic decrement
+      const { data: newBalance, error: rpcError } = await supabase.rpc('adjust_token_balance', {
+        p_venue_id: venueId,
+        p_amount: -amount,
+      })
 
-      // Decrement balance
-      const { error: updateError } = await supabase
-        .from('venues')
-        .update({ token_balance: newBalance })
-        .eq('id', venueId)
-
-      if (updateError) {
+      if (rpcError) {
         return next(createError(500, 'DB_ERROR', 'Failed to update token balance'))
       }
 
@@ -101,44 +113,90 @@ router.post(
   },
 )
 
-// POST /api/v1/tokens/purchase — create Stripe Checkout Session
+// POST /api/v1/tokens/purchase — create Stripe Embedded Checkout Session
 router.post(
   '/api/v1/tokens/purchase',
   requireAuth,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { packageId } = req.body
+      const { packageId, quantity } = req.body
       if (!packageId || typeof packageId !== 'number' || packageId < 1 || packageId > 4) {
         return next(createError(400, 'VALIDATION_ERROR', 'Invalid packageId (1-4)'))
       }
 
+      // Package 4 requires a custom quantity (min 3001 tokens at €0.85 each)
+      if (packageId === 4) {
+        if (!quantity || typeof quantity !== 'number' || quantity < 3001) {
+          return next(createError(400, 'VALIDATION_ERROR', 'Package 4 requires quantity >= 3001'))
+        }
+      }
+
       const venueId = req.user!.venueId
-      const packages: Record<number, { tokens: number; priceEur: number }> = {
-        1: { tokens: 500, priceEur: 575 },
-        2: { tokens: 1500, priceEur: 1575 },
-        3: { tokens: 3000, priceEur: 2850 },
-        4: { tokens: 3001, priceEur: 2550.85 },
+      const operatorId = req.user!.sub
+
+      // Packages 1-3: fixed bundles. Package 4: per-token pricing.
+      const packages: Record<number, { tokens: number; unitAmountCents: number; qty: number; name: string }> = {
+        1: { tokens: 500, unitAmountCents: 57500, qty: 1, name: '500 Gettoni' },
+        2: { tokens: 1500, unitAmountCents: 157500, qty: 1, name: '1.500 Gettoni' },
+        3: { tokens: 3000, unitAmountCents: 285000, qty: 1, name: '3.000 Gettoni' },
+        4: { tokens: quantity || 3001, unitAmountCents: 85, qty: quantity || 3001, name: 'Gettoni (€0,85/cad)' },
       }
 
       const pkg = packages[packageId]
 
-      // In production: create Stripe Checkout Session here
-      // For now, return a mock checkout URL
-      const checkoutUrl = `https://checkout.stripe.com/mock?venue=${venueId}&tokens=${pkg.tokens}&price=${pkg.priceEur}`
-
-      // Record pending transaction
-      await supabase.from('token_transactions').insert({
-        venue_id: venueId,
-        type: 'purchase',
-        amount: pkg.tokens,
-        payment_method: 'stripe',
-        payment_reference: `pending_${Date.now()}`,
-        unit_price: pkg.priceEur / pkg.tokens,
-        total_price: pkg.priceEur,
-        status: 'pending',
+      const session = await getStripe().checkout.sessions.create({
+        ui_mode: 'embedded',
+        mode: 'payment',
+        line_items: [
+          {
+            price_data: {
+              currency: 'eur',
+              unit_amount: pkg.unitAmountCents,
+              product_data: { name: pkg.name },
+            },
+            quantity: pkg.qty,
+          },
+        ],
+        metadata: {
+          venueId,
+          operatorId,
+          tokenAmount: String(pkg.tokens),
+          packageId: String(packageId),
+        },
+        return_url: `${CHECKOUT_RETURN_URL}/checkout/return?session_id={CHECKOUT_SESSION_ID}`,
       })
 
-      res.json({ checkoutUrl, tokens: pkg.tokens, price: pkg.priceEur })
+      res.json({ clientSecret: session.client_secret })
+    } catch (err) {
+      next(err)
+    }
+  },
+)
+
+// GET /api/v1/checkout/session-status — check Stripe session status
+router.get(
+  '/api/v1/checkout/session-status',
+  requireAuth,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const sessionId = req.query.session_id as string
+      if (!sessionId) {
+        return next(createError(400, 'VALIDATION_ERROR', 'Missing session_id'))
+      }
+
+      const session = await getStripe().checkout.sessions.retrieve(sessionId)
+
+      // Verify the session belongs to the requesting user's venue
+      if (session.metadata?.venueId && session.metadata.venueId !== req.user!.venueId) {
+        return next(createError(403, 'FORBIDDEN', 'Session does not belong to this venue'))
+      }
+
+      res.json({
+        status: session.status,
+        paymentStatus: session.payment_status,
+        customerEmail: session.customer_details?.email,
+        tokens: session.metadata?.tokenAmount ? parseInt(session.metadata.tokenAmount, 10) : null,
+      })
     } catch (err) {
       next(err)
     }

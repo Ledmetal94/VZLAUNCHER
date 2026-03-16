@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router'
 import LoginPage from '@/pages/LoginPage'
 import CatalogPage from '@/pages/CatalogPage'
 import HistoryPage from '@/pages/HistoryPage'
+import CheckoutReturnPage from '@/pages/CheckoutReturnPage'
 import RequireAuth from '@/components/auth/RequireAuth'
 
 export default function App() {
@@ -21,6 +22,14 @@ export default function App() {
         element={
           <RequireAuth>
             <HistoryPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/checkout/return"
+        element={
+          <RequireAuth>
+            <CheckoutReturnPage />
           </RequireAuth>
         }
       />
