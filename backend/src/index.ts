@@ -9,6 +9,8 @@ import sessionsRouter from './routes/sessions.js'
 import operatorsRouter from './routes/operators.js'
 import gamesRouter from './routes/games.js'
 import adminGamesRouter from './routes/admin/games.js'
+import tokensRouter from './routes/tokens.js'
+import adminTokensRouter from './routes/admin/tokens.js'
 
 const app = express()
 const PORT = parseInt(process.env.PORT || '3002', 10)
@@ -29,6 +31,8 @@ app.use(sessionsRouter)
 app.use(operatorsRouter)
 app.use(gamesRouter)
 app.use(adminGamesRouter)
+app.use(tokensRouter)
+app.use(adminTokensRouter)
 
 // Error handler (must be last)
 app.use(errorHandler)
