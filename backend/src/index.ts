@@ -11,6 +11,7 @@ import gamesRouter from './routes/games.js'
 import adminGamesRouter from './routes/admin/games.js'
 import tokensRouter from './routes/tokens.js'
 import adminTokensRouter from './routes/admin/tokens.js'
+import webhooksRouter from './routes/webhooks.js'
 
 const app = express()
 const PORT = parseInt(process.env.PORT || '3002', 10)
@@ -33,6 +34,7 @@ app.use(gamesRouter)
 app.use(adminGamesRouter)
 app.use(tokensRouter)
 app.use(adminTokensRouter)
+app.use(webhooksRouter)
 
 // Error handler (must be last)
 app.use(errorHandler)

@@ -101,4 +101,48 @@ router.post(
   },
 )
 
+// POST /api/v1/tokens/purchase — create Stripe Checkout Session
+router.post(
+  '/api/v1/tokens/purchase',
+  requireAuth,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { packageId } = req.body
+      if (!packageId || typeof packageId !== 'number' || packageId < 1 || packageId > 4) {
+        return next(createError(400, 'VALIDATION_ERROR', 'Invalid packageId (1-4)'))
+      }
+
+      const venueId = req.user!.venueId
+      const packages: Record<number, { tokens: number; priceEur: number }> = {
+        1: { tokens: 500, priceEur: 575 },
+        2: { tokens: 1500, priceEur: 1575 },
+        3: { tokens: 3000, priceEur: 2850 },
+        4: { tokens: 3001, priceEur: 2550.85 },
+      }
+
+      const pkg = packages[packageId]
+
+      // In production: create Stripe Checkout Session here
+      // For now, return a mock checkout URL
+      const checkoutUrl = `https://checkout.stripe.com/mock?venue=${venueId}&tokens=${pkg.tokens}&price=${pkg.priceEur}`
+
+      // Record pending transaction
+      await supabase.from('token_transactions').insert({
+        venue_id: venueId,
+        type: 'purchase',
+        amount: pkg.tokens,
+        payment_method: 'stripe',
+        payment_reference: `pending_${Date.now()}`,
+        unit_price: pkg.priceEur / pkg.tokens,
+        total_price: pkg.priceEur,
+        status: 'pending',
+      })
+
+      res.json({ checkoutUrl, tokens: pkg.tokens, price: pkg.priceEur })
+    } catch (err) {
+      next(err)
+    }
+  },
+)
+
 export default router
