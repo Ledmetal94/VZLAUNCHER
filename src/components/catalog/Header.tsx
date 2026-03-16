@@ -2,9 +2,11 @@ import { useState, useEffect } from 'react'
 
 interface HeaderProps {
   onSettingsClick?: () => void
+  onTokenClick?: () => void
+  tokenBalance?: number
 }
 
-export default function Header({ onSettingsClick }: HeaderProps) {
+export default function Header({ onSettingsClick, onTokenClick, tokenBalance = 0 }: HeaderProps) {
   const [time, setTime] = useState(new Date())
 
   useEffect(() => {
@@ -34,6 +36,7 @@ export default function Header({ onSettingsClick }: HeaderProps) {
 
         {/* Token widget pill */}
         <button
+          onClick={onTokenClick}
           className="group"
           style={{
             background: 'rgba(230,0,126,0.08)',
@@ -100,7 +103,7 @@ export default function Header({ onSettingsClick }: HeaderProps) {
                 letterSpacing: '-0.01em',
               }}
             >
-              1.247
+              {tokenBalance.toLocaleString('it-IT')}
             </span>
           </div>
 

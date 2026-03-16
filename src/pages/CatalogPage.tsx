@@ -5,10 +5,12 @@ import GameGrid from '@/components/catalog/GameGrid'
 import LaunchModal from '@/components/catalog/LaunchModal'
 import SessionBar from '@/components/catalog/SessionBar'
 import SettingsModal from '@/components/catalog/SettingsModal'
+import TokenModal from '@/components/catalog/TokenModal'
 import { checkBridgeHealth, launchGame, stopSession } from '@/services/bridgeApi'
 import { useSessionStore } from '@/store/sessionStore'
 import { useConnectionStore } from '@/store/connectionStore'
 import { useGameStore } from '@/store/gameStore'
+import { useTokenStore } from '@/store/tokenStore'
 import type { Category, Game } from '@/types/models'
 
 export default function CatalogPage() {
@@ -17,6 +19,7 @@ export default function CatalogPage() {
   const [launching, setLaunching] = useState(false)
   const [ending, setEnding] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [tokenModalOpen, setTokenModalOpen] = useState(false)
 
   const activeSession = useSessionStore((s) => s.activeSession)
   const startSession = useSessionStore((s) => s.startSession)
@@ -25,11 +28,15 @@ export default function CatalogPage() {
 
   const games = useGameStore((s) => s.games)
   const fetchGames = useGameStore((s) => s.fetchGames)
+  const tokenBalance = useTokenStore((s) => s.balance)
+  const syncBalance = useTokenStore((s) => s.syncBalance)
+  const consumeLocal = useTokenStore((s) => s.consumeLocal)
 
-  // Fetch games from API on mount
+  // Fetch games + token balance on mount
   useEffect(() => {
     fetchGames()
-  }, [fetchGames])
+    syncBalance()
+  }, [fetchGames, syncBalance])
 
   // Poll bridge health
   useEffect(() => {
@@ -50,6 +57,14 @@ export default function CatalogPage() {
 
   const handleLaunch = useCallback(async (players: number) => {
     if (!selectedGame) return
+
+    // Check and consume tokens locally first
+    const consumed = consumeLocal(selectedGame.tokenCost, selectedGame.id)
+    if (!consumed) {
+      alert('Gettoni insufficienti!')
+      return
+    }
+
     setLaunching(true)
     try {
       const result = await launchGame(selectedGame.id, players)
@@ -62,7 +77,7 @@ export default function CatalogPage() {
     } finally {
       setLaunching(false)
     }
-  }, [selectedGame, startSession])
+  }, [selectedGame, startSession, consumeLocal])
 
   const handleEnd = useCallback(async () => {
     setEnding(true)
@@ -85,7 +100,11 @@ export default function CatalogPage() {
 
       {/* All content above blobs */}
       <div className="relative z-10 flex flex-1 flex-col min-h-0">
-        <Header onSettingsClick={() => setSettingsOpen(true)} />
+        <Header
+          onSettingsClick={() => setSettingsOpen(true)}
+          onTokenClick={() => setTokenModalOpen(true)}
+          tokenBalance={tokenBalance}
+        />
         <CategoryFilters
           selected={selectedCategory}
           onSelect={setSelectedCategory}
@@ -99,6 +118,10 @@ export default function CatalogPage() {
 
         {settingsOpen && (
           <SettingsModal onClose={() => setSettingsOpen(false)} />
+        )}
+
+        {tokenModalOpen && (
+          <TokenModal balance={tokenBalance} onClose={() => setTokenModalOpen(false)} />
         )}
 
         {selectedGame && !activeSession && (

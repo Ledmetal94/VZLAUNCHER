@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import type { Game } from '@/types/models'
 import { useConnectionStore } from '@/store/connectionStore'
+import { useTokenStore } from '@/store/tokenStore'
 
 interface LaunchModalProps {
   game: Game
@@ -13,6 +14,8 @@ interface LaunchModalProps {
 export default function LaunchModal({ game, onLaunch, onClose, launching }: LaunchModalProps) {
   const [players, setPlayers] = useState(game.minPlayers)
   const bridgeStatus = useConnectionStore((s) => s.bridgeStatus)
+  const tokenBalance = useTokenStore((s) => s.balance)
+  const insufficientTokens = tokenBalance < game.tokenCost
   const bridgeOffline = bridgeStatus === 'offline'
 
   return (
@@ -30,8 +33,16 @@ export default function LaunchModal({ game, onLaunch, onClose, launching }: Laun
         {/* Game info */}
         <div className="mb-6 flex gap-4 text-sm text-muted">
           <span>{game.durationMinutes} min</span>
-          <span>{game.tokenCost} tokens</span>
+          <span>Costo: {game.tokenCost} gettoni</span>
+          <span>Saldo: {tokenBalance} gettoni</span>
         </div>
+
+        {/* Insufficient tokens warning */}
+        {insufficientTokens && (
+          <div className="mb-4 rounded-lg px-4 py-2 text-sm" style={{ background: 'rgba(255,68,68,0.1)', color: '#ff4444' }}>
+            Gettoni insufficienti — servono {game.tokenCost}, hai {tokenBalance}
+          </div>
+        )}
 
         {/* Player count */}
         <div className="mb-6">
@@ -83,18 +94,18 @@ export default function LaunchModal({ game, onLaunch, onClose, launching }: Laun
             onClick={onClose}
             className="flex-1 rounded-lg bg-surface-light py-2.5 text-sm font-medium text-muted transition hover:bg-surface-lighter hover:text-white"
           >
-            Cancel
+            Annulla
           </button>
           <button
             onClick={() => onLaunch(players)}
-            disabled={bridgeOffline || launching}
+            disabled={bridgeOffline || launching || insufficientTokens}
             className={cn(
               'flex-1 rounded-lg bg-primary py-2.5 text-sm font-semibold text-white',
               'transition hover:bg-primary-hover',
               'disabled:cursor-not-allowed disabled:opacity-50',
             )}
           >
-            {launching ? 'Launching...' : 'Launch'}
+            {launching ? 'Avvio...' : 'Avvia sessione'}
           </button>
         </div>
       </div>
