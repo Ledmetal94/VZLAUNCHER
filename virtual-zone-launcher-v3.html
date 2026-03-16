@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920">
+<title>Virtual Zone – Launcher</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--mg:#E6007E;--vi:#523189;--li:#7B64A9;--dk:#191832;--dkr:#0f0e1f;--dkst:#0a0918;--card-bd:rgba(123,100,169,0.18)}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{overflow:hidden;background:#000;height:100%}
+body{font-family:'Outfit',sans-serif;display:flex;justify-content:center}
+::-webkit-scrollbar{display:none}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes glow-pulse{0%,100%{box-shadow:0 0 8px rgba(230,0,126,0.3)}50%{box-shadow:0 0 18px rgba(230,0,126,0.6)}}
+@keyframes qr-scan{0%{top:20px}50%{top:calc(100% - 22px)}100%{top:20px}}
+@keyframes lockShake{0%,100%{transform:translateX(0)}10%,30%,50%,70%,90%{transform:translateX(-4px)}20%,40%,60%,80%{transform:translateX(4px)}}
+
+#app{width:1920px;height:1080px;background:var(--dkst);color:#fff;position:relative;overflow:hidden}
+
+/* BG */
+.blob{position:absolute;border-radius:50%;pointer-events:none}
+.b1{width:800px;height:800px;filter:blur(160px);background:rgba(82,49,137,0.18);top:-300px;left:-300px}
+.b2{width:600px;height:600px;filter:blur(150px);background:rgba(230,0,126,0.08);bottom:-250px;right:-200px}
+.b3{width:450px;height:450px;filter:blur(130px);background:rgba(82,49,137,0.08);top:30%;left:50%}
+#app::after{content:'';position:absolute;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:998;opacity:.5}
+
+/* HEADER */
+.hdr{height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 32px;border-bottom:1px solid rgba(123,100,169,0.12);background:rgba(15,14,31,0.75);backdrop-filter:blur(12px);position:relative;z-index:50}
+.hdr-left{display:flex;align-items:center;gap:20px}
+.hdr-right{display:flex;align-items:center;gap:10px}
+.gettoni{display:flex;align-items:center;gap:10px;cursor:pointer;background:rgba(230,0,126,0.08);border:1px solid rgba(230,0,126,0.3);border-radius:50px;padding:6px 8px 6px 10px;transition:all .2s;user-select:none}
+.gettoni:hover{background:rgba(230,0,126,0.16);border-color:var(--mg);box-shadow:0 0 20px rgba(230,0,126,0.2)}
+.gettoni-icon{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--mg),var(--vi));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#fff;flex-shrink:0}
+.gettoni-info{display:flex;flex-direction:column;line-height:1}
+.gettoni-label{font-size:9px;font-weight:600;color:rgba(255,255,255,0.4);letter-spacing:.1em;text-transform:uppercase}
+.gettoni-val{font-size:20px;font-weight:900;color:#fff;letter-spacing:-.01em}
+.gettoni-plus{width:26px;height:26px;border-radius:50%;background:var(--mg);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;margin-left:2px;transition:transform .15s}
+.gettoni:hover .gettoni-plus{transform:scale(1.1)}
+.hdr-btn{height:36px;border-radius:8px;border:1px solid rgba(123,100,169,0.18);background:rgba(255,255,255,0.025);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;padding:0 14px;transition:all .15s;color:rgba(255,255,255,0.5);font-family:'Outfit',sans-serif;font-size:11px;font-weight:600}
+.hdr-btn:hover{background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.8)}
+.hdr-btn.icon-only{width:36px;padding:0}
+.live-pill{display:none;align-items:center;gap:5px;background:rgba(68,255,136,0.08);border:1px solid rgba(68,255,136,0.22);border-radius:16px;padding:4px 12px;font-size:10px;font-weight:700;color:#44ff88;letter-spacing:.06em}
+.live-pill.show{display:flex}
+.live-dot{width:5px;height:5px;border-radius:50%;background:#44ff88;animation:pulse 1.6s infinite}
+.clock{font-size:13px;font-weight:600;color:rgba(255,255,255,0.28);font-variant-numeric:tabular-nums;letter-spacing:.06em}
+
+/* License indicator */
+.lic-pill{display:flex;align-items:center;gap:5px;border-radius:16px;padding:4px 12px;font-size:10px;font-weight:600;letter-spacing:.03em}
+.lic-pill.ok{background:rgba(68,255,136,0.06);border:1px solid rgba(68,255,136,0.15);color:rgba(68,255,136,0.7)}
+.lic-pill.warn{background:rgba(255,170,0,0.08);border:1px solid rgba(255,170,0,0.25);color:#ffaa00}
+.lic-pill.danger{background:rgba(255,68,68,0.08);border:1px solid rgba(255,68,68,0.25);color:#ff4444}
+.lic-dot{width:5px;height:5px;border-radius:50%}
+
+/* FILTERS */
+.filters{height:44px;display:flex;align-items:center;gap:5px;padding:0 32px;border-bottom:1px solid rgba(123,100,169,0.06);position:relative;z-index:40}
+.fbtn{padding:7px 22px;border-radius:8px;font-size:12px;font-weight:600;font-family:'Outfit',sans-serif;letter-spacing:.03em;cursor:pointer;transition:all .15s;border:1px solid transparent;background:transparent;color:rgba(255,255,255,0.28)}
+.fbtn:hover{color:rgba(255,255,255,0.5)}
+.fbtn.on{border-color:var(--li);background:rgba(82,49,137,0.28);color:#fff}
+.gcount{margin-left:auto;font-size:11px;color:rgba(255,255,255,0.15);font-weight:500}
+
+/* GRID */
+.grid-wrap{padding:10px 32px;position:relative;z-index:5}
+.grid{display:grid;gap:14px;justify-content:center;overflow:hidden}
+.empty{display:none;flex-direction:column;align-items:center;justify-content:center;height:100%;color:rgba(255,255,255,0.15)}
+.empty.show{display:flex}
+
+/* CARD */
+.card{position:relative;border-radius:14px;overflow:hidden;width:100%;height:100%;cursor:pointer;border:1px solid var(--card-bd);transition:all .22s cubic-bezier(0.4,0,0.2,1)}
+.card:hover{transform:scale(1.03);box-shadow:0 18px 45px rgba(0,0,0,0.5),0 0 0 1px rgba(230,0,126,0.4);border-color:rgba(230,0,126,0.5)}
+.card:hover .c-hov{opacity:1}
+.card:hover .c-play{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.card:active{transform:scale(0.98)}
+.c-badge{position:absolute;top:9px;left:9px;z-index:3;color:#fff;font-size:8px;font-weight:800;letter-spacing:.1em;padding:2px 8px;border-radius:4px;text-transform:uppercase}
+.c-hov{position:absolute;inset:0;z-index:2;opacity:0;background:linear-gradient(to top,rgba(230,0,126,0.3) 0%,transparent 50%);transition:opacity .2s}
+.c-play{position:absolute;top:36%;left:50%;transform:translate(-50%,-50%) scale(0.7);width:48px;height:48px;border-radius:50%;background:rgba(230,0,126,0.92);box-shadow:0 0 28px rgba(230,0,126,0.5);display:flex;align-items:center;justify-content:center;z-index:4;opacity:0;transition:all .22s cubic-bezier(0.4,0,0.2,1)}
+.c-info{position:absolute;bottom:0;left:0;right:0;z-index:3;padding:38px 12px 12px;background:linear-gradient(to top,rgba(10,8,30,0.97) 0%,rgba(10,8,30,0.65) 50%,transparent 100%)}
+.c-cat{font-size:8px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;margin-bottom:2px;color:var(--li)}
+.c-title{font-size:14px;font-weight:800;line-height:1.15;color:#fff}
+.c-meta{font-size:9px;color:rgba(255,255,255,0.32);margin-top:4px;font-weight:500;display:flex;align-items:center;gap:8px}
+.c-meta span{display:flex;align-items:center;gap:3px}
+.c-meta svg{width:10px;height:10px}
+.c-cost{position:absolute;top:9px;right:9px;z-index:3;background:rgba(10,8,30,0.8);border:1px solid rgba(123,100,169,0.3);border-radius:16px;padding:2px 9px;font-size:10px;font-weight:700;display:flex;align-items:center;gap:4px}
+.c-cost-dot{width:6px;height:6px;border-radius:50%;background:var(--mg);box-shadow:0 0 4px var(--mg)}
+
+/* SESSION BAR */
+.ses{position:absolute;bottom:0;left:0;right:0;height:56px;display:none;align-items:center;justify-content:space-between;padding:0 32px;z-index:60;background:rgba(15,14,31,0.94);backdrop-filter:blur(12px);border-top:2px solid var(--mg)}
+.ses.show{display:flex}
+.ses-l{display:flex;align-items:center;gap:14px}
+.ses-dot{width:8px;height:8px;border-radius:50%;background:#44ff88;box-shadow:0 0 6px #44ff88;animation:pulse 1.6s infinite}
+.ses-lbl{font-size:8px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,0.28)}
+.ses-nm{font-size:14px;font-weight:800;color:#fff;line-height:1.1}
+.ses-r{display:flex;align-items:center;gap:20px}
+.ses-stat{text-align:center}
+.ses-stat-lbl{font-size:8px;color:rgba(255,255,255,0.22);font-weight:500;text-transform:uppercase;letter-spacing:.1em}
+.ses-stat-val{font-size:16px;font-weight:800;color:#fff}
+.ses-timer{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums;min-width:72px;text-align:center}
+.ses-prog{width:140px;height:5px;border-radius:3px;background:rgba(255,255,255,0.06)}
+.ses-prog-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--mg),var(--vi));transition:width 1s linear}
+.btn-stop{padding:8px 20px;border-radius:8px;border:1px solid rgba(255,68,68,0.25);background:rgba(255,68,68,0.1);color:#ff4444;font-size:11px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;display:flex;align-items:center;gap:6px;transition:all .15s}
+.btn-stop:hover{background:rgba(255,68,68,0.2)}
+
+/* MODALS */
+.ov{position:absolute;inset:0;z-index:200;background:rgba(10,8,30,0.92);backdrop-filter:blur(16px);display:none;align-items:center;justify-content:center}
+.ov.open{display:flex}
+.box{background:rgba(22,20,45,0.98);border:1px solid rgba(123,100,169,0.25);border-radius:20px;box-shadow:0 40px 100px rgba(0,0,0,0.6),0 0 80px rgba(82,49,137,0.1)}
+.btn-x{width:32px;height:32px;border-radius:50%;border:none;background:rgba(255,255,255,0.05);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s}
+.btn-x:hover{background:rgba(255,255,255,0.1)}
+.sec-lbl{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,0.25);margin-bottom:10px}
+.lm-plat{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;margin-bottom:3px}
+.lm-title{font-size:24px;font-weight:800;color:#fff}
+.lm-desc{font-size:12px;color:rgba(255,255,255,0.38);margin-top:3px}
+.pl-btn{width:44px;height:44px;border-radius:10px;border:none;cursor:pointer;font-family:'Outfit',sans-serif;color:#fff;font-size:16px;font-weight:700;background:rgba(255,255,255,0.04);transition:all .15s}
+.pl-btn.on{background:var(--mg);box-shadow:0 0 16px rgba(230,0,126,0.4)}
+.lm-stat{flex:1;padding:12px 14px;border-radius:10px;background:rgba(82,49,137,0.05);border:1px solid rgba(123,100,169,0.08)}
+.lm-stat-lbl{font-size:9px;color:rgba(255,255,255,0.3);font-weight:500;text-transform:uppercase;letter-spacing:.1em}
+.lm-stat-v{font-size:18px;font-weight:800;color:#fff}
+.lm-stat-v.sm{font-size:13px;font-weight:700;margin-top:2px}
+.btn-cancel{flex:1;padding:13px;border-radius:10px;border:1px solid rgba(123,100,169,0.18);background:transparent;color:rgba(255,255,255,0.45);font-size:13px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .15s}
+.btn-cancel:hover{border-color:rgba(123,100,169,0.35);color:rgba(255,255,255,0.65)}
+.btn-launch{flex:2;padding:13px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--mg),var(--vi));color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;box-shadow:0 6px 24px rgba(230,0,126,0.3);transition:all .15s}
+.btn-launch:hover{box-shadow:0 8px 32px rgba(230,0,126,0.45);transform:translateY(-1px)}
+
+/* Token modal */
+.pkg{position:relative;border-radius:14px;padding:22px 20px 18px;background:rgba(82,49,137,0.08);border:1.5px solid rgba(123,100,169,0.15);cursor:pointer;transition:all .2s;overflow:hidden}
+.pkg:hover{border-color:var(--li);background:rgba(82,49,137,0.18);transform:translateY(-2px);box-shadow:0 10px 30px rgba(82,49,137,0.25)}
+.pkg.feat{border-color:rgba(230,0,126,0.4);background:rgba(230,0,126,0.06)}
+.pkg.sel{border-color:var(--mg)!important;background:rgba(230,0,126,0.12)!important;box-shadow:0 0 0 1px var(--mg),0 10px 30px rgba(230,0,126,0.25)!important}
+.pkg-badge{position:absolute;top:12px;right:12px;background:var(--mg);color:#fff;font-size:9px;font-weight:800;letter-spacing:.08em;padding:3px 10px;border-radius:20px;text-transform:uppercase}
+.pkg-tokens{font-size:36px;font-weight:900;line-height:1;background:linear-gradient(135deg,#fff 50%,var(--li));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.pkg-sub{font-size:11px;color:rgba(255,255,255,0.35);font-weight:500;margin:2px 0 14px;text-transform:uppercase;letter-spacing:.08em}
+.pkg-hr{border:none;border-top:1px solid rgba(123,100,169,0.12);margin:0 0 14px}
+.pkg-price{font-size:24px;font-weight:800;color:#fff;line-height:1}
+.pkg-unit{font-size:11px;color:rgba(255,255,255,0.35);margin-left:6px}
+.pkg-save{display:inline-flex;align-items:center;padding:4px 10px;border-radius:20px;font-size:10px;font-weight:700;margin-top:6px}
+.pkg-save.base{background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.35)}
+.pkg-save.green{background:rgba(0,200,100,0.1);color:#00d46a;border:1px solid rgba(0,200,100,0.15)}
+.pkg-save.blue{background:rgba(100,200,255,0.08);color:#64c8ff;border:1px solid rgba(100,200,255,0.15)}
+.pkg-save.pink{background:rgba(230,0,126,0.1);color:#ff69b4;border:1px solid rgba(230,0,126,0.2)}
+.tab-sw{display:flex;gap:2px;background:rgba(255,255,255,0.03);border-radius:8px;padding:3px;margin-bottom:16px}
+.tab-sw button{flex:1;padding:7px 0;border:none;border-radius:6px;font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;cursor:pointer;background:transparent;color:rgba(255,255,255,0.35);transition:all .15s}
+.tab-sw button.on{background:rgba(82,49,137,0.35);color:#fff}
+.iban-box{padding:16px;border-radius:12px;background:rgba(82,49,137,0.06);border:1px solid rgba(123,100,169,0.12);margin-top:4px}
+.iban-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0}
+.iban-label{font-size:11px;color:rgba(255,255,255,0.4);font-weight:500}
+.iban-value{font-size:12px;color:#fff;font-weight:700;font-family:'Outfit',monospace;letter-spacing:.04em}
+.iban-copy{padding:4px 12px;border-radius:6px;border:1px solid rgba(123,100,169,0.2);background:rgba(255,255,255,0.03);color:rgba(255,255,255,0.5);font-size:10px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif}
+.iban-copy:hover{background:rgba(255,255,255,0.08);color:#fff}
+
+/* QR */
+.qr-viewport{width:300px;height:300px;border-radius:16px;background:#000;border:2px solid rgba(123,100,169,0.2);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.qr-corners{position:absolute;inset:20px;border:2px solid var(--mg);border-radius:8px;opacity:.6}
+.qr-line{position:absolute;left:20px;right:20px;height:2px;background:var(--mg);box-shadow:0 0 12px var(--mg);animation:qr-scan 2s ease-in-out infinite}
+.qr-text{color:rgba(255,255,255,0.35);font-size:13px;font-weight:500;z-index:2}
+.player-scanned{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:10px;background:rgba(68,255,136,0.06);border:1px solid rgba(68,255,136,0.2);margin-top:8px}
+.player-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--vi),var(--mg));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px}
+
+/* Settings */
+.set-row{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-radius:9px;margin-bottom:5px;background:rgba(82,49,137,0.05);border:1px solid rgba(123,100,169,0.06)}
+.set-dot{width:8px;height:8px;border-radius:50%}
+
+/* License lockout */
+.lockout{position:absolute;inset:0;z-index:9999;background:rgba(10,8,30,0.97);backdrop-filter:blur(20px);display:none;align-items:center;justify-content:center;flex-direction:column;gap:20px}
+.lockout.show{display:flex}
+.lock-icon{width:80px;height:80px;border-radius:50%;background:rgba(255,68,68,0.1);border:2px solid rgba(255,68,68,0.3);display:flex;align-items:center;justify-content:center;animation:lockShake .6s ease-in-out}
+.lock-title{font-size:26px;font-weight:800;color:#fff;text-align:center}
+.lock-desc{font-size:14px;color:rgba(255,255,255,0.4);text-align:center;max-width:440px;line-height:1.6}
+.lock-btn{padding:14px 40px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--mg),var(--vi));color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;box-shadow:0 6px 24px rgba(230,0,126,0.3)}
+
+/* VNC Viewer */
+.vnc-frame{width:100%;aspect-ratio:16/9;border-radius:12px;background:#0a0a12;border:1px solid rgba(123,100,169,0.15);position:relative;overflow:hidden}
+.vnc-toolbar{display:flex;align-items:center;justify-content:space-between;padding:10px 0 0}
+.vnc-toolbar-left{display:flex;align-items:center;gap:8px}
+.vnc-toolbar-right{display:flex;align-items:center;gap:6px}
+.vnc-info{font-size:10px;color:rgba(255,255,255,0.3);font-weight:500}
+.vnc-status{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:600}
+.vnc-status-dot{width:6px;height:6px;border-radius:50%}
+.vnc-btn{padding:5px 12px;border-radius:6px;border:1px solid rgba(123,100,169,0.2);background:rgba(255,255,255,0.03);color:rgba(255,255,255,0.5);font-size:10px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;display:flex;align-items:center;gap:5px;transition:all .15s}
+.vnc-btn:hover{background:rgba(255,255,255,0.08);color:#fff}
+.vnc-btn.danger{border-color:rgba(255,68,68,0.2);color:rgba(255,100,100,0.6)}
+.vnc-btn.danger:hover{background:rgba(255,68,68,0.1);color:#ff4444}
+.vnc-scanline{position:absolute;left:0;right:0;height:1px;background:rgba(123,100,169,0.08);animation:vnc-scan 4s linear infinite;pointer-events:none}
+@keyframes vnc-scan{0%{top:0}100%{top:100%}}
+.vnc-desktop{position:absolute;inset:0;display:flex;flex-direction:column;padding:20px}
+.vnc-taskbar{position:absolute;bottom:0;left:0;right:0;height:32px;background:rgba(20,18,40,0.95);border-top:1px solid rgba(123,100,169,0.15);display:flex;align-items:center;padding:0 10px;gap:6px}
+.vnc-task{padding:3px 10px;border-radius:4px;font-size:9px;font-weight:600;background:rgba(255,255,255,0.06);border:1px solid rgba(123,100,169,0.12);color:rgba(255,255,255,0.5)}
+.vnc-task.active{background:rgba(82,49,137,0.3);border-color:var(--li);color:#fff}
+.vnc-win{position:absolute;border-radius:6px;background:rgba(22,20,42,0.95);border:1px solid rgba(123,100,169,0.2);overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,0.4)}
+.vnc-win-bar{height:22px;background:rgba(30,28,55,0.95);border-bottom:1px solid rgba(123,100,169,0.12);display:flex;align-items:center;padding:0 8px;gap:4px}
+.vnc-win-dot{width:7px;height:7px;border-radius:50%}
+.vnc-win-title{font-size:8px;font-weight:600;color:rgba(255,255,255,0.4);margin-left:6px}
+.vnc-win-body{padding:8px;font-size:8px;color:rgba(255,255,255,0.5);line-height:1.5}
+.vnc-cursor{position:absolute;width:12px;height:12px;pointer-events:none;z-index:10;animation:vnc-cursor-move 6s ease-in-out infinite}
+@keyframes vnc-cursor-move{0%{top:35%;left:30%}25%{top:45%;left:55%}50%{top:30%;left:65%}75%{top:55%;left:40%}100%{top:35%;left:30%}}
+
+/* Toast */
+.toast{position:absolute;left:50%;transform:translateX(-50%);background:rgba(22,20,45,0.95);border:1px solid rgba(123,100,169,0.2);border-radius:10px;padding:10px 22px;z-index:300;font-size:12px;font-weight:600;color:#fff;box-shadow:0 8px 30px rgba(0,0,0,0.5);white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .3s}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+
+  <!-- ═══ LICENSE LOCKOUT SCREEN ═══ -->
+  <div class="lockout" id="lockout">
+    <div class="lock-icon"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#ff4444" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+    <div class="lock-title">Licenza scaduta</div>
+    <div class="lock-desc">Il launcher ha funzionato offline per pi\u00F9 di 48 ore. Connetti il dispositivo a internet per rinnovare automaticamente la licenza e riprendere le operazioni.</div>
+    <button class="lock-btn" onclick="tryReconnect()">Riprova connessione</button>
+    <div style="font-size:11px;color:rgba(255,255,255,0.25);margin-top:4px">Ultimo rinnovo: <span id="lockLastRenew">14 mar 2026, 09:32</span></div>
+  </div>
+
+  <!-- ═══ HEADER ═══ -->
+  <div class="hdr">
+    <div class="hdr-left">
+      <svg width="52" height="32" viewBox="0 0 56 34" fill="none">
+        <path d="M5 7L1.5 7L1.5 3.5L5 3.5Z" fill="#E6007E"/><path d="M7 3.5L19 18L24 13L14 3.5Z" fill="white"/><path d="M23 3.5L35 18L40 13L30 3.5Z" fill="#523189"/><path d="M43 3.5L46.5 3.5L46.5 7L43 7Z" fill="#E6007E"/>
+        <text x="0" y="30" font-family="Outfit,sans-serif" font-weight="800" font-size="9.5" letter-spacing="0.18em" fill="white">VIRTUAL ZONE</text>
+      </svg>
+      <div class="gettoni" onclick="openTokens()">
+        <div class="gettoni-icon">G</div>
+        <div class="gettoni-info"><span class="gettoni-label">Gettoni</span><span class="gettoni-val" id="tokenDisplay">1.247</span></div>
+        <div class="gettoni-plus">+</div>
+      </div>
+    </div>
+    <div class="hdr-right">
+      <div class="live-pill" id="livePill"><div class="live-dot"></div>LIVE</div>
+      <!-- License pill -->
+      <div class="lic-pill ok" id="licPill"><div class="lic-dot" style="background:#44ff88;width:5px;height:5px;border-radius:50%"></div><span id="licText">Online</span></div>
+      <button class="hdr-btn" onclick="openQR()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>QR</button>
+      <span class="clock" id="clock">00:00</span>
+      <button class="hdr-btn icon-only" onclick="openSettings()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></button>
+    </div>
+  </div>
+
+  <!-- ═══ FILTERS ═══ -->
+  <div class="filters" id="fbar"></div>
+
+  <!-- ═══ GRID ═══ -->
+  <div class="grid-wrap" id="gw">
+    <div class="grid" id="grid"></div>
+    <div class="empty" id="empty"><div style="font-size:40px;margin-bottom:10px;opacity:.5">&#9671;</div><div style="font-size:15px;font-weight:600">Nessun gioco trovato</div></div>
+  </div>
+
+  <!-- ═══ SESSION BAR ═══ -->
+  <div class="ses" id="sesBar">
+    <div class="ses-l"><div class="ses-dot"></div><div><div class="ses-lbl">Sessione attiva</div><div class="ses-nm" id="sesNm"></div></div></div>
+    <div class="ses-r">
+      <div class="ses-stat"><div class="ses-stat-lbl">Giocatori</div><div class="ses-stat-val" id="sesPl"></div></div>
+      <div class="ses-stat"><div class="ses-stat-lbl">Tempo rimasto</div><div class="ses-timer" id="sesTm">00:00</div></div>
+      <div class="ses-prog"><div class="ses-prog-fill" id="sesPg"></div></div>
+      <button class="btn-stop" onclick="stopSes()"><svg width="12" height="12" viewBox="0 0 24 24" fill="#ff4444"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>Termina</button>
+    </div>
+  </div>
+
+  <!-- ═══ LAUNCH MODAL ═══ -->
+  <div class="ov" id="launchOv" onclick="if(event.target===this)closeLaunch()">
+    <div class="box" style="width:440px;padding:30px 36px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px">
+        <div><div class="lm-plat" id="lmP"></div><div class="lm-title" id="lmT"></div><div class="lm-desc" id="lmD"></div></div>
+        <button class="btn-x" onclick="closeLaunch()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+      </div>
+      <div id="lmScanned" style="margin-bottom:14px"></div>
+      <div class="sec-lbl">Giocatori</div>
+      <div style="display:flex;gap:6px;margin-bottom:16px" id="lmPls"></div>
+      <div style="display:flex;gap:12px">
+        <div class="lm-stat"><div class="lm-stat-lbl">Durata</div><div class="lm-stat-v" id="lmDur"></div></div>
+        <div class="lm-stat"><div class="lm-stat-lbl">Categoria</div><div class="lm-stat-v sm" id="lmCat"></div></div>
+        <div class="lm-stat"><div class="lm-stat-lbl">Costo</div><div class="lm-stat-v" id="lmCost"></div></div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:22px">
+        <button class="btn-cancel" onclick="closeLaunch()">Annulla</button>
+        <button class="btn-launch" onclick="confirmLaunch()">Avvia sessione</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ TOKEN MODAL ═══ -->
+  <div class="ov" id="tokenOv" onclick="if(event.target===this)closeTokens()">
+    <div class="box" style="width:700px;padding:32px 38px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <div style="font-size:24px;font-weight:800">Acquista gettoni</div>
+        <button class="btn-x" onclick="closeTokens()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+      </div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.38);margin-bottom:16px">Scegli il pacchetto e il metodo di pagamento</div>
+      <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(230,0,126,0.08);border:1px solid rgba(230,0,126,0.25);border-radius:30px;padding:6px 16px;margin-bottom:20px">
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--mg);box-shadow:0 0 6px var(--mg)"></div>
+        <span style="font-size:12px;font-weight:600">Saldo attuale: <strong id="tkBal">1.247 gettoni</strong></span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">
+        <div class="pkg" id="pk1" onclick="selPkg(1)"><div class="pkg-tokens">500</div><div class="pkg-sub">1–500 gettoni</div><hr class="pkg-hr"><div><span class="pkg-price">&euro;575</span><span class="pkg-unit">&euro;1,15/cad</span></div><div class="pkg-save base">Prezzo base</div></div>
+        <div class="pkg" id="pk2" onclick="selPkg(2)"><div class="pkg-tokens">1.500</div><div class="pkg-sub">501–1.500</div><hr class="pkg-hr"><div><span class="pkg-price">&euro;1.575</span><span class="pkg-unit">&euro;1,05/cad</span></div><div class="pkg-save green">-9% rispetto base</div></div>
+        <div class="pkg feat" id="pk3" onclick="selPkg(3)"><div class="pkg-badge">Consigliato</div><div class="pkg-tokens">3.000</div><div class="pkg-sub">1.501–3.000</div><hr class="pkg-hr"><div><span class="pkg-price">&euro;2.850</span><span class="pkg-unit">&euro;0,95/cad</span></div><div class="pkg-save blue">-17% rispetto base</div></div>
+        <div class="pkg" id="pk4" onclick="selPkg(4)"><div class="pkg-tokens">3.001+</div><div class="pkg-sub">Tariffa max</div><hr class="pkg-hr"><div><span class="pkg-price">&euro;0,85</span><span class="pkg-unit">al gettone</span></div><div class="pkg-save pink">-26% rispetto base</div></div>
+      </div>
+      <div class="sec-lbl">Metodo di pagamento</div>
+      <div class="tab-sw"><button class="on" onclick="setPayTab(0,this)">Bonifico bancario</button><button onclick="setPayTab(1,this)">Carta / SEPA (Stripe)</button></div>
+      <div id="payTab0">
+        <div class="iban-box">
+          <div style="font-size:12px;font-weight:700;color:#fff;margin-bottom:10px">Dati per bonifico — zero commissioni</div>
+          <div class="iban-row"><span class="iban-label">Intestatario</span><span class="iban-value">Virtual Zone Italia S.r.l.</span></div>
+          <div class="iban-row"><span class="iban-label">IBAN</span><span class="iban-value">IT76 X012 3456 7890 1234 5678 901</span><button class="iban-copy" onclick="copyIban()">Copia</button></div>
+          <div class="iban-row"><span class="iban-label">BIC/SWIFT</span><span class="iban-value">ABCDITMMXXX</span></div>
+          <div class="iban-row"><span class="iban-label">Causale</span><span class="iban-value" id="ibanRef">VZ-GETT-BWL001-20260316</span></div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:10px">I gettoni verranno accreditati alla conferma del bonifico (1-2 giorni lavorativi)</div>
+        </div>
+      </div>
+      <div id="payTab1" style="display:none">
+        <div style="padding:20px;border-radius:12px;background:rgba(82,49,137,0.06);border:1px solid rgba(123,100,169,0.12);text-align:center">
+          <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:6px">Pagamento sicuro con Stripe</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:16px">Carta di credito/debito o addebito SEPA</div>
+          <button id="stripeBtn" disabled style="padding:12px 36px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--mg),var(--vi));color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;opacity:.5">Seleziona un pacchetto</button>
+          <div style="font-size:9px;color:rgba(255,255,255,0.25);margin-top:10px">Commissioni: 1,5% + 0,25&euro; (carte EU) / 0,35&euro; (SEPA)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ QR MODAL ═══ -->
+  <div class="ov" id="qrOv" onclick="if(event.target===this)closeQR()">
+    <div class="box" style="width:420px;padding:30px 36px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+        <div><div style="font-size:20px;font-weight:800">Scansiona giocatore</div><div style="font-size:12px;color:rgba(255,255,255,0.38);margin-top:2px">Punta la fotocamera verso il QR code</div></div>
+        <button class="btn-x" onclick="closeQR()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+      </div>
+      <div style="display:flex;justify-content:center;margin-bottom:16px">
+        <div class="qr-viewport"><div class="qr-corners"></div><div class="qr-line"></div><div class="qr-text">Fotocamera attiva...</div></div>
+      </div>
+      <div class="sec-lbl">Giocatori scansionati</div>
+      <div id="qrPlayers">
+        <div class="player-scanned"><div class="player-avatar">M</div><div><div style="font-size:13px;font-weight:700">Marco R.</div><div style="font-size:10px;color:rgba(255,255,255,0.4)">Livello 12 — 840 punti</div></div></div>
+        <div class="player-scanned"><div class="player-avatar">L</div><div><div style="font-size:13px;font-weight:700">Laura B.</div><div style="font-size:10px;color:rgba(255,255,255,0.4)">Livello 8 — 520 punti</div></div></div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:18px">
+        <button class="btn-cancel" onclick="closeQR()">Chiudi</button>
+        <button class="btn-launch" onclick="closeQR();toast('2 giocatori registrati')">Conferma giocatori</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SETTINGS MODAL ═══ -->
+  <div class="ov" id="setOv" onclick="if(event.target===this)closeSettings()">
+    <div class="box" style="width:500px;padding:28px 34px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:22px">
+        <div style="font-size:20px;font-weight:800">Impostazioni</div>
+        <button class="btn-x" onclick="closeSettings()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+      </div>
+      <div class="sec-lbl">Sede</div>
+      <div class="set-row"><div style="display:flex;align-items:center;gap:10px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span style="font-weight:600;font-size:13px">Bowling Space Latina</span></div><span style="font-size:10px;color:rgba(255,255,255,0.3)">ID: BWL-001</span></div>
+      <div class="sec-lbl" style="margin-top:16px">Licenza</div>
+      <div class="set-row"><span style="font-size:11px;color:rgba(255,255,255,0.5)">Stato</span><span style="font-size:10px;color:#44ff88;font-weight:600" id="setLicStatus">Attiva — online</span></div>
+      <div class="set-row"><span style="font-size:11px;color:rgba(255,255,255,0.5)">Ultimo rinnovo</span><span style="font-size:10px;color:rgba(255,255,255,0.35)" id="setLicRenew">16 mar 2026, 10:15</span></div>
+      <div class="set-row"><span style="font-size:11px;color:rgba(255,255,255,0.5)">Offline rimasto</span><span style="font-size:10px;color:rgba(255,255,255,0.35)" id="setLicOff">48h disponibili</span></div>
+      <div class="sec-lbl" style="margin-top:16px">Sistema</div>
+      <div class="set-row"><span style="font-size:11px;color:rgba(255,255,255,0.5)">API locale</span><div style="display:flex;align-items:center;gap:5px"><div class="set-dot" style="background:#44ff88;box-shadow:0 0 4px #44ff88;width:6px;height:6px"></div><span style="font-size:10px;color:rgba(255,255,255,0.3)">localhost:8000</span></div></div>
+      <div class="set-row"><span style="font-size:11px;color:rgba(255,255,255,0.5)">Automation Engine</span><div style="display:flex;align-items:center;gap:5px"><div class="set-dot" style="background:#44ff88;box-shadow:0 0 4px #44ff88;width:6px;height:6px"></div><span style="font-size:10px;color:rgba(255,255,255,0.3)">Idle</span></div></div>
+      <div class="set-row"><span style="font-size:11px;color:rgba(255,255,255,0.5)">Backend cloud</span><div style="display:flex;align-items:center;gap:5px"><div class="set-dot" style="background:#44ff88;box-shadow:0 0 4px #44ff88;width:6px;height:6px" id="setCloudDot"></div><span style="font-size:10px;color:rgba(255,255,255,0.3)" id="setCloudTxt">Connesso</span></div></div>
+      <div class="sec-lbl" style="margin-top:16px">Azioni</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="hdr-btn" style="font-size:11px" onclick="toast('Aggiornamento in corso...')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>Aggiorna giochi</button>
+        <button class="hdr-btn" style="font-size:11px" onclick="toast('Report esportato')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Report sessioni</button>
+        <button class="hdr-btn" style="font-size:11px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>Tutorial</button>
+        <button class="hdr-btn" style="font-size:11px;color:rgba(255,100,100,0.6)" onclick="toast('Riavvio piattaforme...')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18.36 6.64A9 9 0 1 1 5.64 5.64"/><line x1="12" y1="2" x2="12" y2="12"/></svg>Riavvia</button>
+        <button class="hdr-btn" style="font-size:11px;color:rgba(100,200,255,0.7);border-color:rgba(100,200,255,0.2)" onclick="closeSettings();openVNC()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>Schermo PC (VNC)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ VNC VIEWER MODAL ═══ -->
+  <div class="ov" id="vncOv" onclick="if(event.target===this)closeVNC()">
+    <div class="box" style="width:880px;padding:24px 30px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(100,200,255,0.8)" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          <div>
+            <div style="font-size:18px;font-weight:800">Schermo PC remoto</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.3)">VNC Viewer — 192.168.1.100:5900</div>
+          </div>
+        </div>
+        <button class="btn-x" onclick="closeVNC()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+      </div>
+      <!-- VNC viewport -->
+      <div class="vnc-frame" id="vncFrame">
+        <div class="vnc-scanline"></div>
+        <!-- Simulated Windows desktop -->
+        <div class="vnc-desktop">
+          <!-- Desktop icons -->
+          <div style="display:flex;gap:24px;padding:8px">
+            <div style="text-align:center"><div style="width:32px;height:32px;border-radius:6px;background:rgba(255,68,68,0.2);border:1px solid rgba(255,68,68,0.3);margin:0 auto 4px;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ff4444" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div><div style="font-size:7px;color:rgba(255,255,255,0.5)">Hero Zone</div></div>
+            <div style="text-align:center"><div style="width:32px;height:32px;border-radius:6px;background:rgba(0,200,255,0.15);border:1px solid rgba(0,200,255,0.25);margin:0 auto 4px;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00c8ff" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></div><div style="font-size:7px;color:rgba(255,255,255,0.5)">VEX Play</div></div>
+            <div style="text-align:center"><div style="width:32px;height:32px;border-radius:6px;background:rgba(68,255,136,0.12);border:1px solid rgba(68,255,136,0.25);margin:0 auto 4px;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#44ff88" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div style="font-size:7px;color:rgba(255,255,255,0.5)">Spawnpoint</div></div>
+          </div>
+          <!-- Simulated open windows -->
+          <div class="vnc-win" style="top:20%;left:15%;width:55%;height:52%">
+            <div class="vnc-win-bar">
+              <div class="vnc-win-dot" style="background:#ff4444"></div>
+              <div class="vnc-win-dot" style="background:#ffaa00"></div>
+              <div class="vnc-win-dot" style="background:#44ff88"></div>
+              <span class="vnc-win-title">Hero Zone — Control Panel</span>
+            </div>
+            <div class="vnc-win-body" style="display:flex;gap:8px;flex-wrap:wrap;padding:10px">
+              <div style="width:45%;aspect-ratio:16/10;border-radius:4px;background:linear-gradient(145deg,#1a0505,#3a0000);border:1px solid rgba(255,68,68,0.15)"></div>
+              <div style="width:45%;aspect-ratio:16/10;border-radius:4px;background:linear-gradient(145deg,#0a0a1a,#1a0828);border:1px solid rgba(82,49,137,0.15)"></div>
+              <div style="width:45%;aspect-ratio:16/10;border-radius:4px;background:linear-gradient(145deg,#0a2010,#1a4020);border:1px solid rgba(68,255,136,0.1)"></div>
+              <div style="width:45%;aspect-ratio:16/10;border-radius:4px;background:linear-gradient(145deg,#1a1505,#3a2a10);border:1px solid rgba(255,200,100,0.1)"></div>
+            </div>
+          </div>
+          <div class="vnc-win" style="top:30%;left:50%;width:40%;height:40%">
+            <div class="vnc-win-bar">
+              <div class="vnc-win-dot" style="background:#ff4444"></div>
+              <div class="vnc-win-dot" style="background:#ffaa00"></div>
+              <div class="vnc-win-dot" style="background:#44ff88"></div>
+              <span class="vnc-win-title">VZ Automation Engine — Running</span>
+            </div>
+            <div class="vnc-win-body" style="font-family:monospace;font-size:7px;color:rgba(68,255,136,0.6);line-height:1.8">
+              [10:15:32] Engine ready — listening on :8000<br>
+              [10:15:33] Platforms detected: 3/3 online<br>
+              [10:16:01] Session #482 started: Dead Ahead<br>
+              [10:31:01] Session #482 completed (15m 0s)<br>
+              [10:31:02] Tokens consumed: 6<br>
+              [10:31:03] Idle — waiting for commands...
+            </div>
+          </div>
+          <!-- Animated cursor -->
+          <div class="vnc-cursor">
+            <svg width="12" height="16" viewBox="0 0 12 16" fill="white" stroke="rgba(0,0,0,0.5)" stroke-width="0.5"><path d="M0 0L0 12L3.5 8.5L6.5 15L8 14.5L5 7.5L9.5 7.5Z"/></svg>
+          </div>
+          <!-- Taskbar -->
+          <div class="vnc-taskbar">
+            <div style="width:18px;height:18px;border-radius:3px;background:rgba(82,49,137,0.4);display:flex;align-items:center;justify-content:center"><svg width="10" height="10" viewBox="0 0 24 24" fill="rgba(255,255,255,0.5)"><rect x="1" y="1" width="10" height="10"/><rect x="13" y="1" width="10" height="10"/><rect x="1" y="13" width="10" height="10"/><rect x="13" y="13" width="10" height="10"/></svg></div>
+            <div class="vnc-task active">Hero Zone</div>
+            <div class="vnc-task">VEX Play</div>
+            <div class="vnc-task">Spawnpoint</div>
+            <div class="vnc-task active">VZ Engine</div>
+            <div style="margin-left:auto;font-size:8px;color:rgba(255,255,255,0.3);font-variant-numeric:tabular-nums">10:31 AM</div>
+          </div>
+        </div>
+      </div>
+      <!-- Toolbar -->
+      <div class="vnc-toolbar">
+        <div class="vnc-toolbar-left">
+          <div class="vnc-status"><div class="vnc-status-dot" style="background:#44ff88;box-shadow:0 0 4px #44ff88"></div><span style="color:#44ff88">Connesso</span></div>
+          <span class="vnc-info">1920x1080 @ 30fps — TightVNC</span>
+          <span class="vnc-info">Latenza: 2ms</span>
+        </div>
+        <div class="vnc-toolbar-right">
+          <button class="vnc-btn" onclick="toast('Screenshot salvato')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Screenshot</button>
+          <button class="vnc-btn" onclick="toast('Ctrl+Alt+Del inviato')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h.01M10 8h.01M14 8h4"/></svg>Ctrl+Alt+Del</button>
+          <button class="vnc-btn" onclick="toast('Schermo aggiornato')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>Refresh</button>
+          <button class="vnc-btn danger" onclick="closeVNC()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>Disconnetti</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toastEl"></div>
+</div>
+
+<script>
+const CATS=[
+  {id:"all",l:"Tutti"},
+  {id:"arcade_light",l:"Arcade Light"},
+  {id:"arcade_full",l:"Arcade Full"},
+  {id:"avventura",l:"Avventura"},
+  {id:"lasergame",l:"Laser Game"},
+  {id:"escape",l:"Escape Room"}
+];
+const CAT_LABELS={arcade_light:"Arcade Light",arcade_full:"Arcade Full",avventura:"Avventura",lasergame:"Laser Game",escape:"Escape Room"};
+const BC={NEW:"#E6007E",HOT:"#ff4400",TOP:"#523189"};
+
+const G=[
+  {id:1,n:"Dead Ahead",c:"arcade_full",pl:"1–4",d:15,t:6,bg:"linear-gradient(145deg,#1a0505,#5a0000 50%,#2a0000)",b:"HOT",desc:"Zombie wave shooter"},
+  {id:2,n:"Terminator Uprising",c:"arcade_full",pl:"1–4",d:15,t:6,bg:"linear-gradient(145deg,#0a0a1a,#2a1040 50%,#1a0828)",b:"NEW",desc:"Sci-fi action shooter"},
+  {id:3,n:"Monkey Madness",c:"arcade_light",pl:"1–4",d:10,t:4,bg:"linear-gradient(145deg,#0a2010,#1a4020 50%,#0a2010)",b:"NEW",desc:"Jungle adventure"},
+  {id:4,n:"Arrowsong",c:"avventura",pl:"1–4",d:20,t:7,bg:"linear-gradient(145deg,#1a1505,#3a2a10 50%,#1a1505)",desc:"Fantasy bow combat"},
+  {id:5,n:"Cyber Shock",c:"arcade_full",pl:"1–4",d:15,t:6,bg:"linear-gradient(145deg,#050520,#1a0540 50%,#0d0830)",desc:"Neon cyberpunk arena"},
+  {id:6,n:"Quantum Arena",c:"lasergame",pl:"2–6",d:20,t:8,bg:"linear-gradient(145deg,#000520,#002060 50%,#001040)",desc:"PvP laser combat"},
+  {id:7,n:"Wizard Academy",c:"avventura",pl:"1–4",d:20,t:7,bg:"linear-gradient(145deg,#150a20,#2a1050 50%,#150a20)",desc:"Magic school quest"},
+  {id:8,n:"Plush Rush",c:"arcade_light",pl:"1–4",d:10,t:4,bg:"linear-gradient(145deg,#201020,#402040 50%,#201020)",desc:"Cute adventure"},
+  {id:9,n:"Cops vs Robbers",c:"lasergame",pl:"2–6",d:20,t:8,bg:"linear-gradient(145deg,#0a1020,#1a3050 50%,#0a1020)",desc:"Bank heist PvP"},
+  {id:10,n:"Cook'd Up",c:"arcade_light",pl:"1–4",d:10,t:4,bg:"linear-gradient(145deg,#1a1000,#3a2800 50%,#1a1000)",desc:"Cooking frenzy"},
+  {id:11,n:"RE:COIL",c:"lasergame",pl:"2–6",d:15,t:7,bg:"linear-gradient(145deg,#001020,#003050 50%,#001020)",b:"TOP",desc:"Competitive VR shooter"},
+  {id:12,n:"B Block Breakout",c:"escape",pl:"2–4",d:30,t:10,bg:"linear-gradient(145deg,#0a0520,#1a1040 50%,#0a0520)",desc:"Prison escape puzzle"},
+  {id:13,n:"Death Squad",c:"arcade_full",pl:"2–6",d:15,t:7,bg:"linear-gradient(145deg,#100505,#3a0a0a 50%,#100505)",desc:"Zombie horde survival"},
+  {id:14,n:"Temple Quest",c:"avventura",pl:"2–6",d:30,t:10,bg:"linear-gradient(145deg,#0a1505,#1a3010 50%,#0a1505)",desc:"Temple exploration"},
+  {id:15,n:"Rush Z",c:"arcade_full",pl:"2–6",d:15,t:7,bg:"linear-gradient(145deg,#1a0808,#4a1010 50%,#1a0808)",desc:"Fast-paced action"},
+  {id:16,n:"Arctic Olympics",c:"arcade_light",pl:"2–6",d:10,t:4,bg:"linear-gradient(145deg,#051520,#0a3050 50%,#051520)",desc:"Ice competition"},
+  {id:17,n:"Mission Z",c:"avventura",pl:"2–4",d:30,t:10,bg:"linear-gradient(145deg,#0a0a10,#1a2040 50%,#0a0a10)",desc:"Stealth mission"},
+  {id:18,n:"Insanity",c:"escape",pl:"2–6",d:45,t:12,bg:"linear-gradient(145deg,#100510,#300a30 50%,#100510)",b:"NEW",desc:"4D horror escape"},
+];
+
+let cat="all",ses=null,sesTick=0,sesInt=null,lTarget=null,selPl=2,tokens=1247,selPkg_=null;
+
+/* ── LICENSE SYSTEM ── */
+let licLastRenew=Date.now();
+let isOnline=true;
+const LIC_MAX_OFFLINE_MS=48*60*60*1000; // 48h
+
+function checkLicense(){
+  const elapsed=Date.now()-licLastRenew;
+  const remaining=LIC_MAX_OFFLINE_MS-elapsed;
+  const hours=Math.max(0,Math.floor(remaining/3600000));
+  const pill=document.getElementById('licPill');
+  const dot=pill.querySelector('.lic-dot');
+  const txt=document.getElementById('licText');
+
+  if(isOnline){
+    licLastRenew=Date.now();
+    pill.className='lic-pill ok';
+    dot.style.background='#44ff88';
+    txt.textContent='Online';
+    document.getElementById('lockout').classList.remove('show');
+    document.getElementById('setLicStatus').textContent='Attiva — online';
+    document.getElementById('setLicStatus').style.color='#44ff88';
+    document.getElementById('setLicOff').textContent='48h disponibili';
+  } else if(remaining>12*3600000){
+    pill.className='lic-pill warn';
+    dot.style.background='#ffaa00';
+    txt.textContent='Offline — '+hours+'h rimaste';
+    document.getElementById('setLicStatus').textContent='Offline — licenza valida';
+    document.getElementById('setLicStatus').style.color='#ffaa00';
+    document.getElementById('setLicOff').textContent=hours+'h rimanenti';
+  } else if(remaining>0){
+    pill.className='lic-pill danger';
+    dot.style.background='#ff4444';
+    txt.textContent='Offline — '+hours+'h rimaste!';
+    document.getElementById('setLicStatus').textContent='Offline — licenza in scadenza!';
+    document.getElementById('setLicStatus').style.color='#ff4444';
+    document.getElementById('setLicOff').textContent=hours+'h rimanenti!';
+  } else {
+    document.getElementById('lockout').classList.add('show');
+  }
+}
+function tryReconnect(){
+  isOnline=true;licLastRenew=Date.now();checkLicense();toast('Connessione ristabilita — licenza rinnovata');
+}
+// Simulate: toggle online/offline with "O" key (for demo)
+document.addEventListener('keydown',e=>{
+  if(e.key==='o'||e.key==='O'){isOnline=!isOnline;toast(isOnline?'Simulazione: ONLINE':'Simulazione: OFFLINE');checkLicense()}
+  // Simulate time jump with "T" key
+  if(e.key==='t'||e.key==='T'){licLastRenew-=24*3600000;toast('Simulazione: +24h offline');checkLicense()}
+});
+setInterval(checkLicense,10000);
+checkLicense();
+
+/* ── CLOCK ── */
+function uc(){const d=new Date();document.getElementById('clock').textContent=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
+uc();setInterval(uc,1000);
+
+/* ── TOAST ── */
+function toast(m){const t=document.getElementById('toastEl');t.textContent=m;t.style.bottom=ses?'72px':'20px';t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
+
+/* ── FILTERS ── */
+function renderFilters(){
+  let h='';
+  CATS.forEach(c=>{h+=`<button class="fbtn ${c.id===cat?'on':''}" onclick="setCat('${c.id}')">${c.l}</button>`});
+  h+='<span class="gcount" id="gc"></span>';
+  document.getElementById('fbar').innerHTML=h;
+}
+function setCat(id){cat=id;renderFilters();render()}
+
+/* ── GRID ── */
+function getList(){return G.filter(g=>(cat==='all'||g.c===cat))}
+function render(){
+  const list=getList();
+  const grid=document.getElementById('grid'),emp=document.getElementById('empty'),wrap=document.getElementById('gw'),gc=document.getElementById('gc');
+  const BAR=ses?56:0;const GH=1080-56-44-BAR-20;
+  wrap.style.height=GH+'px';
+  const GAP=14,ROWS=2,RH=(GH-GAP)/ROWS,CW=Math.floor(RH*0.72);
+  const COLS=Math.floor((1920-64+GAP)/(CW+GAP));
+  grid.style.gridTemplateColumns=`repeat(${COLS},${CW}px)`;
+  grid.style.gridAutoRows=RH+'px';
+  grid.style.gap=GAP+'px';
+  if(gc)gc.textContent=list.length+' giochi';
+  if(!list.length){grid.style.display='none';emp.classList.add('show');return}
+  grid.style.display='grid';emp.classList.remove('show');
+  grid.innerHTML=list.slice(0,COLS*ROWS).map((g,i)=>`
+    <div class="card" style="background:${g.bg};animation:fadeUp .35s ease ${i*30}ms both" onclick="openLaunch(${g.id})">
+      ${g.t?`<div class="c-cost"><div class="c-cost-dot"></div>${g.t} gett.</div>`:''}
+      ${g.b?`<div class="c-badge" style="background:${BC[g.b]}">${g.b}</div>`:''}
+      <div class="c-hov"></div>
+      <div class="c-play"><svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div>
+      <div class="c-info">
+        <div class="c-cat">${CAT_LABELS[g.c]||g.c}</div>
+        <div class="c-title">${g.n}</div>
+        <div class="c-meta">
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>${g.pl}</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>${g.d}m</span>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+/* ── LAUNCH ── */
+function openLaunch(id){
+  const g=G.find(x=>x.id===id);if(!g)return;lTarget=g;
+  const mn=parseInt(g.pl.split('\u2013')[0])||1,mx=parseInt(g.pl.split('\u2013')[1])||mn;selPl=mn;
+  document.getElementById('lmP').textContent=CAT_LABELS[g.c]||g.c;document.getElementById('lmP').style.color='var(--li)';
+  document.getElementById('lmT').textContent=g.n;document.getElementById('lmD').textContent=g.desc;
+  document.getElementById('lmDur').textContent=g.d+' min';
+  document.getElementById('lmCat').textContent=CAT_LABELS[g.c]||g.c;document.getElementById('lmCat').style.color='var(--li)';
+  document.getElementById('lmCost').textContent=(g.t||0)+' gett.';
+  let btns='';for(let n=mn;n<=mx;n++)btns+=`<button class="pl-btn ${n===selPl?'on':''}" onclick="pickPl(${n})">${n}</button>`;
+  document.getElementById('lmPls').innerHTML=btns;
+  document.getElementById('lmScanned').innerHTML='';
+  document.getElementById('launchOv').classList.add('open');
+}
+function pickPl(n){selPl=n;document.querySelectorAll('.pl-btn').forEach(b=>b.classList.toggle('on',+b.textContent===n))}
+function closeLaunch(){document.getElementById('launchOv').classList.remove('open');lTarget=null}
+function confirmLaunch(){
+  if(!lTarget)return;
+  if(lTarget.t&&tokens<lTarget.t){toast('Gettoni insufficienti!');closeLaunch();setTimeout(openTokens,500);return}
+  if(lTarget.t){tokens-=lTarget.t;updTokens()}
+  startSes(lTarget,selPl);closeLaunch();
+}
+
+/* ── SESSION ── */
+function startSes(g,pl){
+  ses={g,pl};sesTick=0;
+  document.getElementById('sesNm').innerHTML=g.n+` <span style="color:var(--li);font-size:10px;font-weight:600">\u00B7 ${CAT_LABELS[g.c]}</span>`;
+  document.getElementById('sesPl').textContent=pl;
+  document.getElementById('sesBar').classList.add('show');
+  document.getElementById('livePill').classList.add('show');
+  updTimer();sesInt=setInterval(()=>{sesTick++;updTimer()},1000);
+  render();toast('\u25B6 Avvio "'+g.n+'"...');
+}
+function updTimer(){
+  if(!ses)return;const rem=Math.max(0,ses.g.d*60-sesTick),m=Math.floor(rem/60),s=rem%60,pct=(rem/(ses.g.d*60))*100;
+  const el=document.getElementById('sesTm');el.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  el.style.color=rem<120?'#ff4444':'#fff';document.getElementById('sesPg').style.width=pct+'%';
+}
+function stopSes(){
+  if(!ses)return;toast('\u25A0 Sessione "'+ses.g.n+'" terminata');
+  clearInterval(sesInt);ses=null;sesTick=0;
+  document.getElementById('sesBar').classList.remove('show');document.getElementById('livePill').classList.remove('show');render();
+}
+
+/* ── TOKENS ── */
+function updTokens(){document.getElementById('tokenDisplay').textContent=tokens.toLocaleString('it-IT');document.getElementById('tkBal').textContent=tokens.toLocaleString('it-IT')+' gettoni'}
+function openTokens(){updTokens();document.getElementById('tokenOv').classList.add('open')}
+function closeTokens(){document.getElementById('tokenOv').classList.remove('open');selPkg_=null;document.querySelectorAll('.pkg').forEach(p=>p.classList.remove('sel'));document.getElementById('stripeBtn').disabled=true;document.getElementById('stripeBtn').style.opacity='.5';document.getElementById('stripeBtn').textContent='Seleziona un pacchetto'}
+const pkgs={1:{t:500,p:'\u20AC575'},2:{t:1500,p:'\u20AC1.575'},3:{t:3000,p:'\u20AC2.850'},4:{t:3500,p:'\u20AC0,85/cad'}};
+function selPkg(n){selPkg_=n;document.querySelectorAll('.pkg').forEach(p=>p.classList.remove('sel'));document.getElementById('pk'+n).classList.add('sel');const sb=document.getElementById('stripeBtn');sb.disabled=false;sb.style.opacity='1';sb.textContent='Paga '+pkgs[n].p+' con Stripe'}
+function setPayTab(i,el){document.querySelectorAll('.tab-sw button').forEach(b=>b.classList.remove('on'));el.classList.add('on');document.getElementById('payTab0').style.display=i===0?'block':'none';document.getElementById('payTab1').style.display=i===1?'block':'none'}
+function copyIban(){navigator.clipboard?.writeText('IT76X0123456789012345678901');toast('IBAN copiato!')}
+
+/* ── QR / SETTINGS ── */
+function openQR(){document.getElementById('qrOv').classList.add('open')}
+function closeQR(){document.getElementById('qrOv').classList.remove('open')}
+function openSettings(){document.getElementById('setOv').classList.add('open')}
+function closeSettings(){document.getElementById('setOv').classList.remove('open')}
+function openVNC(){document.getElementById('vncOv').classList.add('open');toast('Connessione VNC a 192.168.1.100:5900...')}
+function closeVNC(){document.getElementById('vncOv').classList.remove('open')}
+
+renderFilters();render();
+</script>
+</body>
+</html>
