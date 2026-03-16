@@ -1,8 +1,8 @@
 import { Router } from 'express'
-import { supabase } from '../lib/supabase.js'
-import { createSessionSchema, listSessionsSchema } from '../schemas/sessions.js'
-import { createError } from '../middleware/errorHandler.js'
-import { requireAuth } from '../middleware/auth.js'
+import { supabase } from '../lib/supabase'
+import { createSessionSchema, listSessionsSchema } from '../schemas/sessions'
+import { createError } from '../middleware/errorHandler'
+import { requireAuth } from '../middleware/auth'
 import type { Request, Response, NextFunction } from 'express'
 
 const router = Router()

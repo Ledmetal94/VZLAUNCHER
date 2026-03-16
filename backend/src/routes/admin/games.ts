@@ -1,8 +1,8 @@
 import { Router } from 'express'
-import { supabase } from '../../lib/supabase.js'
-import { requireAuth, requireAdmin } from '../../middleware/auth.js'
-import { createError } from '../../middleware/errorHandler.js'
-import { createGameSchema, updateGameSchema } from '../../schemas/games.js'
+import { supabase } from '../../lib/supabase'
+import { requireAuth, requireAdmin } from '../../middleware/auth'
+import { createError } from '../../middleware/errorHandler'
+import { createGameSchema, updateGameSchema } from '../../schemas/games'
 import type { Request, Response, NextFunction } from 'express'
 
 const router = Router()

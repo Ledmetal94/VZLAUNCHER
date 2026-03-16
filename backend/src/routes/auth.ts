@@ -2,17 +2,21 @@ import { Router } from 'express'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
-import { supabase } from '../lib/supabase.js'
-import { loginSchema } from '../schemas/auth.js'
-import { createError } from '../middleware/errorHandler.js'
-import { rateLimit } from '../middleware/rateLimit.js'
-import { requireAuth } from '../middleware/auth.js'
+import { supabase } from '../lib/supabase'
+import { loginSchema } from '../schemas/auth'
+import { createError } from '../middleware/errorHandler'
+import { rateLimit } from '../middleware/rateLimit'
+import { requireAuth } from '../middleware/auth'
 import type { Request, Response, NextFunction } from 'express'
 
 const router = Router()
 
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me'
-const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'dev-refresh-secret'
+const JWT_SECRET = process.env.JWT_SECRET
+const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET
+
+if (!JWT_SECRET || !JWT_REFRESH_SECRET) {
+  throw new Error('Missing JWT_SECRET or JWT_REFRESH_SECRET environment variables')
+}
 const ACCESS_TOKEN_EXPIRY = '1h'
 const REFRESH_TOKEN_DAYS = 7
 
@@ -90,8 +94,8 @@ router.post(
       // Set refresh token as httpOnly cookie
       res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        secure: true,
+        sameSite: 'none',
         maxAge: REFRESH_TOKEN_DAYS * 24 * 60 * 60 * 1000,
         path: '/api/v1/auth',
       })
@@ -175,8 +179,8 @@ router.post(
 
       res.cookie('refreshToken', newRefreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        secure: true,
+        sameSite: 'none',
         maxAge: REFRESH_TOKEN_DAYS * 24 * 60 * 60 * 1000,
         path: '/api/v1/auth',
       })

@@ -1,7 +1,7 @@
 import { Router } from 'express'
-import { supabase } from '../lib/supabase.js'
-import { requireAuth } from '../middleware/auth.js'
-import { createError } from '../middleware/errorHandler.js'
+import { supabase } from '../lib/supabase'
+import { requireAuth } from '../middleware/auth'
+import { createError } from '../middleware/errorHandler'
 import type { Request, Response, NextFunction } from 'express'
 
 const router = Router()

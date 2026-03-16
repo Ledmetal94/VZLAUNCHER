@@ -1,9 +1,9 @@
 import { Router } from 'express'
 import bcrypt from 'bcryptjs'
-import { supabase } from '../lib/supabase.js'
-import { createOperatorSchema, updateOperatorSchema } from '../schemas/operators.js'
-import { createError } from '../middleware/errorHandler.js'
-import { requireAuth, requireAdmin } from '../middleware/auth.js'
+import { supabase } from '../lib/supabase'
+import { createOperatorSchema, updateOperatorSchema } from '../schemas/operators'
+import { createError } from '../middleware/errorHandler'
+import { requireAuth, requireAdmin } from '../middleware/auth'
 import type { Request, Response, NextFunction } from 'express'
 
 const router = Router()

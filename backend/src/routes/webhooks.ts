@@ -1,21 +1,48 @@
 import { Router } from 'express'
-import { supabase } from '../lib/supabase.js'
-import { logger } from '../lib/logger.js'
+import crypto from 'crypto'
+import { supabase } from '../lib/supabase'
+import { logger } from '../lib/logger'
 import type { Request, Response } from 'express'
 
 const router = Router()
 
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || ''
 
-// POST /api/webhooks/stripe
-// Must receive raw body for signature verification
-router.post('/api/webhooks/stripe', async (req: Request, res: Response) => {
-  // In production, verify Stripe signature here:
-  // const sig = req.headers['stripe-signature']
-  // const event = stripe.webhooks.constructEvent(req.body, sig, STRIPE_WEBHOOK_SECRET)
+function verifyStripeSignature(payload: string, signature: string, secret: string): boolean {
+  if (!secret) return false
+  const parts = signature.split(',').reduce((acc: Record<string, string>, part) => {
+    const [key, value] = part.split('=')
+    acc[key] = value
+    return acc
+  }, {})
+  const timestamp = parts['t']
+  const sig = parts['v1']
+  if (!timestamp || !sig) return false
+  const signedPayload = `${timestamp}.${payload}`
+  const expected = crypto.createHmac('sha256', secret).update(signedPayload).digest('hex')
+  return crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))
+}
 
+// POST /api/webhooks/stripe
+router.post('/api/webhooks/stripe', async (req: Request, res: Response) => {
   try {
-    const event = req.body
+    // Verify Stripe signature in production
+    if (STRIPE_WEBHOOK_SECRET) {
+      const signature = req.headers['stripe-signature'] as string
+      if (!signature) {
+        logger.warn('Webhook missing stripe-signature header')
+        return res.status(401).json({ error: 'Missing signature' })
+      }
+      const rawBody = typeof req.body === 'string' ? req.body : JSON.stringify(req.body)
+      if (!verifyStripeSignature(rawBody, signature, STRIPE_WEBHOOK_SECRET)) {
+        logger.warn('Webhook signature verification failed')
+        return res.status(401).json({ error: 'Invalid signature' })
+      }
+    } else {
+      logger.warn('STRIPE_WEBHOOK_SECRET not set — skipping signature verification')
+    }
+
+    const event = typeof req.body === 'string' ? JSON.parse(req.body) : req.body
 
     if (event.type === 'checkout.session.completed') {
       const session = event.data?.object
