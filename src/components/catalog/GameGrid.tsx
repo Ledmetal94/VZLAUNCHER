@@ -7,10 +7,23 @@ interface GameGridProps {
 }
 
 export default function GameGrid({ games, onGameClick }: GameGridProps) {
+  // Dynamic columns: 5 for ≤12 games, 6 for >12
+  const cols = games.length <= 12 ? Math.min(games.length, 5) : 6
+
   return (
-    <div className="flex-1 min-h-0 px-6 pb-4">
-      <div className="grid h-full grid-cols-6 grid-rows-2 gap-3">
-        {games.slice(0, 12).map((game) => (
+    <div className="relative z-5 flex-1 min-h-0 overflow-hidden" style={{ padding: '10px 32px' }}>
+      <div
+        className="h-full"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: `repeat(${cols}, 1fr)`,
+          gridAutoRows: '1fr',
+          gap: 14,
+          justifyContent: 'center',
+          overflow: 'hidden',
+        }}
+      >
+        {games.map((game) => (
           <GameCard key={game.id} game={game} onClick={onGameClick} />
         ))}
       </div>

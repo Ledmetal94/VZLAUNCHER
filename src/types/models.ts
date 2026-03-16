@@ -22,6 +22,7 @@ export interface Game {
   thumbnailUrl: string
   badge: Badge | null
   enabled: boolean
+  bg: string
 }
 
 export interface Operator {

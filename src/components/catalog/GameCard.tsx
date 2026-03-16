@@ -1,26 +1,17 @@
-import { cn } from '@/lib/utils'
 import type { Game } from '@/types/models'
 
-const GRADIENT_COLORS: Record<string, string> = {
-  arcade_light: 'from-blue-600/40 to-blue-900/60',
-  arcade_full: 'from-red-600/40 to-red-900/60',
-  avventura: 'from-emerald-600/40 to-emerald-900/60',
-  lasergame: 'from-violet-600/40 to-violet-900/60',
-  escape: 'from-amber-600/40 to-amber-900/60',
-}
-
 const BADGE_COLORS: Record<string, string> = {
-  NEW: 'bg-success text-white',
-  HOT: 'bg-orange-500 text-white',
-  TOP: 'bg-primary text-white',
+  NEW: '#E6007E',
+  HOT: '#ff4400',
+  TOP: '#523189',
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
-  arcade_light: 'Arcade Light',
-  arcade_full: 'Arcade Full',
-  avventura: 'Avventura',
-  lasergame: 'Laser Game',
-  escape: 'Escape Room',
+  arcade_light: 'ARCADE LIGHT',
+  arcade_full: 'ARCADE FULL',
+  avventura: 'AVVENTURA',
+  lasergame: 'LASER GAME',
+  escape: 'ESCAPE ROOM',
 }
 
 interface GameCardProps {
@@ -29,54 +20,140 @@ interface GameCardProps {
 }
 
 export default function GameCard({ game, onClick }: GameCardProps) {
-  const gradient = GRADIENT_COLORS[game.category] || 'from-gray-600/40 to-gray-900/60'
-
   return (
     <button
       onClick={() => onClick(game)}
-      className={cn(
-        'group relative flex w-full h-full flex-col overflow-hidden rounded-xl',
-        'bg-gradient-to-br',
-        gradient,
-        'border border-white/5 transition-all hover:border-primary/40 hover:shadow-lg hover:shadow-primary/10',
-      )}
+      className="group relative flex w-full h-full flex-col overflow-hidden"
+      style={{
+        background: game.bg,
+        borderRadius: 14,
+        border: '1px solid rgba(123,100,169,0.18)',
+        transition: 'all .22s cubic-bezier(0.4,0,0.2,1)',
+      }}
+      onMouseEnter={(e) => {
+        const el = e.currentTarget
+        el.style.transform = 'scale(1.03)'
+        el.style.boxShadow = '0 18px 45px rgba(0,0,0,0.5),0 0 0 1px rgba(230,0,126,0.4)'
+        el.style.borderColor = 'rgba(230,0,126,0.5)'
+      }}
+      onMouseLeave={(e) => {
+        const el = e.currentTarget
+        el.style.transform = 'scale(1)'
+        el.style.boxShadow = 'none'
+        el.style.borderColor = 'rgba(123,100,169,0.18)'
+      }}
     >
       {/* Badge */}
       {game.badge && (
         <span
-          className={cn(
-            'absolute left-2 top-2 z-10 rounded-md px-2 py-0.5 text-[10px] font-bold uppercase',
-            BADGE_COLORS[game.badge],
-          )}
+          className="absolute left-2 top-2 z-10 text-white"
+          style={{
+            background: BADGE_COLORS[game.badge],
+            fontSize: 8,
+            fontWeight: 800,
+            letterSpacing: '.1em',
+            padding: '2px 8px',
+            borderRadius: 4,
+            textTransform: 'uppercase',
+          }}
         >
           {game.badge}
         </span>
       )}
 
       {/* Token cost */}
-      <span className="absolute right-2 top-2 z-10 flex items-center gap-1 rounded-md bg-black/40 px-2 py-0.5 text-[10px] text-white">
-        <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+      <span
+        className="absolute right-2 top-2 z-10 flex items-center gap-1 text-white"
+        style={{
+          background: 'rgba(10,8,30,0.8)',
+          border: '1px solid rgba(123,100,169,0.3)',
+          borderRadius: 16,
+          padding: '2px 9px',
+          fontSize: 10,
+          fontWeight: 700,
+        }}
+      >
+        <span
+          className="rounded-full"
+          style={{
+            width: 6,
+            height: 6,
+            background: '#E6007E',
+          }}
+        />
         {game.tokenCost} gett.
       </span>
 
-      {/* Spacer (where cover image would go) */}
+      {/* Spacer */}
       <div className="flex-1" />
 
       {/* Bottom info overlay */}
-      <div className="relative z-10 bg-gradient-to-t from-black/80 via-black/50 to-transparent p-3 pt-8">
-        <span className="text-[10px] font-medium text-lilla">
+      <div
+        className="relative z-10"
+        style={{
+          background: 'linear-gradient(to top,rgba(10,8,30,0.97) 0%,rgba(10,8,30,0.65) 50%,transparent 100%)',
+          padding: '38px 12px 12px',
+        }}
+      >
+        <span
+          style={{
+            fontSize: 8,
+            fontWeight: 700,
+            letterSpacing: '.14em',
+            textTransform: 'uppercase',
+            color: '#7B64A9',
+          }}
+        >
           {CATEGORY_LABELS[game.category]}
         </span>
-        <h3 className="text-sm font-bold text-white leading-tight">{game.name}</h3>
-        <div className="mt-1 flex items-center gap-3 text-[10px] text-muted">
-          <span>{game.minPlayers}–{game.maxPlayers} players</span>
-          <span>{game.durationMinutes} min</span>
+        <h3
+          className="text-white"
+          style={{
+            fontSize: 14,
+            fontWeight: 800,
+            lineHeight: 1.15,
+          }}
+        >
+          {game.name}
+        </h3>
+        <div
+          className="mt-1 flex items-center gap-3"
+          style={{
+            fontSize: 9,
+            color: 'rgba(255,255,255,0.32)',
+            fontWeight: 500,
+          }}
+        >
+          <span className="flex items-center gap-1">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+            {game.minPlayers}-{game.maxPlayers} pl
+          </span>
+          <span className="flex items-center gap-1">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+            {game.durationMinutes} min
+          </span>
         </div>
       </div>
 
-      {/* Hover overlay */}
-      <div className="absolute inset-0 z-20 flex items-center justify-center bg-primary/0 transition-all group-hover:bg-primary/20">
-        <div className="flex h-12 w-12 scale-0 items-center justify-center rounded-full bg-primary shadow-lg transition-transform group-hover:scale-100">
+      {/* Hover overlay with play button */}
+      <div
+        className="absolute inset-0 z-20 flex items-start justify-center opacity-0 transition-opacity group-hover:opacity-100"
+        style={{
+          background: 'linear-gradient(to top,rgba(230,0,126,0.3) 0%,transparent 50%)',
+        }}
+      >
+        <div
+          className="flex h-12 w-12 scale-0 items-center justify-center rounded-full bg-[#E6007E] shadow-lg transition-transform group-hover:scale-100"
+          style={{ marginTop: '36%' }}
+        >
           <svg
             className="h-5 w-5 text-white"
             fill="currentColor"

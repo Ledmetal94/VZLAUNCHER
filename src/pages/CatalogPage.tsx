@@ -67,27 +67,35 @@ export default function CatalogPage() {
   }, [endSession])
 
   return (
-    <div className="flex h-screen flex-col bg-surface">
-      <Header />
-      <CategoryFilters
-        selected={selectedCategory}
-        onSelect={setSelectedCategory}
-        gameCount={filteredGames.length}
-      />
-      <GameGrid games={filteredGames} onGameClick={setSelectedGame} />
+    <div className="noise-overlay relative flex h-screen flex-col overflow-hidden" style={{ background: 'var(--color-surface)' }}>
+      {/* Ambient blobs */}
+      <div className="blob" style={{ width: 800, height: 800, filter: 'blur(160px)', background: 'rgba(82,49,137,0.18)', top: -300, left: -300 }} />
+      <div className="blob" style={{ width: 600, height: 600, filter: 'blur(150px)', background: 'rgba(230,0,126,0.08)', bottom: -250, right: -200 }} />
+      <div className="blob" style={{ width: 450, height: 450, filter: 'blur(130px)', background: 'rgba(82,49,137,0.08)', top: '30%', left: '50%' }} />
 
-      {activeSession && (
-        <SessionBar onEnd={handleEnd} ending={ending} />
-      )}
-
-      {selectedGame && !activeSession && (
-        <LaunchModal
-          game={selectedGame}
-          onLaunch={handleLaunch}
-          onClose={() => setSelectedGame(null)}
-          launching={launching}
+      {/* All content above blobs */}
+      <div className="relative z-10 flex flex-1 flex-col min-h-0">
+        <Header />
+        <CategoryFilters
+          selected={selectedCategory}
+          onSelect={setSelectedCategory}
+          gameCount={filteredGames.length}
         />
-      )}
+        <GameGrid games={filteredGames} onGameClick={setSelectedGame} />
+
+        {activeSession && (
+          <SessionBar onEnd={handleEnd} ending={ending} />
+        )}
+
+        {selectedGame && !activeSession && (
+          <LaunchModal
+            game={selectedGame}
+            onLaunch={handleLaunch}
+            onClose={() => setSelectedGame(null)}
+            launching={launching}
+          />
+        )}
+      </div>
     </div>
   )
 }
