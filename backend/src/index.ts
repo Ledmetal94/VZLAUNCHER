@@ -1,8 +1,10 @@
 import express from 'express'
 import cors from 'cors'
+import cookieParser from 'cookie-parser'
 import { logger } from './lib/logger.js'
 import { errorHandler } from './middleware/errorHandler.js'
 import healthRouter from './routes/health.js'
+import authRouter from './routes/auth.js'
 
 const app = express()
 const PORT = parseInt(process.env.PORT || '3002', 10)
@@ -14,9 +16,11 @@ app.use(cors({
 }))
 
 app.use(express.json({ limit: '1mb' }))
+app.use(cookieParser())
 
 // Routes
 app.use(healthRouter)
+app.use(authRouter)
 
 // Error handler (must be last)
 app.use(errorHandler)
