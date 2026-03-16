@@ -67,7 +67,7 @@ export default function CatalogPage() {
   }, [endSession])
 
   return (
-    <div className="noise-overlay relative flex h-screen flex-col overflow-hidden" style={{ background: 'var(--color-surface)' }}>
+    <div className="noise-overlay relative flex flex-col overflow-hidden" style={{ width: 1920, height: 1080, background: 'var(--color-surface)' }}>
       {/* Ambient blobs */}
       <div className="blob" style={{ width: 800, height: 800, filter: 'blur(160px)', background: 'rgba(82,49,137,0.18)', top: -300, left: -300 }} />
       <div className="blob" style={{ width: 600, height: 600, filter: 'blur(150px)', background: 'rgba(230,0,126,0.08)', bottom: -250, right: -200 }} />

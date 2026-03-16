@@ -38,28 +38,28 @@
 }
 
 html,
-body,
-#root {
+body {
   height: 100%;
   width: 100%;
   overflow: hidden;
-  background-color: var(--color-surface);
+  background: #000;
   color: white;
   font-family: var(--font-sans);
+  display: flex;
+  justify-content: center;
 }
 
-::-webkit-scrollbar {
-  width: 6px;
+#root {
+  width: 1920px;
+  height: 1080px;
+  overflow: hidden;
+  background-color: var(--color-surface);
+  position: relative;
+  flex-shrink: 0;
 }
 
-::-webkit-scrollbar-track {
-  background: transparent;
-}
+::-webkit-scrollbar { display: none; }
 
-::-webkit-scrollbar-thumb {
-  background: var(--color-muted-foreground);
-  border-radius: 3px;
-}
 
 .glass {
   background: rgba(13, 12, 26, 0.6);
