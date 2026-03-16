@@ -1,0 +1,71 @@
+[
+  {
+    "id": "hz-dead-ahead",
+    "name": "Dead Ahead",
+    "platform": "herozone",
+    "category": "arcade_full",
+    "minPlayers": 1,
+    "maxPlayers": 6,
+    "durationMinutes": 15,
+    "tokenCost": 2,
+    "description": "Zombie shooter — survive the horde",
+    "badge": "HOT",
+    "exePath": "C:\\HeroZone\\HeroZone.exe",
+    "steps": [
+      { "action": "launch", "target": "herozone" },
+      { "action": "wait", "seconds": 3 },
+      { "action": "click", "x": 960, "y": 540, "label": "start_button" }
+    ]
+  },
+  {
+    "id": "hz-singularity",
+    "name": "Singularity",
+    "platform": "herozone",
+    "category": "avventura",
+    "minPlayers": 1,
+    "maxPlayers": 6,
+    "durationMinutes": 25,
+    "tokenCost": 3,
+    "description": "Sci-fi adventure through space anomalies",
+    "badge": "NEW",
+    "exePath": "C:\\HeroZone\\HeroZone.exe",
+    "steps": [
+      { "action": "launch", "target": "herozone" },
+      { "action": "wait", "seconds": 3 }
+    ]
+  },
+  {
+    "id": "vex-mission-sigma",
+    "name": "Mission Sigma",
+    "platform": "vex",
+    "category": "arcade_full",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "durationMinutes": 15,
+    "tokenCost": 2,
+    "description": "Tactical co-op FPS mission",
+    "badge": null,
+    "exePath": "C:\\VEXPlay\\VEXPlay.exe",
+    "steps": [
+      { "action": "launch", "target": "vex" },
+      { "action": "wait", "seconds": 5 }
+    ]
+  },
+  {
+    "id": "vex-arena-clash",
+    "name": "Arena Clash",
+    "platform": "vex",
+    "category": "lasergame",
+    "minPlayers": 2,
+    "maxPlayers": 6,
+    "durationMinutes": 15,
+    "tokenCost": 2,
+    "description": "PvP laser tag arena battle",
+    "badge": "TOP",
+    "exePath": "C:\\VEXPlay\\VEXPlay.exe",
+    "steps": [
+      { "action": "launch", "target": "vex" },
+      { "action": "wait", "seconds": 5 }
+    ]
+  }
+]
