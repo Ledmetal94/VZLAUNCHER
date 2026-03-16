@@ -4,10 +4,11 @@ import CategoryFilters from '@/components/catalog/CategoryFilters'
 import GameGrid from '@/components/catalog/GameGrid'
 import LaunchModal from '@/components/catalog/LaunchModal'
 import SessionBar from '@/components/catalog/SessionBar'
-import { SAMPLE_GAMES } from '@/data/games'
+import SettingsModal from '@/components/catalog/SettingsModal'
 import { checkBridgeHealth, launchGame, stopSession } from '@/services/bridgeApi'
 import { useSessionStore } from '@/store/sessionStore'
 import { useConnectionStore } from '@/store/connectionStore'
+import { useGameStore } from '@/store/gameStore'
 import type { Category, Game } from '@/types/models'
 
 export default function CatalogPage() {
@@ -15,11 +16,20 @@ export default function CatalogPage() {
   const [selectedGame, setSelectedGame] = useState<Game | null>(null)
   const [launching, setLaunching] = useState(false)
   const [ending, setEnding] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   const activeSession = useSessionStore((s) => s.activeSession)
   const startSession = useSessionStore((s) => s.startSession)
   const endSession = useSessionStore((s) => s.endSession)
   const setBridgeStatus = useConnectionStore((s) => s.setBridgeStatus)
+
+  const games = useGameStore((s) => s.games)
+  const fetchGames = useGameStore((s) => s.fetchGames)
+
+  // Fetch games from API on mount
+  useEffect(() => {
+    fetchGames()
+  }, [fetchGames])
 
   // Poll bridge health
   useEffect(() => {
@@ -34,9 +44,9 @@ export default function CatalogPage() {
   }, [setBridgeStatus])
 
   const filteredGames = useMemo(() => {
-    if (selectedCategory === 'all') return SAMPLE_GAMES
-    return SAMPLE_GAMES.filter((g) => g.category === selectedCategory)
-  }, [selectedCategory])
+    if (selectedCategory === 'all') return games
+    return games.filter((g) => g.category === selectedCategory)
+  }, [selectedCategory, games])
 
   const handleLaunch = useCallback(async (players: number) => {
     if (!selectedGame) return
@@ -75,7 +85,7 @@ export default function CatalogPage() {
 
       {/* All content above blobs */}
       <div className="relative z-10 flex flex-1 flex-col min-h-0">
-        <Header />
+        <Header onSettingsClick={() => setSettingsOpen(true)} />
         <CategoryFilters
           selected={selectedCategory}
           onSelect={setSelectedCategory}
@@ -85,6 +95,10 @@ export default function CatalogPage() {
 
         {activeSession && (
           <SessionBar onEnd={handleEnd} ending={ending} />
+        )}
+
+        {settingsOpen && (
+          <SettingsModal onClose={() => setSettingsOpen(false)} />
         )}
 
         {selectedGame && !activeSession && (

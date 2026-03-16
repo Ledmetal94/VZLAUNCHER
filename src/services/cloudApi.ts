@@ -92,3 +92,85 @@ export async function logout(): Promise<void> {
     _accessToken = null
   }
 }
+
+// ─── Sessions ────────────────────────────────────────────────
+
+export interface SyncSessionPayload {
+  gameId: string
+  platform: string
+  category: string
+  playersCount: number
+  durationPlanned: number
+  durationActual: number
+  tokensConsumed: number
+  status: 'completed' | 'error' | 'cancelled'
+  errorLog?: string
+  startedAt: string
+  endedAt: string
+}
+
+export interface CloudSession {
+  id: string
+  venueId: string
+  gameId: string
+  operatorId: string
+  platform: string
+  category: string
+  playersCount: number
+  durationPlanned: number
+  durationActual: number
+  tokensConsumed: number
+  status: string
+  errorLog: string | null
+  startedAt: string
+  endedAt: string
+}
+
+export interface SessionListResponse {
+  data: CloudSession[]
+  total: number
+  page: number
+  pageSize: number
+}
+
+export async function syncSession(
+  session: SyncSessionPayload,
+): Promise<CloudSession> {
+  return request<CloudSession>('/sessions', {
+    method: 'POST',
+    body: JSON.stringify(session),
+  })
+}
+
+export async function getSessionHistory(
+  page = 1,
+  pageSize = 20,
+): Promise<SessionListResponse> {
+  return request<SessionListResponse>(
+    `/sessions?page=${page}&pageSize=${pageSize}`,
+  )
+}
+
+// ─── Games ────────────────────────────────────────────────
+
+export interface CloudGame {
+  id: string
+  name: string
+  platform: string
+  category: string
+  min_players: number
+  max_players: number
+  duration_minutes: number
+  token_cost: number
+  description: string
+  thumbnail_url: string
+  badge: string | null
+  enabled: boolean
+  bg: string
+  created_at: string
+}
+
+export async function getGames(): Promise<CloudGame[]> {
+  const data = await request<{ games: CloudGame[] }>('/games')
+  return data.games
+}

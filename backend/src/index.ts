@@ -5,6 +5,10 @@ import { logger } from './lib/logger.js'
 import { errorHandler } from './middleware/errorHandler.js'
 import healthRouter from './routes/health.js'
 import authRouter from './routes/auth.js'
+import sessionsRouter from './routes/sessions.js'
+import operatorsRouter from './routes/operators.js'
+import gamesRouter from './routes/games.js'
+import adminGamesRouter from './routes/admin/games.js'
 
 const app = express()
 const PORT = parseInt(process.env.PORT || '3002', 10)
@@ -21,6 +25,10 @@ app.use(cookieParser())
 // Routes
 app.use(healthRouter)
 app.use(authRouter)
+app.use(sessionsRouter)
+app.use(operatorsRouter)
+app.use(gamesRouter)
+app.use(adminGamesRouter)
 
 // Error handler (must be last)
 app.use(errorHandler)

@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
-import { useAuthStore } from '@/store/authStore'
 
-export default function Header() {
+interface HeaderProps {
+  onSettingsClick?: () => void
+}
+
+export default function Header({ onSettingsClick }: HeaderProps) {
   const [time, setTime] = useState(new Date())
-  const logout = useAuthStore((s) => s.logout)
 
   useEffect(() => {
     const interval = setInterval(() => setTime(new Date()), 1000)
@@ -204,7 +206,7 @@ export default function Header() {
 
         {/* Settings gear button */}
         <button
-          onClick={logout}
+          onClick={onSettingsClick}
           style={{
             width: 36,
             height: 36,
