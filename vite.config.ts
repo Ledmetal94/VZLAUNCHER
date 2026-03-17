@@ -11,16 +11,20 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       workbox: {
-        // Cache-first for static assets
+        skipWaiting: true,
+        clientsClaim: true,
+        // Clean old caches on activate
+        cleanupOutdatedCaches: true,
         runtimeCaching: [
           {
+            // StaleWhileRevalidate for assets — serves cached but fetches update in background
             urlPattern: /\.(?:js|css|woff2?|svg|png|jpg|jpeg|webp|ico)$/i,
-            handler: 'CacheFirst',
+            handler: 'StaleWhileRevalidate',
             options: {
               cacheName: 'static-assets',
               expiration: {
                 maxEntries: 100,
-                maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
+                maxAgeSeconds: 7 * 24 * 60 * 60, // 7 days
               },
             },
           },
