@@ -51,7 +51,6 @@ export default function App() {
   }, [])
   return (
     <Suspense fallback={<div className="flex h-screen items-center justify-center" style={{ background: 'var(--color-surface)' }}><span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 14 }}>Caricamento...</span></div>}>
-    <PageTransition>
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/super-admin/login" element={<SuperAdminLoginPage />} />
@@ -133,7 +132,6 @@ export default function App() {
       />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
-    </PageTransition>
     </Suspense>
   )
 }
