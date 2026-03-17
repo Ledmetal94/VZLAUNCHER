@@ -6,7 +6,7 @@ import HistoryPage from '@/pages/HistoryPage'
 import RequireAuth from '@/components/auth/RequireAuth'
 import RequireAdmin from '@/components/auth/RequireAdmin'
 import RequireSuperAdmin from '@/components/auth/RequireSuperAdmin'
-import PageTransition from '@/components/PageTransition'
+
 
 // Lazy-load admin-only pages
 const CheckoutReturnPage = lazy(() => import('@/pages/CheckoutReturnPage'))
