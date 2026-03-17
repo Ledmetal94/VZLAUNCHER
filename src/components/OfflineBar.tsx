@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useConnectionStore } from '@/store/connectionStore'
 
 export default function OfflineBar() {
@@ -10,31 +10,27 @@ export default function OfflineBar() {
 
   const [showCloud, setShowCloud] = useState(false)
   const [showBridge, setShowBridge] = useState(false)
-  const [dismissed, setDismissed] = useState<Set<string>>(new Set())
+  const dismissedRef = useRef<Set<string>>(new Set())
 
   // Debounce cloud offline (500ms)
   useEffect(() => {
-    if (cloudOffline && !dismissed.has('cloud')) {
+    if (cloudOffline && !dismissedRef.current.has('cloud')) {
       const timer = setTimeout(() => setShowCloud(true), 500)
       return () => clearTimeout(timer)
     }
     setShowCloud(false)
     if (!cloudOffline) {
-      setDismissed((prev) => {
-        const next = new Set(prev)
-        next.delete('cloud')
-        return next
-      })
+      dismissedRef.current.delete('cloud')
     }
-  }, [cloudOffline, dismissed])
+  }, [cloudOffline])
 
   // Debounce bridge offline (500ms), then auto-dismiss after 5s
   useEffect(() => {
-    if (bridgeOffline && !dismissed.has('bridge')) {
+    if (bridgeOffline && !dismissedRef.current.has('bridge')) {
       const showTimer = setTimeout(() => setShowBridge(true), 500)
       const hideTimer = setTimeout(() => {
         setShowBridge(false)
-        setDismissed((prev) => new Set(prev).add('bridge'))
+        dismissedRef.current.add('bridge')
       }, 5500)
       return () => {
         clearTimeout(showTimer)
@@ -43,16 +39,12 @@ export default function OfflineBar() {
     }
     setShowBridge(false)
     if (!bridgeOffline) {
-      setDismissed((prev) => {
-        const next = new Set(prev)
-        next.delete('bridge')
-        return next
-      })
+      dismissedRef.current.delete('bridge')
     }
-  }, [bridgeOffline, dismissed])
+  }, [bridgeOffline])
 
   const dismiss = useCallback((key: string) => {
-    setDismissed((prev) => new Set(prev).add(key))
+    dismissedRef.current.add(key)
     if (key === 'cloud') setShowCloud(false)
     if (key === 'bridge') setShowBridge(false)
   }, [])

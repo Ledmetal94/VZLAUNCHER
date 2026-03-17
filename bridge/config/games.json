@@ -1,8 +1,13 @@
 [
   {
-    "id": "hz-dead-ahead",
+    "profile_version": 2,
+    "game_id": "hz-dead-ahead",
     "name": "Dead Ahead",
     "platform": "herozone",
+    "window_title": "Hero Zone",
+    "exePath": "C:\\HeroZone\\HeroZone.exe",
+    "exeArgs": [],
+    "processName": "HeroZone",
     "category": "arcade_full",
     "minPlayers": 1,
     "maxPlayers": 6,
@@ -10,17 +15,26 @@
     "tokenCost": 2,
     "description": "Zombie shooter — survive the horde",
     "badge": "HOT",
-    "exePath": "C:\\HeroZone\\HeroZone.exe",
-    "steps": [
-      { "action": "launch", "target": "herozone" },
-      { "action": "wait", "seconds": 3 },
-      { "action": "click", "x": 960, "y": 540, "label": "start_button" }
+    "pre_checks": [],
+    "launch_sequence": [
+      { "type": "launch", "label": "start_herozone" },
+      { "type": "wait", "seconds": 5, "label": "splash_screen" },
+      { "type": "focus_window", "title": "Hero Zone", "label": "focus_game" },
+      "launch"
+    ],
+    "stop_sequence": [
+      "stop"
     ]
   },
   {
-    "id": "hz-singularity",
+    "profile_version": 2,
+    "game_id": "hz-singularity",
     "name": "Singularity",
     "platform": "herozone",
+    "window_title": "Hero Zone",
+    "exePath": "C:\\HeroZone\\HeroZone.exe",
+    "exeArgs": [],
+    "processName": "HeroZone",
     "category": "avventura",
     "minPlayers": 1,
     "maxPlayers": 6,
@@ -28,44 +42,285 @@
     "tokenCost": 3,
     "description": "Sci-fi adventure through space anomalies",
     "badge": "NEW",
+    "pre_checks": [],
+    "launch_sequence": [
+      { "type": "launch", "label": "start_herozone" },
+      { "type": "wait", "seconds": 5, "label": "splash_screen" },
+      { "type": "focus_window", "title": "Hero Zone", "label": "focus_game" },
+      "launch"
+    ],
+    "stop_sequence": [
+      "stop"
+    ]
+  },
+  {
+    "profile_version": 2,
+    "game_id": "hz-arrowsong",
+    "name": "ArrowSong",
+    "platform": "herozone",
+    "window_title": "Hero Zone",
     "exePath": "C:\\HeroZone\\HeroZone.exe",
-    "steps": [
-      { "action": "launch", "target": "herozone" },
-      { "action": "wait", "seconds": 3 }
-    ]
-  },
-  {
-    "id": "vex-mission-sigma",
-    "name": "Mission Sigma",
-    "platform": "vex",
-    "category": "arcade_full",
-    "minPlayers": 2,
-    "maxPlayers": 4,
-    "durationMinutes": 15,
+    "exeArgs": [],
+    "processName": "HeroZone",
+    "category": "avventura",
+    "minPlayers": 1,
+    "maxPlayers": 6,
+    "durationMinutes": 20,
     "tokenCost": 2,
-    "description": "Tactical co-op FPS mission",
+    "description": "Fantasy archery adventure with elves and rangers",
     "badge": null,
-    "exePath": "C:\\VEXPlay\\VEXPlay.exe",
-    "steps": [
-      { "action": "launch", "target": "vex" },
-      { "action": "wait", "seconds": 5 }
+    "pre_checks": [],
+    "launch_sequence": [
+      { "type": "launch", "label": "start_herozone" },
+      { "type": "wait", "seconds": 5, "label": "splash_screen" },
+      { "type": "focus_window", "title": "Hero Zone", "label": "focus_game" },
+      "launch"
+    ],
+    "stop_sequence": [
+      "stop"
     ]
   },
   {
-    "id": "vex-arena-clash",
-    "name": "Arena Clash",
-    "platform": "vex",
-    "category": "lasergame",
+    "profile_version": 2,
+    "game_id": "hz-cookd-up",
+    "name": "Cook'd Up: Burger Beef",
+    "platform": "herozone",
+    "window_title": "Hero Zone",
+    "exePath": "C:\\HeroZone\\HeroZone.exe",
+    "exeArgs": [],
+    "processName": "HeroZone",
+    "category": "arcade_light",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "durationMinutes": 10,
+    "tokenCost": 1,
+    "description": "Frantic cooking competition — build the best burger",
+    "badge": null,
+    "pre_checks": [],
+    "launch_sequence": [
+      { "type": "launch", "label": "start_herozone" },
+      { "type": "wait", "seconds": 5, "label": "splash_screen" },
+      { "type": "focus_window", "title": "Hero Zone", "label": "focus_game" },
+      "launch"
+    ],
+    "stop_sequence": [
+      "stop"
+    ]
+  },
+  {
+    "profile_version": 2,
+    "game_id": "hz-cops-vs-robbers",
+    "name": "Cops vs Robbers",
+    "platform": "herozone",
+    "window_title": "Hero Zone",
+    "exePath": "C:\\HeroZone\\HeroZone.exe",
+    "exeArgs": [],
+    "processName": "HeroZone",
+    "category": "arcade_full",
     "minPlayers": 2,
     "maxPlayers": 6,
     "durationMinutes": 15,
     "tokenCost": 2,
-    "description": "PvP laser tag arena battle",
+    "description": "Team-based cops and robbers showdown",
+    "badge": null,
+    "pre_checks": [],
+    "launch_sequence": [
+      { "type": "launch", "label": "start_herozone" },
+      { "type": "wait", "seconds": 5, "label": "splash_screen" },
+      { "type": "focus_window", "title": "Hero Zone", "label": "focus_game" },
+      "launch"
+    ],
+    "stop_sequence": [
+      "stop"
+    ]
+  },
+  {
+    "profile_version": 2,
+    "game_id": "hz-cybershock",
+    "name": "CyberShock",
+    "platform": "herozone",
+    "window_title": "Hero Zone",
+    "exePath": "C:\\HeroZone\\HeroZone.exe",
+    "exeArgs": [],
+    "processName": "HeroZone",
+    "category": "arcade_full",
+    "minPlayers": 1,
+    "maxPlayers": 6,
+    "durationMinutes": 15,
+    "tokenCost": 2,
+    "description": "Retro-futuristic FPS in a neon cyber world",
+    "badge": "NEW",
+    "pre_checks": [],
+    "launch_sequence": [
+      { "type": "launch", "label": "start_herozone" },
+      { "type": "wait", "seconds": 5, "label": "splash_screen" },
+      { "type": "focus_window", "title": "Hero Zone", "label": "focus_game" },
+      "launch"
+    ],
+    "stop_sequence": [
+      "stop"
+    ]
+  },
+  {
+    "profile_version": 2,
+    "game_id": "hz-plush-rush",
+    "name": "Plush Rush",
+    "platform": "herozone",
+    "window_title": "Hero Zone",
+    "exePath": "C:\\HeroZone\\HeroZone.exe",
+    "exeArgs": [],
+    "processName": "HeroZone",
+    "category": "arcade_light",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "durationMinutes": 10,
+    "tokenCost": 1,
+    "description": "Colorful plush toy racing mayhem",
+    "badge": null,
+    "pre_checks": [],
+    "launch_sequence": [
+      { "type": "launch", "label": "start_herozone" },
+      { "type": "wait", "seconds": 5, "label": "splash_screen" },
+      { "type": "focus_window", "title": "Hero Zone", "label": "focus_game" },
+      "launch"
+    ],
+    "stop_sequence": [
+      "stop"
+    ]
+  },
+  {
+    "profile_version": 2,
+    "game_id": "hz-quantum-arena",
+    "name": "Quantum Arena",
+    "platform": "herozone",
+    "window_title": "Hero Zone",
+    "exePath": "C:\\HeroZone\\HeroZone.exe",
+    "exeArgs": [],
+    "processName": "HeroZone",
+    "category": "arcade_full",
+    "minPlayers": 2,
+    "maxPlayers": 6,
+    "durationMinutes": 15,
+    "tokenCost": 2,
+    "description": "Sci-fi arena combat with heavy weapons",
     "badge": "TOP",
-    "exePath": "C:\\VEXPlay\\VEXPlay.exe",
-    "steps": [
-      { "action": "launch", "target": "vex" },
-      { "action": "wait", "seconds": 5 }
+    "pre_checks": [],
+    "launch_sequence": [
+      { "type": "launch", "label": "start_herozone" },
+      { "type": "wait", "seconds": 5, "label": "splash_screen" },
+      { "type": "focus_window", "title": "Hero Zone", "label": "focus_game" },
+      "launch"
+    ],
+    "stop_sequence": [
+      "stop"
+    ]
+  },
+  {
+    "profile_version": 2,
+    "game_id": "hz-wayfinders",
+    "name": "Wayfinders: Escape From Aurora",
+    "platform": "herozone",
+    "window_title": "Hero Zone",
+    "exePath": "C:\\HeroZone\\HeroZone.exe",
+    "exeArgs": [],
+    "processName": "HeroZone",
+    "category": "avventura",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "durationMinutes": 25,
+    "tokenCost": 3,
+    "description": "Co-op space escape adventure on a dying station",
+    "badge": null,
+    "pre_checks": [],
+    "launch_sequence": [
+      { "type": "launch", "label": "start_herozone" },
+      { "type": "wait", "seconds": 5, "label": "splash_screen" },
+      { "type": "focus_window", "title": "Hero Zone", "label": "focus_game" },
+      "launch"
+    ],
+    "stop_sequence": [
+      "stop"
+    ]
+  },
+  {
+    "profile_version": 2,
+    "game_id": "hz-wizard-academy",
+    "name": "Wizard Academy",
+    "platform": "herozone",
+    "window_title": "Hero Zone",
+    "exePath": "C:\\HeroZone\\HeroZone.exe",
+    "exeArgs": [],
+    "processName": "HeroZone",
+    "category": "arcade_light",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "durationMinutes": 15,
+    "tokenCost": 2,
+    "description": "Cast spells and brew potions at a magical school",
+    "badge": null,
+    "pre_checks": [],
+    "launch_sequence": [
+      { "type": "launch", "label": "start_herozone" },
+      { "type": "wait", "seconds": 5, "label": "splash_screen" },
+      { "type": "focus_window", "title": "Hero Zone", "label": "focus_game" },
+      "launch"
+    ],
+    "stop_sequence": [
+      "stop"
+    ]
+  },
+  {
+    "profile_version": 2,
+    "game_id": "hz-monkey-madness",
+    "name": "Monkey Madness: Jungle Games",
+    "platform": "herozone",
+    "window_title": "Hero Zone",
+    "exePath": "C:\\HeroZone\\HeroZone.exe",
+    "exeArgs": [],
+    "processName": "HeroZone",
+    "category": "arcade_light",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "durationMinutes": 10,
+    "tokenCost": 1,
+    "description": "Party mini-games in a crazy jungle",
+    "badge": null,
+    "pre_checks": [],
+    "launch_sequence": [
+      { "type": "launch", "label": "start_herozone" },
+      { "type": "wait", "seconds": 5, "label": "splash_screen" },
+      { "type": "focus_window", "title": "Hero Zone", "label": "focus_game" },
+      "launch"
+    ],
+    "stop_sequence": [
+      "stop"
+    ]
+  },
+  {
+    "profile_version": 2,
+    "game_id": "hz-terminator-uprising",
+    "name": "Terminator Uprising",
+    "platform": "herozone",
+    "window_title": "Hero Zone",
+    "exePath": "C:\\HeroZone\\HeroZone.exe",
+    "exeArgs": [],
+    "processName": "HeroZone",
+    "category": "arcade_full",
+    "minPlayers": 1,
+    "maxPlayers": 6,
+    "durationMinutes": 20,
+    "tokenCost": 3,
+    "description": "Fight Skynet's machines in a post-apocalyptic warzone",
+    "badge": "HOT",
+    "pre_checks": [],
+    "launch_sequence": [
+      { "type": "launch", "label": "start_herozone" },
+      { "type": "wait", "seconds": 5, "label": "splash_screen" },
+      { "type": "focus_window", "title": "Hero Zone", "label": "focus_game" },
+      "launch"
+    ],
+    "stop_sequence": [
+      "stop"
     ]
   }
 ]

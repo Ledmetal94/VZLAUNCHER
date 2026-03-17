@@ -71,6 +71,7 @@ interface SessionState {
   startSession: (game: Game, players: number, sessionId: string) => void
   endSession: (status?: 'completed' | 'error' | 'cancelled', errorLog?: string) => Promise<void>
   tick: () => void
+  updateFromWs: (elapsedSeconds: number, remainingSeconds: number) => void
   retrySync: (id: string) => Promise<void>
   syncAllPending: () => Promise<number>
   fetchHistory: (page?: number, pageSize?: number) => Promise<{ data: CloudSession[]; total: number; page: number; pageSize: number }>
@@ -158,6 +159,17 @@ export const useSessionStore = create<SessionState>()(
           activeSession: {
             ...session,
             elapsed: Math.floor((Date.now() - session.startedAt) / 1000),
+          },
+        })
+      },
+
+      updateFromWs: (elapsedSeconds, remainingSeconds) => {
+        const session = get().activeSession
+        if (!session) return
+        set({
+          activeSession: {
+            ...session,
+            elapsed: elapsedSeconds,
           },
         })
       },

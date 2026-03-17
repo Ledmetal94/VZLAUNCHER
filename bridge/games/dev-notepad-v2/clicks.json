@@ -1,0 +1,18 @@
+{
+  "game_id": "dev-notepad-v2",
+  "game_name": "Test Notepad v2 (Python)",
+  "resolution": "1920x1080",
+  "actions": {
+    "setup": [
+      { "type": "click", "fallback_x": 400, "fallback_y": 300, "label": "click_editor_area" },
+      { "type": "type", "text": "Hello from VZLAUNCHER automation!", "label": "type_test_text" }
+    ],
+    "select_all": [
+      { "type": "hotkey", "keys": ["ctrl", "a"], "label": "select_all" }
+    ],
+    "close": [
+      { "type": "hotkey", "keys": ["alt", "F4"], "label": "close_notepad" },
+      { "type": "wait", "seconds": 1, "label": "wait_close" }
+    ]
+  }
+}

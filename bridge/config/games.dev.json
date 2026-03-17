@@ -1,0 +1,82 @@
+[
+  {
+    "profile_version": 1,
+    "game_id": "dev-notepad",
+    "name": "Test Notepad",
+    "platform": "herozone",
+    "window_title": "Notepad",
+    "exePath": "notepad.exe",
+    "exeArgs": [],
+    "processName": "notepad",
+    "category": "arcade_full",
+    "minPlayers": 1,
+    "maxPlayers": 6,
+    "durationMinutes": 5,
+    "tokenCost": 1,
+    "description": "Dev test — launches Notepad",
+    "badge": "DEV",
+    "screenshots_dir": "herozone/",
+    "pre_checks": [],
+    "launch_sequence": [
+      { "type": "launch", "label": "start_notepad" },
+      { "type": "wait", "seconds": 2, "label": "wait_open" },
+      { "type": "focus_window", "title": "Notepad", "label": "focus_notepad" }
+    ],
+    "stop_sequence": [
+      { "type": "wait", "seconds": 1 }
+    ]
+  },
+  {
+    "profile_version": 1,
+    "game_id": "dev-calc",
+    "name": "Test Calculator",
+    "platform": "vex",
+    "window_title": "Calculator",
+    "exePath": "calc.exe",
+    "exeArgs": [],
+    "processName": "CalculatorApp",
+    "category": "arcade_full",
+    "minPlayers": 1,
+    "maxPlayers": 2,
+    "durationMinutes": 5,
+    "tokenCost": 1,
+    "description": "Dev test — launches Calculator",
+    "badge": "DEV",
+    "screenshots_dir": "vex/",
+    "pre_checks": [],
+    "launch_sequence": [
+      { "type": "launch", "label": "start_calc" },
+      { "type": "wait", "seconds": 2, "label": "wait_open" }
+    ],
+    "stop_sequence": []
+  },
+  {
+    "profile_version": 2,
+    "game_id": "dev-notepad-v2",
+    "name": "Test Notepad v2 (Python)",
+    "platform": "herozone",
+    "window_title": "Notepad",
+    "exePath": "notepad.exe",
+    "exeArgs": [],
+    "processName": "notepad",
+    "category": "arcade_full",
+    "minPlayers": 1,
+    "maxPlayers": 6,
+    "durationMinutes": 5,
+    "tokenCost": 1,
+    "description": "Dev test — launches Notepad with action groups from clicks.json",
+    "badge": "DEV",
+    "screenshots_dir": "herozone/",
+    "pre_checks": [],
+    "launch_sequence": [
+      { "type": "launch", "label": "start_notepad" },
+      { "type": "wait", "seconds": 2, "label": "wait_open" },
+      { "type": "focus_window", "title": "Notepad", "label": "focus_notepad" },
+      "setup",
+      "select_all"
+    ],
+    "stop_sequence": [
+      "close"
+    ]
+  }
+]

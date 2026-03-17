@@ -84,6 +84,18 @@ export default function GameCard({ game, onClick }: GameCardProps) {
         {game.tokenCost} gett.
       </span>
 
+      {/* Poster image */}
+      {game.thumbnailUrl && (
+        <img
+          src={game.thumbnailUrl}
+          alt={game.name}
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ zIndex: 0 }}
+          loading="lazy"
+          onError={(e) => { e.currentTarget.style.display = 'none' }}
+        />
+      )}
+
       {/* Spacer */}
       <div className="flex-1" />
 

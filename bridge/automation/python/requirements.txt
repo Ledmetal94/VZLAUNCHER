@@ -1,0 +1,4 @@
+pyautogui
+opencv-python-headless
+pygetwindow
+Pillow

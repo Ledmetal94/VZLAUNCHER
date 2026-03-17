@@ -2,39 +2,117 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { toast } from 'sonner'
 
-interface PendingConsumption {
+// --- Transaction-based token ledger ---
+// Balance is NEVER stored as a raw number.
+// It is always derived from: initialBalance - sum(transactions).
+// This makes it auditable, tamper-detectable, and impossible to "add coins by mistake."
+
+interface TokenTransaction {
   id: string
-  amount: number
-  gameId: string
+  type: 'consume' | 'topup' | 'correction'
+  amount: number // always positive
+  gameId?: string
   sessionId?: string
   operatorId?: string
   timestamp: number
+  syncedToCloud: boolean
   retryCount: number
 }
 
 interface TokenState {
-  balance: number
-  pendingConsumptions: PendingConsumption[]
+  /** The last known loaded/topped-up balance (set by cloud or admin topup) */
+  initialBalance: number
+  /** Ordered transaction log — every deduction or topup is recorded */
+  transactions: TokenTransaction[]
   loading: boolean
   lastSyncedAt: number | null
+  /** Integrity checksum to detect localStorage tampering */
+  _checksum: string
+
+  // Computed
+  readonly balance: number
+
+  // Actions
+  setInitialBalance: (balance: number) => void
   setBalance: (balance: number) => void
   syncBalance: () => Promise<void>
   consumeLocal: (amount: number, gameId: string, sessionId?: string) => boolean
+  topup: (amount: number, reason?: string) => void
   reconcile: () => Promise<void>
+  getTransactionLog: () => TokenTransaction[]
+  verifyIntegrity: () => boolean
 }
 
 const CLOUD_URL = import.meta.env.VITE_CLOUD_URL || 'http://localhost:3002'
 const MAX_RETRIES = 5
+const CHECKSUM_SECRET = 'vz-token-integrity-2026'
+
+/** Compute balance from initial + transactions */
+function computeBalance(initial: number, transactions: TokenTransaction[]): number {
+  let balance = initial
+  for (const tx of transactions) {
+    if (tx.type === 'consume') {
+      balance -= tx.amount
+    } else if (tx.type === 'topup' || tx.type === 'correction') {
+      balance += tx.amount
+    }
+  }
+  return Math.max(0, balance)
+}
+
+/** Simple checksum to detect localStorage tampering */
+function computeChecksum(initial: number, transactions: TokenTransaction[]): string {
+  const data = `${CHECKSUM_SECRET}:${initial}:${transactions.map(t => `${t.id}:${t.type}:${t.amount}:${t.timestamp}`).join(',')}`
+  // Simple hash — not cryptographically secure but catches casual tampering
+  let hash = 0
+  for (let i = 0; i < data.length; i++) {
+    const char = data.charCodeAt(i)
+    hash = ((hash << 5) - hash) + char
+    hash |= 0
+  }
+  return `vz1:${hash.toString(36)}`
+}
+
+function getOperatorId(): string | undefined {
+  try {
+    const authStore = JSON.parse(localStorage.getItem('vz-auth') || '{}')
+    return authStore?.state?.userId
+  } catch { return undefined }
+}
+
+/** Helper: set state and recompute balance */
+function setWithBalance(set: Function, get: Function, partial: Record<string, unknown>) {
+  set((state: TokenState) => {
+    const merged = { ...state, ...partial }
+    const initial = merged.initialBalance ?? state.initialBalance
+    const txs = merged.transactions ?? state.transactions
+    return { ...partial, balance: computeBalance(initial, txs) }
+  })
+}
 
 export const useTokenStore = create<TokenState>()(
   persist(
     (set, get) => ({
-      balance: 0,
-      pendingConsumptions: [],
+      initialBalance: 500,
+      transactions: [],
+      balance: 500,
       loading: false,
       lastSyncedAt: null,
+      _checksum: '',
 
-      setBalance: (balance) => set({ balance }),
+      setInitialBalance: (balance) => {
+        const txs = get().transactions
+        const checksum = computeChecksum(balance, txs)
+        setWithBalance(set, get, { initialBalance: balance, _checksum: checksum })
+      },
+
+      setBalance: (balance) => {
+        const unsynced = get().transactions.filter(t => !t.syncedToCloud)
+        if (unsynced.length === 0) {
+          const checksum = computeChecksum(balance, get().transactions)
+          setWithBalance(set, get, { initialBalance: balance, _checksum: checksum })
+        }
+      },
 
       syncBalance: async () => {
         set({ loading: true })
@@ -50,9 +128,16 @@ export const useTokenStore = create<TokenState>()(
           })
           if (res.ok) {
             const data = await res.json()
-            // Cloud balance is authoritative — pending consumptions are already deducted locally
-            // and will be synced on reconcile. Use cloud balance directly.
-            set({ balance: data.balance, lastSyncedAt: Date.now() })
+            const state = get()
+            const unsynced = state.transactions.filter(t => !t.syncedToCloud)
+            const currentBalance = computeBalance(state.initialBalance, state.transactions)
+
+            if (unsynced.length === 0 && data.balance < currentBalance) {
+              const checksum = computeChecksum(data.balance, state.transactions)
+              setWithBalance(set, get, { initialBalance: data.balance, lastSyncedAt: Date.now(), _checksum: checksum })
+            } else {
+              set({ lastSyncedAt: Date.now() })
+            }
           }
         } catch {
           // Offline — keep local balance
@@ -63,29 +148,26 @@ export const useTokenStore = create<TokenState>()(
 
       consumeLocal: (amount, gameId, sessionId) => {
         const state = get()
-        if (state.balance < amount) return false
+        const currentBalance = computeBalance(state.initialBalance, state.transactions)
 
-        // Get operator ID from auth store
-        let operatorId: string | undefined
-        try {
-          const authStore = JSON.parse(localStorage.getItem('vz-auth') || '{}')
-          operatorId = authStore?.state?.userId
-        } catch { /* ignore */ }
+        if (currentBalance < amount) return false
+        if (amount <= 0) return false
 
-        const pending: PendingConsumption = {
+        const tx: TokenTransaction = {
           id: crypto.randomUUID(),
+          type: 'consume',
           amount,
           gameId,
           sessionId,
-          operatorId,
+          operatorId: getOperatorId(),
           timestamp: Date.now(),
+          syncedToCloud: false,
           retryCount: 0,
         }
 
-        set({
-          balance: state.balance - amount,
-          pendingConsumptions: [...state.pendingConsumptions, pending],
-        })
+        const newTxs = [...state.transactions, tx]
+        const checksum = computeChecksum(state.initialBalance, newTxs)
+        setWithBalance(set, get, { transactions: newTxs, _checksum: checksum })
 
         // Try to sync to cloud in background
         import('@/services/cloudApi').then(({ getAccessToken: getToken }) => {
@@ -104,22 +186,41 @@ export const useTokenStore = create<TokenState>()(
               .then((res) => {
                 if (res.ok) {
                   set((s) => ({
-                    pendingConsumptions: s.pendingConsumptions.filter((p) => p.id !== pending.id),
+                    transactions: s.transactions.map(t =>
+                      t.id === tx.id ? { ...t, syncedToCloud: true } : t
+                    ),
                   }))
                 }
               })
-              .catch(() => {
-                // Will retry on reconcile
-              })
+              .catch(() => { /* Will retry on reconcile */ })
           }
         })
 
         return true
       },
 
+      topup: (amount, reason) => {
+        if (amount <= 0) return
+        const state = get()
+        const tx: TokenTransaction = {
+          id: crypto.randomUUID(),
+          type: 'topup',
+          amount,
+          operatorId: getOperatorId(),
+          timestamp: Date.now(),
+          syncedToCloud: false,
+          retryCount: 0,
+        }
+        const newTxs = [...state.transactions, tx]
+        const checksum = computeChecksum(state.initialBalance, newTxs)
+        setWithBalance(set, get, { transactions: newTxs, _checksum: checksum })
+      },
+
       reconcile: async () => {
         const state = get()
-        if (state.pendingConsumptions.length === 0) {
+        const unsynced = state.transactions.filter(t => !t.syncedToCloud && t.type === 'consume')
+
+        if (unsynced.length === 0) {
           await get().syncBalance()
           return
         }
@@ -128,13 +229,12 @@ export const useTokenStore = create<TokenState>()(
         const token = getAccessToken()
         if (!token) return
 
-        const remaining: PendingConsumption[] = []
         let synced = 0
+        let failed = 0
 
-        for (const pending of state.pendingConsumptions) {
-          // Skip items that exceeded max retries
-          if (pending.retryCount >= MAX_RETRIES) {
-            toast.error(`Consumo gettoni fallito per gioco ${pending.gameId.slice(0, 8)} — max tentativi raggiunto`)
+        for (const tx of unsynced) {
+          if (tx.retryCount >= MAX_RETRIES) {
+            toast.error(`Consumo gettoni fallito (${tx.gameId?.slice(0, 8)}) — max tentativi`)
             continue
           }
 
@@ -147,42 +247,72 @@ export const useTokenStore = create<TokenState>()(
               },
               credentials: 'include',
               body: JSON.stringify({
-                amount: pending.amount,
-                gameId: pending.gameId,
-                sessionId: pending.sessionId,
+                amount: tx.amount,
+                gameId: tx.gameId,
+                sessionId: tx.sessionId,
               }),
               signal: AbortSignal.timeout(10000),
             })
             if (res.ok) {
+              set((s) => ({
+                transactions: s.transactions.map(t =>
+                  t.id === tx.id ? { ...t, syncedToCloud: true } : t
+                ),
+              }))
               synced++
             } else {
-              remaining.push({ ...pending, retryCount: pending.retryCount + 1 })
+              set((s) => ({
+                transactions: s.transactions.map(t =>
+                  t.id === tx.id ? { ...t, retryCount: t.retryCount + 1 } : t
+                ),
+              }))
+              failed++
             }
           } catch {
-            remaining.push({ ...pending, retryCount: pending.retryCount + 1 })
+            set((s) => ({
+              transactions: s.transactions.map(t =>
+                t.id === tx.id ? { ...t, retryCount: t.retryCount + 1 } : t
+              ),
+            }))
+            failed++
           }
         }
 
-        set({ pendingConsumptions: remaining })
+        if (synced > 0) toast.success(`${synced} consumo/i gettoni sincronizzati`)
+        if (failed > 0) toast.warning(`${failed} consumo/i in attesa`)
 
-        if (synced > 0) {
-          toast.success(`${synced} consumo/i gettoni sincronizzati`)
-        }
-        if (remaining.length > 0) {
-          toast.warning(`${remaining.length} consumo/i in attesa di sincronizzazione`)
-        }
-
-        // Sync authoritative balance from cloud
         await get().syncBalance()
+      },
+
+      getTransactionLog: () => {
+        return [...get().transactions].sort((a, b) => b.timestamp - a.timestamp)
+      },
+
+      verifyIntegrity: () => {
+        const state = get()
+        const expected = computeChecksum(state.initialBalance, state.transactions)
+        return state._checksum === expected
       },
     }),
     {
       name: 'vz-tokens',
       partialize: (state) => ({
-        balance: state.balance,
-        pendingConsumptions: state.pendingConsumptions,
+        initialBalance: state.initialBalance,
+        transactions: state.transactions,
         lastSyncedAt: state.lastSyncedAt,
+        _checksum: state._checksum,
       }),
+      onRehydrateStorage: () => (state) => {
+        if (!state) return
+        // Recompute balance from transactions
+        state.balance = computeBalance(state.initialBalance, state.transactions)
+        // Verify integrity
+        const expected = computeChecksum(state.initialBalance, state.transactions)
+        if (state._checksum && state._checksum !== expected) {
+          console.error('[TOKEN STORE] Integrity check FAILED — possible tampering detected')
+          toast.error('Anomalia rilevata nel saldo gettoni — contattare supporto')
+        }
+      },
     },
   ),
 )

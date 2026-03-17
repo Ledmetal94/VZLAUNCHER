@@ -2,12 +2,29 @@ import { create } from 'zustand'
 import { toast } from 'sonner'
 import { getAccessToken } from '@/services/cloudApi'
 import type { Game } from '@/types/models'
-import { SAMPLE_GAMES } from '@/data/games'
+import { SAMPLE_GAMES, GAMES_WITH_POSTERS } from '@/data/games'
 
 const CACHE_KEY = 'vz_games_cache'
 const ETAG_KEY = 'vz_games_etag'
 const CLOUD_URL = import.meta.env.VITE_CLOUD_URL || 'http://localhost:3002'
+const BRIDGE_URL = import.meta.env.VITE_BRIDGE_URL || 'http://localhost:8000'
 const REFRESH_INTERVAL = 5 * 60 * 1000 // 5 minutes
+
+// Build a lookup: normalized game name → local folder id for poster URLs
+const SAMPLE_POSTER_MAP = new Map<string, string>()
+for (const g of SAMPLE_GAMES) {
+  SAMPLE_POSTER_MAP.set(g.name.toLowerCase(), g.id)
+}
+
+function findPosterUrl(id: string, name: string): string {
+  // Try matching by name to a known local game folder
+  const localId = SAMPLE_POSTER_MAP.get(name.toLowerCase())
+  if (localId) {
+    return `${BRIDGE_URL}/api/games/assets/${localId}/poster.jpg`
+  }
+  // Fallback: try the id directly (works if id matches folder name)
+  return `${BRIDGE_URL}/api/games/assets/${id}/poster.jpg`
+}
 
 function mapCloudGame(g: {
   id: string
@@ -34,7 +51,7 @@ function mapCloudGame(g: {
     durationMinutes: g.duration_minutes,
     tokenCost: g.token_cost,
     description: g.description || '',
-    thumbnailUrl: g.thumbnail_url || '',
+    thumbnailUrl: g.thumbnail_url || findPosterUrl(g.id, g.name),
     badge: g.badge as Game['badge'],
     enabled: g.enabled,
     bg: g.bg || '',
@@ -76,7 +93,7 @@ interface GameState {
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
-  games: loadCache() || SAMPLE_GAMES,
+  games: SAMPLE_GAMES,
   loading: false,
   error: null,
   refreshTimer: null,
@@ -110,26 +127,24 @@ export const useGameStore = create<GameState>((set, get) => ({
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
 
       const data = await res.json()
-      const mapped = data.games.map(mapCloudGame)
+      const cloudGames = data.games
+        .map(mapCloudGame)
+        .filter((g: Game) => g.thumbnailUrl && GAMES_WITH_POSTERS.has(g.name.toLowerCase()))
 
-      // Check for new/updated games
-      const prevGames = get().games
-      const prevIds = new Set(prevGames.map((g) => g.id))
-      const newGames = mapped.filter((g: Game) => !prevIds.has(g.id))
-      if (newGames.length > 0 && prevGames.length > 0) {
-        toast.info(`${newGames.length} nuovo/i gioco/hi disponibile/i`)
-      }
+      // Merge: cloud games + local-only SAMPLE_GAMES not in cloud
+      const cloudNames = new Set(cloudGames.map((g: Game) => g.name.toLowerCase()))
+      const localOnly = SAMPLE_GAMES.filter(g => !cloudNames.has(g.name.toLowerCase()))
+      const merged = [...cloudGames, ...localOnly]
 
       // Save ETag
       const etag = res.headers.get('etag')
       if (etag) saveEtag(etag)
 
-      saveCache(mapped)
-      set({ games: mapped, loading: false })
+      saveCache(merged)
+      set({ games: merged, loading: false })
     } catch (err) {
-      const cached = loadCache()
+      // On failure, keep current games (don't overwrite with stale cache)
       set({
-        games: cached || SAMPLE_GAMES,
         loading: false,
         error: err instanceof Error ? err.message : 'Failed to fetch games',
       })

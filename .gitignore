@@ -27,3 +27,18 @@ dist-ssr
 *.png
 
 .vercel
+
+# Bridge runtime
+bridge/logging/logs/
+bridge/logging/screenshots/*.png
+bridge/automation/screenshots/**/*.png
+bridge/automation/python/.venv/
+bridge/games/**/screenshots/*.png
+bridge/games/Games/
+
+# Allow game posters (override *.png rule)
+!bridge/games/**/poster.png
+!bridge/games/**/poster.jpg
+!bridge/games/**/poster.jpeg
+!bridge/games/**/poster.webp
+!bridge/games/**/.gitkeep

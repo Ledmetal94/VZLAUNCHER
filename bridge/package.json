@@ -1,13 +1,21 @@
 {
   "name": "vzlauncher-bridge",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "BRIDGE_DRY_RUN=true node server.js",
+    "dev:win": "set BRIDGE_DRY_RUN=true && node server.js",
+    "test:launch": "node scripts/test-launch.js",
+    "calibrate": "node scripts/calibrate.js",
+    "coords": "node scripts/coord-finder.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
-    "express": "^4.21.0"
+    "express": "^4.21.0",
+    "pino": "^9.0.0",
+    "pino-pretty": "^11.0.0",
+    "ws": "^8.18.0"
   }
 }

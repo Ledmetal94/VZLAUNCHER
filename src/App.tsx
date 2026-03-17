@@ -18,6 +18,7 @@ const SuperAdminDashboard = lazy(() => import('@/pages/SuperAdminDashboard'))
 const SuperAdminOperatorsPage = lazy(() => import('@/pages/SuperAdminOperatorsPage'))
 import { useAlerts } from '@/hooks/useAlerts'
 import { useWebSocket } from '@/hooks/useWebSocket'
+import { initWsBridge, destroyWsBridge } from '@/services/wsbridge'
 import { useSessionStore } from '@/store/sessionStore'
 import { useLicenseStore } from '@/store/licenseStore'
 import { useAuthStore } from '@/store/authStore'
@@ -30,6 +31,12 @@ export default function App() {
 
   useAlerts()
   useWebSocket()
+
+  // Bridge WebSocket — real-time session/automation updates
+  useEffect(() => {
+    initWsBridge()
+    return () => destroyWsBridge()
+  }, [])
 
   // Validate license on startup + poll every hour
   const validateLicense = useLicenseStore((s) => s.validate)
