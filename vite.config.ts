@@ -54,10 +54,9 @@ export default defineConfig({
             },
           },
         ],
-        // Offline fallback
-        navigateFallback: '/offline.html',
-        navigateFallbackDenylist: [/^\/api\//],
-        navigateFallbackAllowlist: [/^\/[^.]*$/],
+        // SPA fallback — serve index.html for all navigation requests
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/api\//, /^\/health/],
       },
       manifest: {
         name: 'VZ Launcher — Arcade Management',
