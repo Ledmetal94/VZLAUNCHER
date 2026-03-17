@@ -18,7 +18,7 @@ export default function LoginPage() {
 
     try {
       const data = await cloudLogin(username, password)
-      login(data.user)
+      login(data.user, data.accessToken)
       navigate('/', { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Accesso fallito')

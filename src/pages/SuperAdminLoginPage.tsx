@@ -18,7 +18,7 @@ export default function SuperAdminLoginPage() {
 
     try {
       const data = await superAdminLogin(username, password)
-      login(data.user)
+      login(data.user, data.accessToken)
       navigate('/super-admin', { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Accesso fallito')

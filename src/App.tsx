@@ -20,8 +20,14 @@ import { useAlerts } from '@/hooks/useAlerts'
 import { useWebSocket } from '@/hooks/useWebSocket'
 import { useSessionStore } from '@/store/sessionStore'
 import { useLicenseStore } from '@/store/licenseStore'
+import { useAuthStore } from '@/store/authStore'
 
 export default function App() {
+  // Rehydrate access token from persisted auth store on app load
+  useEffect(() => {
+    useAuthStore.getState().rehydrateToken()
+  }, [])
+
   useAlerts()
   useWebSocket()
 
