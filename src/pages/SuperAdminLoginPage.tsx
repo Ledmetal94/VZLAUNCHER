@@ -22,7 +22,7 @@ export default function SuperAdminLoginPage() {
       login(data.user)
       navigate('/super-admin', { replace: true })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed')
+      setError(err instanceof Error ? err.message : 'Accesso fallito')
     } finally {
       setLoading(false)
     }
@@ -38,7 +38,7 @@ export default function SuperAdminLoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-muted">Username</label>
+            <label className="mb-1 block text-sm font-medium text-muted">Utente</label>
             <input
               type="text"
               value={username}
@@ -48,7 +48,7 @@ export default function SuperAdminLoginPage() {
                 'text-white placeholder:text-muted-foreground',
                 'outline-none transition focus:border-primary focus:ring-1 focus:ring-primary',
               )}
-              placeholder="Super admin username"
+              placeholder="Utente super admin"
               required
               autoFocus
             />
@@ -81,7 +81,7 @@ export default function SuperAdminLoginPage() {
               'disabled:cursor-not-allowed disabled:opacity-50',
             )}
           >
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? 'Accesso in corso...' : 'Accedi'}
           </button>
         </form>
 

@@ -26,7 +26,7 @@ export default function SessionBar({ onEnd, ending }: SessionBarProps) {
       {/* Status dot */}
       <div className="flex items-center gap-2">
         <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
-        <span className="text-sm font-semibold text-white">Active</span>
+        <span className="text-sm font-semibold text-white">Attivo</span>
       </div>
 
       {/* Game info */}
@@ -36,7 +36,7 @@ export default function SessionBar({ onEnd, ending }: SessionBarProps) {
 
       {/* Players */}
       <span className="text-sm text-muted">
-        Players: {session.players}
+        Giocatori: {session.players}
       </span>
 
       {/* Timer + progress bar */}
@@ -68,7 +68,7 @@ export default function SessionBar({ onEnd, ending }: SessionBarProps) {
           'disabled:opacity-50',
         )}
       >
-        {ending ? 'Ending...' : 'End'}
+        {ending ? 'Arresto...' : 'Termina'}
       </button>
     </div>
   )

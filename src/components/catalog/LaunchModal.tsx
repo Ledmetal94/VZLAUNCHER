@@ -47,7 +47,7 @@ export default function LaunchModal({ game, onLaunch, onClose, launching }: Laun
         {/* Player count */}
         <div className="mb-6">
           <label className="mb-2 block text-sm font-medium text-muted">
-            Players
+            Giocatori
           </label>
           <div className="flex items-center gap-4">
             <button
@@ -84,7 +84,7 @@ export default function LaunchModal({ game, onLaunch, onClose, launching }: Laun
         {/* Bridge offline warning */}
         {bridgeOffline && (
           <div className="mb-4 rounded-lg bg-danger/10 px-4 py-2 text-sm text-danger">
-            Bridge offline — cannot launch games
+            Bridge offline — impossibile avviare i giochi
           </div>
         )}
 

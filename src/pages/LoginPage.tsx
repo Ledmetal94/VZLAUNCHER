@@ -22,7 +22,7 @@ export default function LoginPage() {
       login(data.user)
       navigate('/', { replace: true })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed')
+      setError(err instanceof Error ? err.message : 'Accesso fallito')
     } finally {
       setLoading(false)
     }
@@ -39,7 +39,7 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="mb-1 block text-sm font-medium text-muted">
-              Username
+              Utente
             </label>
             <input
               type="text"
@@ -50,10 +50,10 @@ export default function LoginPage() {
                 'text-white placeholder:text-muted-foreground',
                 'outline-none transition focus:border-primary focus:ring-1 focus:ring-primary',
               )}
-              placeholder="Enter username"
+              placeholder="Inserisci utente"
               required
               autoFocus
-              aria-label="Username"
+              aria-label="Utente"
             />
           </div>
 
@@ -70,7 +70,7 @@ export default function LoginPage() {
                 'text-white placeholder:text-muted-foreground',
                 'outline-none transition focus:border-primary focus:ring-1 focus:ring-primary',
               )}
-              placeholder="Enter password"
+              placeholder="Inserisci password"
               required
               aria-label="Password"
             />
@@ -89,7 +89,7 @@ export default function LoginPage() {
               'disabled:cursor-not-allowed disabled:opacity-50',
             )}
           >
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? 'Accesso in corso...' : 'Accedi'}
           </button>
         </form>
       </div>
