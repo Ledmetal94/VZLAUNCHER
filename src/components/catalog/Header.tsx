@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router'
 import { useAuthStore } from '@/store/authStore'
+import { useLicenseStore } from '@/store/licenseStore'
 import { usePwa } from '@/hooks/usePwa'
 
 interface HeaderProps {
@@ -14,6 +15,8 @@ export default function Header({ onSettingsClick, onTokenClick, tokenBalance = 0
   const role = useAuthStore((s) => s.role)
   const isAdmin = role === 'admin'
   const { canInstall, promptInstall } = usePwa()
+  const licenseStatus = useLicenseStore((s) => s.status)
+  const getOfflineRemaining = useLicenseStore((s) => s.getOfflineTimeRemaining)
   const [time, setTime] = useState(new Date())
 
   useEffect(() => {
@@ -140,33 +143,49 @@ export default function Header({ onSettingsClick, onTokenClick, tokenBalance = 0
       {/* Right side */}
       <div className="flex items-center gap-3">
         {/* License pill */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 5,
-            background: 'rgba(68,255,136,0.08)',
-            border: '1px solid rgba(68,255,136,0.22)',
-            borderRadius: 16,
-            padding: '4px 12px',
-            fontSize: 10,
-            fontWeight: 700,
-            color: '#44ff88',
-            letterSpacing: '0.06em',
-          }}
-        >
-          <span
-            className="animate-pulse"
-            style={{
-              width: 5,
-              height: 5,
-              borderRadius: '50%',
-              background: '#44ff88',
-              display: 'inline-block',
-            }}
-          />
-          Online
-        </div>
+        {(() => {
+          const isOnline = licenseStatus === 'active'
+          const isDegraded = licenseStatus === 'expired' || licenseStatus === 'suspended'
+          const color = isDegraded ? '#ff4444' : isOnline ? '#44ff88' : '#ffaa00'
+          const remaining = getOfflineRemaining()
+          const hoursLeft = Math.floor(remaining / (60 * 60 * 1000))
+          const label = isDegraded
+            ? 'Offline scaduto'
+            : isOnline
+              ? 'Online'
+              : remaining > 0
+                ? `Offline ${hoursLeft}h`
+                : 'Sconosciuto'
+          return (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 5,
+                background: `${color}14`,
+                border: `1px solid ${color}38`,
+                borderRadius: 16,
+                padding: '4px 12px',
+                fontSize: 10,
+                fontWeight: 700,
+                color,
+                letterSpacing: '0.06em',
+              }}
+            >
+              <span
+                className={isOnline ? 'animate-pulse' : undefined}
+                style={{
+                  width: 5,
+                  height: 5,
+                  borderRadius: '50%',
+                  background: color,
+                  display: 'inline-block',
+                }}
+              />
+              {label}
+            </div>
+          )
+        })()}
 
         {/* Games admin button (admin only) */}
         {isAdmin && (

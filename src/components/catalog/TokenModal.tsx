@@ -4,7 +4,8 @@ import {
   EmbeddedCheckoutProvider,
   EmbeddedCheckout,
 } from '@stripe/react-stripe-js'
-import { purchaseTokens } from '@/services/cloudApi'
+import { toast } from 'sonner'
+import { purchaseTokens, requestBankTransfer } from '@/services/cloudApi'
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY)
 
@@ -239,10 +240,9 @@ export default function TokenModal({ balance, onClose }: TokenModalProps) {
               Dati per bonifico — zero commissioni
             </div>
             {[
-              ['Intestatario', 'Virtual Zone Italia S.r.l.'],
-              ['IBAN', 'IT76 X012 3456 7890 1234 5678 901'],
-              ['BIC/SWIFT', 'ABCDITMMXXX'],
-              ['Causale', `VZ-GETT-VZR001-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}`],
+              ['Intestatario', 'Virtual Zone S.r.l.'],
+              ['IBAN', 'IT60X0542811101000000123456'],
+              ['Causale', 'Seleziona un pacchetto e clicca "Richiedi bonifico"'],
             ].map(([label, value]) => (
               <div key={label} className="flex items-center justify-between" style={{ padding: '4px 0' }}>
                 <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>{label}</span>
@@ -250,7 +250,7 @@ export default function TokenModal({ balance, onClose }: TokenModalProps) {
                   <span style={{ fontSize: 12, color: '#fff', fontWeight: 700, fontFamily: 'Outfit, monospace', letterSpacing: '.04em' }}>{value}</span>
                   {label === 'IBAN' && (
                     <button
-                      onClick={() => navigator.clipboard.writeText(value.replace(/\s/g, ''))}
+                      onClick={() => { navigator.clipboard.writeText(value.replace(/\s/g, '')); toast.success('IBAN copiato') }}
                       style={{
                         padding: '4px 12px', borderRadius: 6,
                         border: '1px solid rgba(123,100,169,0.2)', background: 'rgba(255,255,255,0.03)',
@@ -263,6 +263,33 @@ export default function TokenModal({ balance, onClose }: TokenModalProps) {
                 </div>
               </div>
             ))}
+            {selectedPkg && (
+              <button
+                onClick={async () => {
+                  const pkg = PACKAGES.find((p) => p.id === selectedPkg)
+                  if (!pkg) return
+                  const tokenAmount = parseInt(pkg.tokens.replace(/\./g, ''), 10)
+                  if (isNaN(tokenAmount) || tokenAmount <= 0) {
+                    toast.error('Pacchetto personalizzato non supportato per bonifico')
+                    return
+                  }
+                  try {
+                    const result = await requestBankTransfer(tokenAmount)
+                    toast.success(`Richiesta bonifico creata — Causale: ${result.bankDetails.reference}`)
+                  } catch (err) {
+                    toast.error(err instanceof Error ? err.message : 'Errore creazione richiesta')
+                  }
+                }}
+                style={{
+                  width: '100%', marginTop: 12, padding: '10px', borderRadius: 8,
+                  border: '1px solid rgba(123,100,169,0.25)', background: 'rgba(82,49,137,0.12)',
+                  color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                  fontFamily: 'Outfit, sans-serif',
+                }}
+              >
+                Richiedi bonifico per {PACKAGES.find((p) => p.id === selectedPkg)?.tokens} gettoni
+              </button>
+            )}
             <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 10 }}>
               I gettoni verranno accreditati alla conferma del bonifico (1-2 giorni lavorativi)
             </div>

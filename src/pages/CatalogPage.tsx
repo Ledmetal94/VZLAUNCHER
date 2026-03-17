@@ -35,15 +35,19 @@ export default function CatalogPage() {
 
   const games = useGameStore((s) => s.games)
   const fetchGames = useGameStore((s) => s.fetchGames)
+  const startAutoRefresh = useGameStore((s) => s.startAutoRefresh)
+  const stopAutoRefresh = useGameStore((s) => s.stopAutoRefresh)
   const tokenBalance = useTokenStore((s) => s.balance)
   const syncBalance = useTokenStore((s) => s.syncBalance)
   const consumeLocal = useTokenStore((s) => s.consumeLocal)
 
-  // Fetch games + token balance on mount
+  // Fetch games + token balance on mount, start auto-refresh
   useEffect(() => {
     fetchGames()
     syncBalance()
-  }, [fetchGames, syncBalance])
+    startAutoRefresh()
+    return () => stopAutoRefresh()
+  }, [fetchGames, syncBalance, startAutoRefresh, stopAutoRefresh])
 
   // Poll bridge health
   useEffect(() => {

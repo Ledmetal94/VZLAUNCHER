@@ -19,6 +19,8 @@ import superAdminAuthRouter from './routes/superAdmin/auth'
 import superAdminVenuesRouter from './routes/superAdmin/venues'
 import superAdminAnalyticsRouter from './routes/superAdmin/analytics'
 import superAdminOperatorsRouter from './routes/superAdmin/operators'
+import licenseRouter from './routes/license'
+import bankTransferRouter from './routes/bankTransfer'
 
 const app = express()
 const PORT = parseInt(process.env.PORT || '3002', 10)
@@ -54,6 +56,8 @@ app.use(superAdminAuthRouter)
 app.use(superAdminVenuesRouter)
 app.use(superAdminAnalyticsRouter)
 app.use(superAdminOperatorsRouter)
+app.use(licenseRouter)
+app.use(bankTransferRouter)
 
 // Error handler (must be last)
 app.use(errorHandler)

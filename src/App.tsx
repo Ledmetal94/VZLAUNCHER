@@ -17,10 +17,21 @@ const SuperAdminLoginPage = lazy(() => import('@/pages/SuperAdminLoginPage'))
 const SuperAdminDashboard = lazy(() => import('@/pages/SuperAdminDashboard'))
 const SuperAdminOperatorsPage = lazy(() => import('@/pages/SuperAdminOperatorsPage'))
 import { useAlerts } from '@/hooks/useAlerts'
+import { useWebSocket } from '@/hooks/useWebSocket'
 import { useSessionStore } from '@/store/sessionStore'
+import { useLicenseStore } from '@/store/licenseStore'
 
 export default function App() {
   useAlerts()
+  useWebSocket()
+
+  // Validate license on startup + poll every hour
+  const validateLicense = useLicenseStore((s) => s.validate)
+  useEffect(() => {
+    validateLicense()
+    const interval = setInterval(validateLicense, 60 * 60 * 1000)
+    return () => clearInterval(interval)
+  }, [validateLicense])
 
   // Listen for Background Sync requests from service worker
   useEffect(() => {

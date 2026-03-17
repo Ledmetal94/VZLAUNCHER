@@ -49,6 +49,7 @@ async function request<T>(
         ...options,
         headers,
         credentials: 'include',
+        signal: options.signal ?? AbortSignal.timeout(30000),
       })
       if (!retry.ok) {
         throw new Error(`HTTP ${retry.status}`)
@@ -275,6 +276,20 @@ export async function uploadGameThumbnail(file: File): Promise<string> {
 
   const data = await res.json()
   return data.url
+}
+
+// ─── Bank Transfer ──────────────────────────────────────
+
+export interface BankTransferResponse {
+  transferRequest: { id: string; payment_reference: string; amount: number; status: string; created_at: string }
+  bankDetails: { iban: string; beneficiary: string; reference: string; amount: string }
+}
+
+export async function requestBankTransfer(amount: number): Promise<BankTransferResponse> {
+  return request<BankTransferResponse>('/tokens/bank-transfer-request', {
+    method: 'POST',
+    body: JSON.stringify({ amount }),
+  })
 }
 
 // ─── Tokens / Checkout ──────────────────────────────────────

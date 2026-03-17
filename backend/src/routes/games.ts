@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import crypto from 'crypto'
 import { supabase } from '../lib/supabase'
 import { requireAuth } from '../middleware/auth'
 import { createError } from '../middleware/errorHandler'
@@ -6,11 +7,11 @@ import type { Request, Response, NextFunction } from 'express'
 
 const router = Router()
 
-// GET /api/v1/games — list enabled games
+// GET /api/v1/games — list enabled games with ETag support
 router.get(
   '/api/v1/games',
   requireAuth,
-  async (_req: Request, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { data, error } = await supabase
         .from('game_configs')
@@ -22,6 +23,17 @@ router.get(
         return next(createError(500, 'DB_ERROR', 'Failed to fetch games'))
       }
 
+      // Generate ETag from data content
+      const hash = crypto.createHash('md5').update(JSON.stringify(data)).digest('hex')
+      const etag = `"${hash}"`
+
+      // Check If-None-Match header
+      const ifNoneMatch = req.headers['if-none-match']
+      if (ifNoneMatch === etag) {
+        return res.status(304).end()
+      }
+
+      res.setHeader('ETag', etag)
       res.json({ games: data })
     } catch (err) {
       next(err)
