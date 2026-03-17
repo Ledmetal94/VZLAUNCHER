@@ -144,18 +144,20 @@ export default function Header({ onSettingsClick, onTokenClick, tokenBalance = 0
       <div className="flex items-center gap-3">
         {/* License pill */}
         {(() => {
-          const isOnline = licenseStatus === 'active'
+          const isOnline = licenseStatus === 'active' || licenseStatus === 'unknown'
           const isDegraded = licenseStatus === 'expired' || licenseStatus === 'suspended'
           const color = isDegraded ? '#ff4444' : isOnline ? '#44ff88' : '#ffaa00'
           const remaining = getOfflineRemaining()
           const hoursLeft = Math.floor(remaining / (60 * 60 * 1000))
           const label = isDegraded
             ? 'Offline scaduto'
-            : isOnline
+            : licenseStatus === 'active'
               ? 'Online'
-              : remaining > 0
-                ? `Offline ${hoursLeft}h`
-                : 'Sconosciuto'
+              : licenseStatus === 'unknown'
+                ? 'Online'
+                : remaining > 0
+                  ? `Offline ${hoursLeft}h`
+                  : 'Offline'
           return (
             <div
               style={{
