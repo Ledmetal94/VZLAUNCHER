@@ -1,59 +1,153 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useConnectionStore } from '@/store/connectionStore'
 
 export default function OfflineBar() {
   const cloudStatus = useConnectionStore((s) => s.cloudStatus)
   const bridgeStatus = useConnectionStore((s) => s.bridgeStatus)
 
-  const isOffline = cloudStatus === 'offline' || bridgeStatus === 'offline'
+  const cloudOffline = cloudStatus === 'offline'
+  const bridgeOffline = bridgeStatus === 'offline'
 
-  // Debounce: only show after 500ms of being offline (prevents flicker)
-  const [visible, setVisible] = useState(false)
+  const [showCloud, setShowCloud] = useState(false)
+  const [showBridge, setShowBridge] = useState(false)
+  const [dismissed, setDismissed] = useState<Set<string>>(new Set())
 
+  // Debounce cloud offline (500ms)
   useEffect(() => {
-    if (isOffline) {
-      const timer = setTimeout(() => setVisible(true), 500)
+    if (cloudOffline && !dismissed.has('cloud')) {
+      const timer = setTimeout(() => setShowCloud(true), 500)
       return () => clearTimeout(timer)
-    } else {
-      setVisible(false)
     }
-  }, [isOffline])
+    setShowCloud(false)
+    if (!cloudOffline) {
+      setDismissed((prev) => {
+        const next = new Set(prev)
+        next.delete('cloud')
+        return next
+      })
+    }
+  }, [cloudOffline, dismissed])
 
-  if (!visible) return null
+  // Debounce bridge offline (500ms), then auto-dismiss after 5s
+  useEffect(() => {
+    if (bridgeOffline && !dismissed.has('bridge')) {
+      const showTimer = setTimeout(() => setShowBridge(true), 500)
+      const hideTimer = setTimeout(() => {
+        setShowBridge(false)
+        setDismissed((prev) => new Set(prev).add('bridge'))
+      }, 5500)
+      return () => {
+        clearTimeout(showTimer)
+        clearTimeout(hideTimer)
+      }
+    }
+    setShowBridge(false)
+    if (!bridgeOffline) {
+      setDismissed((prev) => {
+        const next = new Set(prev)
+        next.delete('bridge')
+        return next
+      })
+    }
+  }, [bridgeOffline, dismissed])
 
-  const parts: string[] = []
-  if (cloudStatus === 'offline') parts.push('Cloud')
-  if (bridgeStatus === 'offline') parts.push('Bridge')
+  const dismiss = useCallback((key: string) => {
+    setDismissed((prev) => new Set(prev).add(key))
+    if (key === 'cloud') setShowCloud(false)
+    if (key === 'bridge') setShowBridge(false)
+  }, [])
+
+  const chips: Array<{ key: string; label: string; color: string }> = []
+
+  if (showCloud) {
+    chips.push({ key: 'cloud', label: 'Cloud non raggiungibile', color: '#ff6b6b' })
+  }
+  if (showBridge) {
+    chips.push({ key: 'bridge', label: 'Bridge locale offline', color: '#f59e0b' })
+  }
+
+  if (chips.length === 0) return null
 
   return (
     <div
-      role="alert"
-      aria-live="polite"
-      aria-atomic="true"
       style={{
         position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 999,
-        height: 32,
+        bottom: 16,
+        right: 16,
+        zIndex: 900,
         display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
+        flexDirection: 'column',
+        alignItems: 'flex-end',
         gap: 8,
-        background: 'rgba(245,158,11,0.12)',
-        borderBottom: '1px solid rgba(245,158,11,0.25)',
-        backdropFilter: 'blur(8px)',
-        fontSize: 11,
-        fontWeight: 600,
-        color: '#f59e0b',
-        animation: 'pageIn 0.3s ease-out',
+        pointerEvents: 'none',
       }}
     >
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-        <path d="M1 1l22 22M16.72 11.06A10.94 10.94 0 0119 12.55M5 12.55a10.94 10.94 0 015.17-2.39M10.71 5.05A16 16 0 0122.56 9M1.42 9a15.91 15.91 0 014.7-2.88M8.53 16.11a6 6 0 016.95 0M12 20h.01" />
-      </svg>
-      Sei offline ({parts.join(' + ')}) — i dati verranno sincronizzati al ripristino della connessione
+      {chips.map((chip) => (
+        <div
+          key={chip.key}
+          role="status"
+          aria-live="polite"
+          style={{
+            pointerEvents: 'auto',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '6px 10px 6px 12px',
+            borderRadius: 9999,
+            background: 'rgba(15,14,31,0.85)',
+            border: `1px solid ${chip.color}30`,
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            boxShadow: `0 4px 24px rgba(0,0,0,0.4), 0 0 12px ${chip.color}10`,
+            fontSize: 11,
+            fontWeight: 600,
+            fontFamily: 'Outfit, sans-serif',
+            color: chip.color,
+            animation: 'offlineChipIn 0.3s ease-out',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          <span
+            style={{
+              width: 6,
+              height: 6,
+              borderRadius: '50%',
+              background: chip.color,
+              flexShrink: 0,
+              opacity: 0.9,
+            }}
+          />
+          {chip.label}
+          <button
+            onClick={() => dismiss(chip.key)}
+            aria-label="Chiudi"
+            style={{
+              width: 18,
+              height: 18,
+              borderRadius: '50%',
+              border: 'none',
+              background: `${chip.color}18`,
+              color: chip.color,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: 0,
+              flexShrink: 0,
+            }}
+          >
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      ))}
+      <style>{`
+        @keyframes offlineChipIn {
+          from { opacity: 0; transform: translateY(8px) scale(0.95); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+      `}</style>
     </div>
   )
 }
