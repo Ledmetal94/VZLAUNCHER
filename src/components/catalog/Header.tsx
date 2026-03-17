@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router'
 import { useAuthStore } from '@/store/authStore'
 import { useLicenseStore } from '@/store/licenseStore'
 import { usePwa } from '@/hooks/usePwa'
@@ -11,7 +10,6 @@ interface HeaderProps {
 }
 
 export default function Header({ onSettingsClick, onTokenClick, tokenBalance = 0 }: HeaderProps) {
-  const navigate = useNavigate()
   const role = useAuthStore((s) => s.role)
   const isAdmin = role === 'admin'
   const { canInstall, promptInstall } = usePwa()
