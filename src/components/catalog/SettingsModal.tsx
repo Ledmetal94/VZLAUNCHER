@@ -106,6 +106,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
   function handleLogout() {
     logout()
     onClose()
+    navigate('/login', { replace: true })
   }
 
   return (
