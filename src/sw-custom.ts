@@ -1,12 +1,16 @@
 /// <reference lib="webworker" />
 declare const self: ServiceWorkerGlobalScope
 
+interface SyncEvent extends ExtendableEvent {
+  tag: string
+}
+
 // Background Sync for session queue
-self.addEventListener('sync', (event) => {
+self.addEventListener('sync', ((event: SyncEvent) => {
   if (event.tag === 'sync-sessions') {
     event.waitUntil(syncPendingSessions())
   }
-})
+}) as EventListener)
 
 async function syncPendingSessions() {
   try {

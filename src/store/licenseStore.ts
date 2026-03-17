@@ -21,7 +21,6 @@ const CLOUD_URL = import.meta.env.VITE_CLOUD_URL || 'http://localhost:3002'
 // Emergency PIN should be configured per-venue, not hardcoded
 // This is a fallback — production should use server-side validation
 const EMERGENCY_PIN = import.meta.env.VITE_EMERGENCY_PIN || '999999'
-const GRACE_MS_DEFAULT = 48 * 60 * 60 * 1000 // 48h
 
 export const useLicenseStore = create<LicenseState>()(
   persist(
