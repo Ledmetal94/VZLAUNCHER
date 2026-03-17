@@ -55,7 +55,7 @@ export default function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/super-admin/login" element={<SuperAdminLoginPage />} />
       <Route
-        path="/"
+        index
         element={
           <RequireAuth>
             <CatalogPage />
