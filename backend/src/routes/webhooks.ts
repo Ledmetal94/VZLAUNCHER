@@ -27,22 +27,21 @@ router.post(
     try {
       let event: Stripe.Event
 
-      if (STRIPE_WEBHOOK_SECRET) {
-        const signature = req.headers['stripe-signature'] as string
-        if (!signature) {
-          logger.warn('Webhook missing stripe-signature header')
-          return res.status(401).json({ error: 'Missing signature' })
-        }
-        try {
-          event = getStripe().webhooks.constructEvent(req.body, signature, STRIPE_WEBHOOK_SECRET)
-        } catch (err) {
-          logger.warn('Webhook signature verification failed')
-          return res.status(401).json({ error: 'Invalid signature' })
-        }
-      } else {
-        logger.warn('STRIPE_WEBHOOK_SECRET not set — skipping signature verification')
-        const body = typeof req.body === 'string' ? req.body : req.body.toString()
-        event = JSON.parse(body) as Stripe.Event
+      if (!STRIPE_WEBHOOK_SECRET) {
+        logger.error('STRIPE_WEBHOOK_SECRET not configured — rejecting webhook')
+        return res.status(500).json({ error: 'Webhook secret not configured' })
+      }
+
+      const signature = req.headers['stripe-signature'] as string
+      if (!signature) {
+        logger.warn('Webhook missing stripe-signature header')
+        return res.status(401).json({ error: 'Missing signature' })
+      }
+      try {
+        event = getStripe().webhooks.constructEvent(req.body, signature, STRIPE_WEBHOOK_SECRET)
+      } catch (err) {
+        logger.warn('Webhook signature verification failed')
+        return res.status(401).json({ error: 'Invalid signature' })
       }
 
       if (event.type === 'checkout.session.completed') {
@@ -90,7 +89,13 @@ router.post(
         })
 
         if (rpcError) {
-          logger.error({ rpcError }, 'Failed to adjust token balance')
+          logger.error({ rpcError }, 'Failed to adjust token balance — rolling back transaction')
+          // Rollback: delete the orphaned transaction record
+          await supabase
+            .from('token_transactions')
+            .delete()
+            .eq('payment_reference', paymentReference)
+          return res.status(500).json({ error: 'Balance update failed' })
         }
 
         logger.info(`Credited ${amount} tokens to venue ${venueId} via Stripe`)

@@ -53,6 +53,7 @@ export default function LoginPage() {
               placeholder="Enter username"
               required
               autoFocus
+              aria-label="Username"
             />
           </div>
 
@@ -71,6 +72,7 @@ export default function LoginPage() {
               )}
               placeholder="Enter password"
               required
+              aria-label="Password"
             />
           </div>
 

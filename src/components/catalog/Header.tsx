@@ -1,4 +1,7 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router'
+import { useAuthStore } from '@/store/authStore'
+import { usePwa } from '@/hooks/usePwa'
 
 interface HeaderProps {
   onSettingsClick?: () => void
@@ -7,6 +10,10 @@ interface HeaderProps {
 }
 
 export default function Header({ onSettingsClick, onTokenClick, tokenBalance = 0 }: HeaderProps) {
+  const navigate = useNavigate()
+  const role = useAuthStore((s) => s.role)
+  const isAdmin = role === 'admin'
+  const { canInstall, promptInstall } = usePwa()
   const [time, setTime] = useState(new Date())
 
   useEffect(() => {
@@ -35,9 +42,9 @@ export default function Header({ onSettingsClick, onTokenClick, tokenBalance = 0
         <img src="/logo.png" alt="VZ" className="h-8" />
 
         {/* Token widget pill */}
-        <button
-          onClick={onTokenClick}
-          className="group"
+        <div
+          role={isAdmin ? 'button' : undefined}
+          onClick={isAdmin ? onTokenClick : undefined}
           style={{
             background: 'rgba(230,0,126,0.08)',
             border: '1px solid rgba(230,0,126,0.3)',
@@ -46,22 +53,22 @@ export default function Header({ onSettingsClick, onTokenClick, tokenBalance = 0
             display: 'flex',
             alignItems: 'center',
             gap: 10,
-            cursor: 'pointer',
+            cursor: isAdmin ? 'pointer' : 'default',
             transition: 'all 0.2s',
             userSelect: 'none',
           }}
-          onMouseEnter={(e) => {
+          onMouseEnter={isAdmin ? (e) => {
             const el = e.currentTarget
             el.style.background = 'rgba(230,0,126,0.16)'
             el.style.borderColor = '#E6007E'
             el.style.boxShadow = '0 0 20px rgba(230,0,126,0.2)'
-          }}
-          onMouseLeave={(e) => {
+          } : undefined}
+          onMouseLeave={isAdmin ? (e) => {
             const el = e.currentTarget
             el.style.background = 'rgba(230,0,126,0.08)'
             el.style.borderColor = 'rgba(230,0,126,0.3)'
             el.style.boxShadow = 'none'
-          }}
+          } : undefined}
         >
           {/* Circle "G" icon */}
           <div
@@ -107,25 +114,27 @@ export default function Header({ onSettingsClick, onTokenClick, tokenBalance = 0
             </span>
           </div>
 
-          {/* Plus button */}
-          <div
-            style={{
-              width: 26,
-              height: 26,
-              borderRadius: '50%',
-              background: '#E6007E',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 18,
-              fontWeight: 700,
-              color: '#fff',
-              marginLeft: 2,
-            }}
-          >
-            +
-          </div>
-        </button>
+          {/* Plus button (admin only) */}
+          {isAdmin && (
+            <div
+              style={{
+                width: 26,
+                height: 26,
+                borderRadius: '50%',
+                background: '#E6007E',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 18,
+                fontWeight: 700,
+                color: '#fff',
+                marginLeft: 2,
+              }}
+            >
+              +
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Right side */}
@@ -159,8 +168,64 @@ export default function Header({ onSettingsClick, onTokenClick, tokenBalance = 0
           Online
         </div>
 
-        {/* QR button */}
+        {/* Games admin button (admin only) */}
+        {isAdmin && (
+          <button
+            onClick={() => navigate('/admin/games')}
+            style={{
+              height: 36,
+              borderRadius: 8,
+              border: '1px solid rgba(123,100,169,0.18)',
+              background: 'rgba(255,255,255,0.025)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 7,
+              padding: '0 14px',
+              color: 'rgba(255,255,255,0.5)',
+              fontSize: 11,
+              fontWeight: 600,
+            }}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <rect x="2" y="6" width="20" height="12" rx="2" />
+              <path d="M12 12h.01M8 12h.01M16 12h.01" />
+            </svg>
+            Giochi
+          </button>
+        )}
+
+        {/* Analytics button (admin only) */}
+        {isAdmin && (
+          <button
+            onClick={() => navigate('/analytics')}
+            style={{
+              height: 36,
+              borderRadius: 8,
+              border: '1px solid rgba(230,0,126,0.25)',
+              background: 'rgba(230,0,126,0.06)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 7,
+              padding: '0 14px',
+              color: '#E6007E',
+              fontSize: 11,
+              fontWeight: 600,
+            }}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M18 20V10M12 20V4M6 20v-6" />
+            </svg>
+            Analisi
+          </button>
+        )}
+
+        {/* History button */}
         <button
+          onClick={() => navigate('/history')}
           style={{
             height: 36,
             borderRadius: 8,
@@ -177,22 +242,40 @@ export default function Header({ onSettingsClick, onTokenClick, tokenBalance = 0
             fontWeight: 600,
           }}
         >
-          <svg
-            width="15"
-            height="15"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-          >
-            <rect x="3" y="3" width="7" height="7" />
-            <rect x="14" y="3" width="7" height="7" />
-            <rect x="3" y="14" width="7" height="7" />
-            <rect x="14" y="14" width="7" height="7" />
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <circle cx="12" cy="12" r="10" />
+            <polyline points="12 6 12 12 16 14" />
           </svg>
-          QR
+          Storico
         </button>
+
+        {/* Install PWA button */}
+        {canInstall && (
+          <button
+            onClick={() => promptInstall().catch(() => {})}
+            aria-label="Installa app"
+            style={{
+              height: 36,
+              borderRadius: 8,
+              border: '1px solid rgba(68,255,136,0.22)',
+              background: 'rgba(68,255,136,0.06)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 6,
+              padding: '0 14px',
+              color: '#44ff88',
+              fontSize: 10,
+              fontWeight: 700,
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
+            </svg>
+            Installa
+          </button>
+        )}
 
         {/* Clock */}
         <span
@@ -207,34 +290,37 @@ export default function Header({ onSettingsClick, onTokenClick, tokenBalance = 0
           {timeStr}
         </span>
 
-        {/* Settings gear button */}
-        <button
-          onClick={onSettingsClick}
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: 8,
-            border: '1px solid rgba(123,100,169,0.18)',
-            background: 'rgba(255,255,255,0.025)',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="rgba(255,255,255,0.5)"
-            strokeWidth="1.8"
-            strokeLinecap="round"
+        {/* Settings gear button (admin only) */}
+        {isAdmin && (
+          <button
+            onClick={onSettingsClick}
+            aria-label="Impostazioni"
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 8,
+              border: '1px solid rgba(123,100,169,0.18)',
+              background: 'rgba(255,255,255,0.025)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
           >
-            <circle cx="12" cy="12" r="3" />
-            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
-          </svg>
-        </button>
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="rgba(255,255,255,0.5)"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+            >
+              <circle cx="12" cy="12" r="3" />
+              <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+            </svg>
+          </button>
+        )}
       </div>
     </header>
   )

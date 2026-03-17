@@ -26,6 +26,11 @@ router.post(
       const { amount, reason } = parsed.data
       const venueId = req.params.id
 
+      // Venue isolation: non-super-admins can only manage their own venue
+      if (req.user!.role !== 'super_admin' && venueId !== req.user!.venueId) {
+        return next(createError(403, 'FORBIDDEN', 'Cannot manage tokens for another venue'))
+      }
+
       // Fetch current balance
       const { data: venue, error: fetchError } = await supabase
         .from('venues')

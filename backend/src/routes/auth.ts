@@ -195,6 +195,7 @@ router.post(
 // POST /api/v1/auth/logout
 router.post(
   '/api/v1/auth/logout',
+  requireAuth,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const refreshToken = req.cookies?.refreshToken

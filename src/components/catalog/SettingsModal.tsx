@@ -1,3 +1,5 @@
+import { useNavigate } from 'react-router'
+import { toast } from 'sonner'
 import { useAuthStore } from '@/store/authStore'
 import { useConnectionStore } from '@/store/connectionStore'
 
@@ -96,14 +98,10 @@ function ActionBtn({
 }
 
 export default function SettingsModal({ onClose }: SettingsModalProps) {
+  const navigate = useNavigate()
   const { venueName, venueId, role, logout } = useAuthStore()
   const bridgeStatus = useConnectionStore((s) => s.bridgeStatus)
   const cloudStatus = useConnectionStore((s) => s.cloudStatus)
-
-  function toast(msg: string) {
-    // Simple alert for now — will be replaced with proper toast system
-    console.log(msg)
-  }
 
   function handleLogout() {
     logout()
@@ -217,7 +215,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
           <>
             <SectionLabel mt>Azioni</SectionLabel>
             <div className="flex flex-wrap gap-2">
-              <ActionBtn onClick={() => toast('Aggiornamento in corso...')}>
+              <ActionBtn onClick={() => toast.info('Aggiornamento in corso...')}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                   <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
                   <path d="M3 3v5h5" />
@@ -226,21 +224,30 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                 </svg>
                 Aggiorna giochi
               </ActionBtn>
-              <ActionBtn onClick={() => toast('Report esportato')}>
+              <ActionBtn onClick={() => toast.success('Report esportato')}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                   <polyline points="14 2 14 8 20 8" />
                 </svg>
                 Report sessioni
               </ActionBtn>
-              <ActionBtn danger onClick={() => toast('Riavvio piattaforme...')}>
+              <ActionBtn danger onClick={() => toast.warning('Riavvio piattaforme...')}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                   <path d="M18.36 6.64A9 9 0 1 1 5.64 5.64" />
                   <line x1="12" y1="2" x2="12" y2="12" />
                 </svg>
                 Riavvia
               </ActionBtn>
-              <ActionBtn accent>
+              <ActionBtn accent onClick={() => { onClose(); navigate('/operators') }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+                Gestione operatori
+              </ActionBtn>
+              <ActionBtn onClick={() => toast.info('Funzione in arrivo')}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                   <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
                   <line x1="8" y1="21" x2="16" y2="21" />

@@ -1,4 +1,5 @@
-import { useState, useMemo, useEffect, useCallback } from 'react'
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
+import { toast } from 'sonner'
 import Header from '@/components/catalog/Header'
 import CategoryFilters from '@/components/catalog/CategoryFilters'
 import GameGrid from '@/components/catalog/GameGrid'
@@ -7,10 +8,12 @@ import SessionBar from '@/components/catalog/SessionBar'
 import SettingsModal from '@/components/catalog/SettingsModal'
 import TokenModal from '@/components/catalog/TokenModal'
 import { checkBridgeHealth, launchGame, stopSession } from '@/services/bridgeApi'
+import { checkCloudHealth } from '@/services/cloudApi'
 import { useSessionStore } from '@/store/sessionStore'
 import { useConnectionStore } from '@/store/connectionStore'
 import { useGameStore } from '@/store/gameStore'
 import { useTokenStore } from '@/store/tokenStore'
+import { useAuthStore } from '@/store/authStore'
 import type { Category, Game } from '@/types/models'
 
 export default function CatalogPage() {
@@ -20,11 +23,15 @@ export default function CatalogPage() {
   const [ending, setEnding] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [tokenModalOpen, setTokenModalOpen] = useState(false)
+  const isAdmin = useAuthStore((s) => s.role) === 'admin'
 
   const activeSession = useSessionStore((s) => s.activeSession)
   const startSession = useSessionStore((s) => s.startSession)
   const endSession = useSessionStore((s) => s.endSession)
   const setBridgeStatus = useConnectionStore((s) => s.setBridgeStatus)
+  const setCloudStatus = useConnectionStore((s) => s.setCloudStatus)
+  const cloudStatus = useConnectionStore((s) => s.cloudStatus)
+  const syncAllPending = useSessionStore((s) => s.syncAllPending)
 
   const games = useGameStore((s) => s.games)
   const fetchGames = useGameStore((s) => s.fetchGames)
@@ -50,6 +57,25 @@ export default function CatalogPage() {
     return () => { active = false; clearInterval(interval) }
   }, [setBridgeStatus])
 
+  // Poll cloud health + auto-sync pending sessions on reconnect
+  const wasOfflineRef = useRef(cloudStatus === 'offline')
+  useEffect(() => {
+    let active = true
+    async function poll() {
+      const online = await checkCloudHealth()
+      if (!active) return
+      setCloudStatus(online ? 'online' : 'offline')
+      // Auto-sync when transitioning from offline to online
+      if (online && wasOfflineRef.current) {
+        syncAllPending()
+      }
+      wasOfflineRef.current = !online
+    }
+    poll()
+    const interval = setInterval(poll, 15000)
+    return () => { active = false; clearInterval(interval) }
+  }, [setCloudStatus, syncAllPending])
+
   const filteredGames = useMemo(() => {
     if (selectedCategory === 'all') return games
     return games.filter((g) => g.category === selectedCategory)
@@ -61,7 +87,7 @@ export default function CatalogPage() {
     // Check and consume tokens locally first
     const consumed = consumeLocal(selectedGame.tokenCost, selectedGame.id)
     if (!consumed) {
-      alert('Gettoni insufficienti!')
+      toast.warning('Gettoni insufficienti!')
       return
     }
 
@@ -73,7 +99,7 @@ export default function CatalogPage() {
         setSelectedGame(null)
       }
     } catch (err) {
-      console.error('Launch failed:', err)
+      toast.error('Avvio gioco fallito')
     } finally {
       setLaunching(false)
     }
@@ -83,9 +109,9 @@ export default function CatalogPage() {
     setEnding(true)
     try {
       await stopSession()
-      endSession()
+      await endSession()
     } catch (err) {
-      console.error('Stop failed:', err)
+      toast.error('Errore arresto sessione')
     } finally {
       setEnding(false)
     }
@@ -101,8 +127,8 @@ export default function CatalogPage() {
       {/* All content above blobs */}
       <div className="relative z-10 flex flex-1 flex-col min-h-0">
         <Header
-          onSettingsClick={() => setSettingsOpen(true)}
-          onTokenClick={() => setTokenModalOpen(true)}
+          onSettingsClick={isAdmin ? () => setSettingsOpen(true) : undefined}
+          onTokenClick={isAdmin ? () => setTokenModalOpen(true) : undefined}
           tokenBalance={tokenBalance}
         />
         <CategoryFilters
@@ -116,11 +142,11 @@ export default function CatalogPage() {
           <SessionBar onEnd={handleEnd} ending={ending} />
         )}
 
-        {settingsOpen && (
+        {isAdmin && settingsOpen && (
           <SettingsModal onClose={() => setSettingsOpen(false)} />
         )}
 
-        {tokenModalOpen && (
+        {isAdmin && tokenModalOpen && (
           <TokenModal balance={tokenBalance} onClose={() => setTokenModalOpen(false)} />
         )}
 

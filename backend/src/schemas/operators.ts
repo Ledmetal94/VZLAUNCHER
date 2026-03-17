@@ -9,7 +9,6 @@ export const createOperatorSchema = z.object({
     .regex(/^[a-z0-9]+$/, 'Username must be lowercase alphanumeric'),
   password: z.string().min(6, 'Password must be at least 6 characters').max(100),
   role: z.enum(['admin', 'normal']),
-  venueId: z.string().uuid('Invalid venue ID'),
 })
 
 export const updateOperatorSchema = z

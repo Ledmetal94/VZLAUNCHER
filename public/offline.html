@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1920, initial-scale=1.0">
+  <title>VZ Launcher — Offline</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0D0C1A;
+      color: white;
+      font-family: 'Outfit', system-ui, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .container {
+      text-align: center;
+      max-width: 400px;
+    }
+    .icon {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      background: rgba(245,158,11,0.1);
+      border: 1px solid rgba(245,158,11,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      margin: 0 auto 24px;
+    }
+    h1 { font-size: 22px; font-weight: 800; margin-bottom: 12px; }
+    p { font-size: 14px; color: rgba(255,255,255,0.4); line-height: 1.6; margin-bottom: 24px; }
+    .btn {
+      padding: 12px 32px;
+      border-radius: 8px;
+      background: #E6007E;
+      border: none;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .btn:hover { background: #CC006F; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">&#9888;</div>
+    <h1>Sei offline</h1>
+    <p>Riconnettiti a Internet per continuare a usare VZ Launcher. I dati locali verranno sincronizzati automaticamente.</p>
+    <button class="btn" onclick="window.location.reload()">Riprova</button>
+  </div>
+  <noscript><p style="color:rgba(255,255,255,0.4);font-size:12px;margin-top:16px;">Abilita JavaScript per ricaricare automaticamente.</p></noscript>
+  <script>
+    // Auto-reload when back online (debounced 1s to avoid flicker)
+    let t;
+    window.addEventListener('online', () => { clearTimeout(t); t = setTimeout(() => window.location.reload(), 1000); })
+  </script>
+</body>
+</html>

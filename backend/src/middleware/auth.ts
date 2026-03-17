@@ -2,13 +2,13 @@ import type { Request, Response, NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
 import { createError } from './errorHandler'
 
-const JWT_SECRET = process.env.JWT_SECRET
+const JWT_SECRET = process.env.JWT_SECRET as string
 if (!JWT_SECRET) throw new Error('Missing JWT_SECRET environment variable')
 
 export interface JwtPayload {
   sub: string
-  role: 'admin' | 'normal'
-  venueId: string
+  role: 'admin' | 'normal' | 'super_admin'
+  venueId: string | null
 }
 
 declare module 'express' {
@@ -25,7 +25,7 @@ export function requireAuth(req: Request, _res: Response, next: NextFunction) {
 
   const token = authHeader.slice(7)
   try {
-    const payload = jwt.verify(token, JWT_SECRET) as JwtPayload
+    const payload = jwt.verify(token, JWT_SECRET) as unknown as JwtPayload
     req.user = payload
     next()
   } catch {
@@ -34,8 +34,15 @@ export function requireAuth(req: Request, _res: Response, next: NextFunction) {
 }
 
 export function requireAdmin(req: Request, _res: Response, next: NextFunction) {
-  if (req.user?.role !== 'admin') {
+  if (req.user?.role !== 'admin' && req.user?.role !== 'super_admin') {
     return next(createError(403, 'FORBIDDEN', 'Admin access required'))
+  }
+  next()
+}
+
+export function requireSuperAdmin(req: Request, _res: Response, next: NextFunction) {
+  if (req.user?.role !== 'super_admin') {
+    return next(createError(403, 'FORBIDDEN', 'Super-admin access required'))
   }
   next()
 }

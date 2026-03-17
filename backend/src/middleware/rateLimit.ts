@@ -16,10 +16,13 @@ setInterval(() => {
   }
 }, 5 * 60 * 1000)
 
-export function rateLimit(maxAttempts: number, windowMs: number) {
+function createRateLimiter(
+  keyFn: (req: Request) => string,
+  maxAttempts: number,
+  windowMs: number,
+) {
   return (req: Request, _res: Response, next: NextFunction) => {
-    const ip = req.ip || req.socket.remoteAddress || 'unknown'
-    const key = `${req.path}:${ip}`
+    const key = keyFn(req)
     const now = Date.now()
 
     const entry = store.get(key)
@@ -34,10 +37,30 @@ export function rateLimit(maxAttempts: number, windowMs: number) {
     if (entry.count > maxAttempts) {
       const retryAfter = Math.ceil((entry.resetAt - now) / 1000)
       return next(
-        createError(429, 'RATE_LIMITED', `Too many attempts. Try again in ${retryAfter}s`),
+        createError(429, 'RATE_LIMITED', `Too many requests. Try again in ${retryAfter}s`),
       )
     }
 
     next()
   }
+}
+
+/** Per-IP rate limit (for auth endpoints). */
+export function rateLimit(maxAttempts: number, windowMs: number) {
+  return createRateLimiter(
+    (req) => `ip:${req.path}:${req.ip || req.socket.remoteAddress || 'unknown'}`,
+    maxAttempts,
+    windowMs,
+  )
+}
+
+/** Per-venue rate limit (for authenticated endpoints). Falls back to IP if no user. */
+export function venueRateLimit(maxAttempts = 100, windowMs = 60 * 1000) {
+  return createRateLimiter(
+    (req) => req.user?.venueId
+      ? `venue:${req.user.venueId}`
+      : `ip:${req.ip || req.socket.remoteAddress || 'unknown'}`,
+    maxAttempts,
+    windowMs,
+  )
 }

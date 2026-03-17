@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router'
-import { getSessionHistory, type CloudSession } from '@/services/cloudApi'
+import { toast } from 'sonner'
+import { SkeletonRow } from '@/components/ui/Skeleton'
+import { getSessionHistory, getOperators, type CloudSession, type CloudOperator, type SessionFilters } from '@/services/cloudApi'
+import { useAuthStore } from '@/store/authStore'
 
 const CATEGORY_LABELS: Record<string, string> = {
   arcade_light: 'Arcade Light',
@@ -32,18 +35,40 @@ function formatDate(iso: string): string {
   })
 }
 
+const RANGE_OPTIONS = [
+  { label: 'Tutto', days: -1 },
+  { label: 'Oggi', days: 0 },
+  { label: '7g', days: 7 },
+  { label: '30g', days: 30 },
+]
+
 export default function HistoryPage() {
   const navigate = useNavigate()
+  const role = useAuthStore((s) => s.role)
+  const isAdmin = role === 'admin'
   const [sessions, setSessions] = useState<CloudSession[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
+  const [operators, setOperators] = useState<CloudOperator[]>([])
+  const [rangeDays, setRangeDays] = useState(-1)
+  const [operatorId, setOperatorId] = useState('')
+  const [category, setCategory] = useState('')
+  const [status, setStatus] = useState('')
   const pageSize = 15
+
+  // Load operators for filter
+  useEffect(() => {
+    if (isAdmin) {
+      getOperators().then(setOperators).catch(() => {})
+    }
+  }, [isAdmin])
 
   useEffect(() => {
     let active = true
     setLoading(true)
-    getSessionHistory(page, pageSize)
+
+    getSessionHistory(page, pageSize, buildFilters())
       .then((res) => {
         if (active) {
           setSessions(res.data)
@@ -57,9 +82,67 @@ export default function HistoryPage() {
         if (active) setLoading(false)
       })
     return () => { active = false }
-  }, [page])
+  }, [page, rangeDays, operatorId, category, status])
 
   const totalPages = Math.ceil(total / pageSize)
+
+  const buildFilters = (): SessionFilters => {
+    const f: SessionFilters = {}
+    if (rangeDays >= 0) {
+      f.endDate = new Date().toISOString()
+      f.startDate = rangeDays === 0
+        ? new Date(new Date().setHours(0, 0, 0, 0)).toISOString()
+        : new Date(Date.now() - rangeDays * 86400000).toISOString()
+    }
+    if (operatorId) f.operatorId = operatorId
+    if (category) f.category = category
+    if (status) f.status = status
+    return f
+  }
+
+  const [exporting, setExporting] = useState(false)
+  const [exportError, setExportError] = useState('')
+
+  const exportCsv = async () => {
+    setExporting(true)
+    setExportError('')
+    try {
+      // Fetch all filtered sessions (up to 100)
+      const res = await getSessionHistory(1, 100, buildFilters())
+      const rows = res.data
+
+      const header = ['Data', 'Gioco', 'Categoria', 'Giocatori', 'Durata (s)', 'Gettoni', 'Stato']
+      const csvRows = [
+        header.join(','),
+        ...rows.map((s) =>
+          [
+            s.startedAt,
+            s.gameId?.slice(0, 8) || '',
+            CATEGORY_LABELS[s.category] || s.category,
+            s.playersCount,
+            s.durationActual || 0,
+            s.tokensConsumed,
+            s.status,
+          ].join(','),
+        ),
+      ]
+
+      const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `sessioni_${new Date().toISOString().slice(0, 10)}.csv`
+      a.click()
+      URL.revokeObjectURL(url)
+      toast.success('CSV esportato')
+    } catch {
+      toast.error('Esportazione fallita')
+      setExportError('Esportazione fallita')
+      setTimeout(() => setExportError(''), 3000)
+    } finally {
+      setExporting(false)
+    }
+  }
 
   return (
     <div
@@ -107,17 +190,164 @@ export default function HistoryPage() {
             </button>
             <span style={{ fontSize: 20, fontWeight: 800 }}>Storico sessioni</span>
           </div>
-          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>
-            {total} sessioni totali
-          </span>
+          <div className="flex items-center gap-3">
+            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>
+              {total} sessioni totali
+            </span>
+            <button
+              onClick={exportCsv}
+              disabled={exporting || sessions.length === 0}
+              style={{
+                height: 32,
+                borderRadius: 8,
+                border: '1px solid rgba(123,100,169,0.18)',
+                background: 'rgba(255,255,255,0.025)',
+                cursor: exporting || sessions.length === 0 ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '0 12px',
+                color: exporting ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.5)',
+                fontSize: 10,
+                fontWeight: 600,
+              }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
+              </svg>
+              {exporting ? 'Esporta...' : 'CSV'}
+            </button>
+            {exportError && (
+              <span style={{ fontSize: 10, color: '#ff4444', fontWeight: 600 }}>{exportError}</span>
+            )}
+          </div>
+        </div>
+
+        {/* Filters bar */}
+        <div
+          className="flex shrink-0 items-center gap-3"
+          style={{
+            height: 44,
+            padding: '0 32px',
+            borderBottom: '1px solid rgba(123,100,169,0.08)',
+            background: 'rgba(15,14,31,0.4)',
+          }}
+        >
+          {/* Date range */}
+          {RANGE_OPTIONS.map((opt) => (
+            <button
+              key={opt.days}
+              onClick={() => { setRangeDays(opt.days); setPage(1) }}
+              style={{
+                padding: '4px 12px',
+                borderRadius: 6,
+                border: `1px solid ${rangeDays === opt.days ? 'rgba(230,0,126,0.5)' : 'rgba(123,100,169,0.15)'}`,
+                background: rangeDays === opt.days ? 'rgba(230,0,126,0.12)' : 'transparent',
+                color: rangeDays === opt.days ? '#E6007E' : 'rgba(255,255,255,0.4)',
+                fontSize: 10,
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              {opt.label}
+            </button>
+          ))}
+
+          <div style={{ width: 1, height: 20, background: 'rgba(123,100,169,0.15)', margin: '0 4px' }} />
+
+          {/* Operator filter (admin only) */}
+          {isAdmin && (
+            <select
+              value={operatorId}
+              onChange={(e) => { setOperatorId(e.target.value); setPage(1) }}
+              style={{
+                padding: '4px 10px',
+                borderRadius: 6,
+                border: '1px solid rgba(123,100,169,0.15)',
+                background: 'rgba(255,255,255,0.03)',
+                color: operatorId ? '#fff' : 'rgba(255,255,255,0.4)',
+                fontSize: 10,
+                fontWeight: 600,
+                outline: 'none',
+              }}
+            >
+              <option value="">Tutti gli operatori</option>
+              {operators.map((op) => (
+                <option key={op.id} value={op.id}>{op.name}</option>
+              ))}
+            </select>
+          )}
+
+          {/* Category filter */}
+          <select
+            value={category}
+            onChange={(e) => { setCategory(e.target.value); setPage(1) }}
+            style={{
+              padding: '4px 10px',
+              borderRadius: 6,
+              border: '1px solid rgba(123,100,169,0.15)',
+              background: 'rgba(255,255,255,0.03)',
+              color: category ? '#fff' : 'rgba(255,255,255,0.4)',
+              fontSize: 10,
+              fontWeight: 600,
+              outline: 'none',
+            }}
+          >
+            <option value="">Tutte le categorie</option>
+            {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
+              <option key={key} value={key}>{label}</option>
+            ))}
+          </select>
+
+          {/* Status filter */}
+          <select
+            value={status}
+            onChange={(e) => { setStatus(e.target.value); setPage(1) }}
+            style={{
+              padding: '4px 10px',
+              borderRadius: 6,
+              border: '1px solid rgba(123,100,169,0.15)',
+              background: 'rgba(255,255,255,0.03)',
+              color: status ? '#fff' : 'rgba(255,255,255,0.4)',
+              fontSize: 10,
+              fontWeight: 600,
+              outline: 'none',
+            }}
+          >
+            <option value="">Tutti gli stati</option>
+            <option value="completed">Completata</option>
+            <option value="error">Errore</option>
+            <option value="cancelled">Cancellata</option>
+          </select>
+
+          {/* Reset filters */}
+          {(rangeDays !== -1 || operatorId || category || status) && (
+            <button
+              onClick={() => { setRangeDays(-1); setOperatorId(''); setCategory(''); setStatus(''); setPage(1) }}
+              style={{
+                padding: '4px 10px',
+                borderRadius: 6,
+                border: '1px solid rgba(255,68,68,0.2)',
+                background: 'rgba(255,68,68,0.06)',
+                color: '#ff4444',
+                fontSize: 10,
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              Reset
+            </button>
+          )}
         </div>
 
         {/* Table */}
         <div className="flex-1 min-h-0 overflow-auto" style={{ padding: '20px 32px' }}>
           {loading ? (
-            <div className="flex items-center justify-center h-full">
-              <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 14 }}>Caricamento...</span>
-            </div>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <tbody>
+                {Array.from({ length: 10 }).map((_, i) => <SkeletonRow key={i} cols={7} />)}
+              </tbody>
+            </table>
           ) : sessions.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full gap-3">
               <div style={{ fontSize: 40, opacity: 0.3 }}>&#9671;</div>

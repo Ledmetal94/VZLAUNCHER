@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { supabase } from '../lib/supabase'
+import { logger } from '../lib/logger'
 import { createSessionSchema, listSessionsSchema } from '../schemas/sessions'
 import { createError } from '../middleware/errorHandler'
 import { requireAuth } from '../middleware/auth'
@@ -47,7 +48,8 @@ router.post(
         .single()
 
       if (error) {
-        return next(createError(500, 'DB_ERROR', error.message))
+        logger.error({ error }, 'Failed to create session')
+        return next(createError(500, 'DB_ERROR', 'Failed to create session'))
       }
 
       res.status(201).json({
@@ -87,31 +89,46 @@ router.get(
         )
       }
 
-      const { page, pageSize, sort, order } = parsed.data
+      const { page, pageSize, sort, order, startDate, endDate, operatorId, category, status } = parsed.data
       const venueId = req.user!.venueId
       const from = (page - 1) * pageSize
       const to = from + pageSize - 1
 
       // Get total count
-      const { count, error: countError } = await supabase
+      let countQuery = supabase
         .from('sessions')
         .select('id', { count: 'exact', head: true })
         .eq('venue_id', venueId)
+      if (startDate) countQuery = countQuery.gte('started_at', startDate)
+      if (endDate) countQuery = countQuery.lte('started_at', endDate)
+      if (operatorId) countQuery = countQuery.eq('operator_id', operatorId)
+      if (category) countQuery = countQuery.eq('category', category)
+      if (status) countQuery = countQuery.eq('status', status)
+
+      const { count, error: countError } = await countQuery
 
       if (countError) {
         return next(createError(500, 'DB_ERROR', countError.message))
       }
 
       // Get paginated data
-      const { data: rows, error } = await supabase
+      let dataQuery = supabase
         .from('sessions')
         .select('id, venue_id, game_id, operator_id, platform, category, players_count, duration_planned, duration_actual, tokens_consumed, status, error_log, started_at, ended_at')
         .eq('venue_id', venueId)
+      if (startDate) dataQuery = dataQuery.gte('started_at', startDate)
+      if (endDate) dataQuery = dataQuery.lte('started_at', endDate)
+      if (operatorId) dataQuery = dataQuery.eq('operator_id', operatorId)
+      if (category) dataQuery = dataQuery.eq('category', category)
+      if (status) dataQuery = dataQuery.eq('status', status)
+
+      const { data: rows, error } = await dataQuery
         .order(sort, { ascending: order === 'asc' })
         .range(from, to)
 
       if (error) {
-        return next(createError(500, 'DB_ERROR', error.message))
+        logger.error({ error }, 'Failed to list sessions')
+        return next(createError(500, 'DB_ERROR', 'Failed to fetch sessions'))
       }
 
       const data = (rows || []).map((s) => ({

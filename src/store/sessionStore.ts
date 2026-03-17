@@ -16,6 +16,7 @@ export interface ActiveSession {
   category: string
   players: number
   durationPlanned: number
+  tokenCost: number
   startedAt: number
   elapsed: number
 }
@@ -36,13 +37,42 @@ export interface SessionRecord {
   endedAt: string
 }
 
+async function requestBackgroundSync() {
+  try {
+    const reg = await navigator.serviceWorker?.ready
+    if (reg && 'sync' in reg) {
+      await (reg as ServiceWorkerRegistration & { sync: { register: (tag: string) => Promise<void> } }).sync.register('sync-sessions')
+    }
+  } catch {
+    // Background Sync not supported — fallback handled by app reconnect logic
+  }
+}
+
+function buildSyncPayload(record: SessionRecord, errorLog?: string): SyncSessionPayload {
+  return {
+    gameId: record.gameId,
+    platform: record.platform,
+    category: record.category,
+    playersCount: record.playersCount,
+    durationPlanned: record.durationPlanned,
+    durationActual: record.durationActual,
+    tokensConsumed: record.tokensConsumed,
+    status: record.status,
+    ...(errorLog && { errorLog }),
+    startedAt: record.startedAt,
+    endedAt: record.endedAt,
+  }
+}
+
 interface SessionState {
   activeSession: ActiveSession | null
   history: SessionRecord[]
+  _syncing: boolean
   startSession: (game: Game, players: number, sessionId: string) => void
-  endSession: (status?: 'completed' | 'error' | 'cancelled', errorLog?: string) => void
+  endSession: (status?: 'completed' | 'error' | 'cancelled', errorLog?: string) => Promise<void>
   tick: () => void
   retrySync: (id: string) => Promise<void>
+  syncAllPending: () => Promise<number>
   fetchHistory: (page?: number, pageSize?: number) => Promise<{ data: CloudSession[]; total: number; page: number; pageSize: number }>
 }
 
@@ -51,6 +81,7 @@ export const useSessionStore = create<SessionState>()(
     (set, get) => ({
       activeSession: null,
       history: [],
+      _syncing: false,
 
       startSession: (game, players, sessionId) =>
         set({
@@ -62,6 +93,7 @@ export const useSessionStore = create<SessionState>()(
             category: game.category,
             players,
             durationPlanned: game.durationMinutes * 60,
+            tokenCost: game.tokenCost,
             startedAt: Date.now(),
             elapsed: 0,
           },
@@ -85,7 +117,7 @@ export const useSessionStore = create<SessionState>()(
           playersCount: session.players,
           durationPlanned: session.durationPlanned,
           durationActual,
-          tokensConsumed: 1,
+          tokensConsumed: session.tokenCost,
           status,
           syncStatus: 'pending',
           startedAt,
@@ -99,22 +131,8 @@ export const useSessionStore = create<SessionState>()(
         }))
 
         // Attempt cloud sync
-        const payload: SyncSessionPayload = {
-          gameId: record.gameId,
-          platform: record.platform,
-          category: record.category,
-          playersCount: record.playersCount,
-          durationPlanned: record.durationPlanned,
-          durationActual: record.durationActual,
-          tokensConsumed: record.tokensConsumed,
-          status: record.status,
-          ...(errorLog && { errorLog }),
-          startedAt: record.startedAt,
-          endedAt: record.endedAt,
-        }
-
         try {
-          const cloudResult = await cloudSyncSession(payload)
+          const cloudResult = await cloudSyncSession(buildSyncPayload(record, errorLog))
           set((state) => ({
             history: state.history.map((r) =>
               r.id === record.id
@@ -128,6 +146,8 @@ export const useSessionStore = create<SessionState>()(
               r.id === record.id ? { ...r, syncStatus: 'error' as const } : r,
             ),
           }))
+          // Request Background Sync if available
+          requestBackgroundSync()
         }
       },
 
@@ -152,21 +172,8 @@ export const useSessionStore = create<SessionState>()(
           ),
         }))
 
-        const payload: SyncSessionPayload = {
-          gameId: record.gameId,
-          platform: record.platform,
-          category: record.category,
-          playersCount: record.playersCount,
-          durationPlanned: record.durationPlanned,
-          durationActual: record.durationActual,
-          tokensConsumed: record.tokensConsumed,
-          status: record.status,
-          startedAt: record.startedAt,
-          endedAt: record.endedAt,
-        }
-
         try {
-          const cloudResult = await cloudSyncSession(payload)
+          const cloudResult = await cloudSyncSession(buildSyncPayload(record))
           set((state) => ({
             history: state.history.map((r) =>
               r.id === id
@@ -180,6 +187,37 @@ export const useSessionStore = create<SessionState>()(
               r.id === id ? { ...r, syncStatus: 'error' as const } : r,
             ),
           }))
+        }
+      },
+
+      syncAllPending: async () => {
+        // Guard against concurrent syncs
+        if (get()._syncing) return 0
+        set({ _syncing: true })
+
+        try {
+          const pending = get().history.filter(
+            (r) => r.syncStatus === 'pending' || r.syncStatus === 'error',
+          )
+          let synced = 0
+          for (const record of pending) {
+            try {
+              const cloudResult = await cloudSyncSession(buildSyncPayload(record))
+              set((state) => ({
+                history: state.history.map((r) =>
+                  r.id === record.id
+                    ? { ...r, id: cloudResult.id, syncStatus: 'synced' as const }
+                    : r,
+                ),
+              }))
+              synced++
+            } catch {
+              // Leave as error, will retry on next reconnect
+            }
+          }
+          return synced
+        } finally {
+          set({ _syncing: false })
         }
       },
 

@@ -14,3 +14,13 @@ export const manualCreditSchema = z.object({
 })
 
 export type ManualCreditInput = z.infer<typeof manualCreditSchema>
+
+export const purchaseSchema = z.object({
+  packageId: z.number().int().min(1).max(4),
+  quantity: z.number().int().min(3001).optional(),
+}).refine(
+  (data) => data.packageId !== 4 || (data.quantity !== undefined && data.quantity >= 3001),
+  { message: 'Package 4 requires quantity >= 3001', path: ['quantity'] },
+)
+
+export type PurchaseInput = z.infer<typeof purchaseSchema>

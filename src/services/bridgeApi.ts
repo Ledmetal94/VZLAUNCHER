@@ -1,4 +1,4 @@
-const BRIDGE_URL = 'http://localhost:3001'
+const BRIDGE_URL = import.meta.env.VITE_BRIDGE_URL || 'http://localhost:3001'
 
 export async function checkBridgeHealth(): Promise<boolean> {
   try {
@@ -22,17 +22,26 @@ export interface LaunchResult {
 }
 
 export async function launchGame(gameId: string, players: number): Promise<LaunchResult> {
-  const res = await fetch(`${BRIDGE_URL}/launch`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ gameId, players }),
-  })
-  return res.json()
+  try {
+    const res = await fetch(`${BRIDGE_URL}/launch`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ gameId, players }),
+      signal: AbortSignal.timeout(15000),
+    })
+    return res.json()
+  } catch (err) {
+    return { success: false, error: { code: 'BRIDGE_ERROR', message: err instanceof Error ? err.message : 'Bridge unreachable' } }
+  }
 }
 
 export async function stopSession(): Promise<{ success: boolean }> {
-  const res = await fetch(`${BRIDGE_URL}/stop`, { method: 'POST' })
-  return res.json()
+  try {
+    const res = await fetch(`${BRIDGE_URL}/stop`, { method: 'POST', signal: AbortSignal.timeout(10000) })
+    return res.json()
+  } catch {
+    return { success: false }
+  }
 }
 
 export async function getSessionStatus(): Promise<{
@@ -43,6 +52,10 @@ export async function getSessionStatus(): Promise<{
   remaining?: number
   players?: number
 }> {
-  const res = await fetch(`${BRIDGE_URL}/session`)
-  return res.json()
+  try {
+    const res = await fetch(`${BRIDGE_URL}/session`, { signal: AbortSignal.timeout(5000) })
+    return res.json()
+  } catch {
+    return { status: 'idle' }
+  }
 }

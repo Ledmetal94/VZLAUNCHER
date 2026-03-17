@@ -5,15 +5,15 @@ interface AuthState {
   isAuthenticated: boolean
   userId: string | null
   name: string | null
-  role: 'admin' | 'normal' | null
+  role: 'admin' | 'normal' | 'super_admin' | null
   venueId: string | null
   venueName: string | null
   login: (user: {
     id: string
     name: string
-    role: 'admin' | 'normal'
-    venueId: string
-    venueName: string
+    role: 'admin' | 'normal' | 'super_admin'
+    venueId: string | null
+    venueName: string | null
   }) => void
   logout: () => void
 }

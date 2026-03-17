@@ -17,7 +17,10 @@ router.get(
   requireAdmin,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const venueId = (req.query.venue_id as string) || req.user!.venueId
+      // Venue isolation: non-super-admins always see their own venue only
+      const venueId = req.user!.role === 'super_admin'
+        ? (req.query.venue_id as string) || req.user!.venueId
+        : req.user!.venueId
 
       const { data, error } = await supabase
         .from('operators')
@@ -55,7 +58,8 @@ router.post(
         )
       }
 
-      const { name, username, password, role, venueId } = parsed.data
+      const { name, username, password, role } = parsed.data
+      const venueId = req.user!.venueId
 
       // Check username uniqueness
       const { data: existing } = await supabase

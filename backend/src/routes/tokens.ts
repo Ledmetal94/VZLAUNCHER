@@ -1,9 +1,9 @@
 import { Router } from 'express'
 import Stripe from 'stripe'
 import { supabase } from '../lib/supabase'
-import { consumeSchema } from '../schemas/tokens'
+import { consumeSchema, purchaseSchema } from '../schemas/tokens'
 import { createError } from '../middleware/errorHandler'
-import { requireAuth } from '../middleware/auth'
+import { requireAuth, requireAdmin } from '../middleware/auth'
 import type { Request, Response, NextFunction } from 'express'
 
 let _stripe: Stripe | null = null
@@ -64,28 +64,17 @@ router.post(
       const { amount, gameId, sessionId } = parsed.data
       const venueId = req.user!.venueId
 
-      // Check current balance
-      const { data: venue, error: fetchError } = await supabase
-        .from('venues')
-        .select('token_balance')
-        .eq('id', venueId)
-        .single()
-
-      if (fetchError || !venue) {
-        return next(createError(500, 'DB_ERROR', 'Failed to fetch venue'))
-      }
-
-      if (venue.token_balance < amount) {
-        return next(createError(402, 'INSUFFICIENT_TOKENS', `Insufficient token balance. Current: ${venue.token_balance}, required: ${amount}`))
-      }
-
-      // Atomic decrement
+      // Atomic check-and-decrement via RPC (balance check inside the function prevents negative balances)
       const { data: newBalance, error: rpcError } = await supabase.rpc('adjust_token_balance', {
         p_venue_id: venueId,
         p_amount: -amount,
       })
 
       if (rpcError) {
+        // RPC raises exception on insufficient balance
+        if (rpcError.message?.includes('insufficient')) {
+          return next(createError(402, 'INSUFFICIENT_TOKENS', 'Insufficient token balance'))
+        }
         return next(createError(500, 'DB_ERROR', 'Failed to update token balance'))
       }
 
@@ -117,20 +106,19 @@ router.post(
 router.post(
   '/api/v1/tokens/purchase',
   requireAuth,
+  requireAdmin,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { packageId, quantity } = req.body
-      if (!packageId || typeof packageId !== 'number' || packageId < 1 || packageId > 4) {
-        return next(createError(400, 'VALIDATION_ERROR', 'Invalid packageId (1-4)'))
+      const parsed = purchaseSchema.safeParse(req.body)
+      if (!parsed.success) {
+        return next(
+          createError(400, 'VALIDATION_ERROR', 'Invalid request',
+            parsed.error.issues.map((i) => ({ field: String(i.path[0]), issue: i.message })),
+          ),
+        )
       }
 
-      // Package 4 requires a custom quantity (min 3001 tokens at €0.85 each)
-      if (packageId === 4) {
-        if (!quantity || typeof quantity !== 'number' || quantity < 3001) {
-          return next(createError(400, 'VALIDATION_ERROR', 'Package 4 requires quantity >= 3001'))
-        }
-      }
-
+      const { packageId, quantity } = parsed.data
       const venueId = req.user!.venueId
       const operatorId = req.user!.sub
 

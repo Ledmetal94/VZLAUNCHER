@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams, useNavigate } from 'react-router'
 import { getCheckoutSessionStatus } from '@/services/cloudApi'
+import { useTokenStore } from '@/store/tokenStore'
 
 export default function CheckoutReturnPage() {
   const [searchParams] = useSearchParams()
@@ -16,6 +17,10 @@ export default function CheckoutReturnPage() {
       .then((data) => {
         setStatus(data.status)
         setTokens(data.tokens)
+        // Refresh token balance after successful payment
+        if (data.status === 'complete') {
+          useTokenStore.getState().syncBalance()
+        }
       })
       .catch(() => setStatus('error'))
   }, [sessionId])
