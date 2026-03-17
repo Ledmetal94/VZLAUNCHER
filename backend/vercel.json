@@ -1,5 +1,7 @@
 {
   "version": 2,
+  "installCommand": "npm install --omit=dev",
+  "buildCommand": "",
   "builds": [
     {
       "src": "api/_app.js",
