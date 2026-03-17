@@ -15,13 +15,12 @@ const GAP = 14
 export default function GameGrid({ games, onGameClick }: GameGridProps) {
   const { cols, cardWidth, cardHeight } = useMemo(() => {
     const availW = 1920 - PADDING_H * 2 // 1856
-    // Reference: 5 columns for ≤12 filtered, up to 6 for more
-    const c = games.length <= 12 ? Math.min(games.length, 5) : Math.min(games.length, 6)
+    // Always 6 columns — card size stays consistent when filtering
+    const c = 6
     const cw = (availW - (c - 1) * GAP) / c
-    // Vertical poster ratio ~1.35
     const ch = cw * 1.35
     return { cols: c, cardWidth: cw, cardHeight: ch }
-  }, [games.length])
+  }, [])
 
   return (
     <div
