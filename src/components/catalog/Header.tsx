@@ -192,7 +192,7 @@ export default function Header({ onSettingsClick, onTokenClick, tokenBalance = 0
         {/* Games admin button (admin only) */}
         {isAdmin && (
           <button
-            onClick={() => navigate('/admin/games')}
+            onClick={() => window.location.href = '/admin/games'}
             style={{
               height: 36,
               borderRadius: 8,
@@ -220,7 +220,7 @@ export default function Header({ onSettingsClick, onTokenClick, tokenBalance = 0
         {/* Analytics button (admin only) */}
         {isAdmin && (
           <button
-            onClick={() => navigate('/analytics')}
+            onClick={() => window.location.href = '/analytics'}
             style={{
               height: 36,
               borderRadius: 8,
@@ -246,7 +246,7 @@ export default function Header({ onSettingsClick, onTokenClick, tokenBalance = 0
 
         {/* History button */}
         <button
-          onClick={() => navigate('/history')}
+          onClick={() => window.location.href = '/history'}
           style={{
             height: 36,
             borderRadius: 8,
