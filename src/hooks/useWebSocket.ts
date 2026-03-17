@@ -6,8 +6,9 @@ import { useLicenseStore } from '@/store/licenseStore'
 const WS_URL = (import.meta.env.VITE_CLOUD_URL || 'http://localhost:3002')
   .replace(/^http/, 'ws')
 
-const RECONNECT_BASE_MS = 1000
-const RECONNECT_MAX_MS = 30000
+const RECONNECT_BASE_MS = 2000
+const RECONNECT_MAX_MS = 60000
+const MAX_RECONNECT_ATTEMPTS = 5
 const HEARTBEAT_MS = 30000
 
 export function useWebSocket() {
@@ -65,7 +66,8 @@ export function useWebSocket() {
 
       ws.onclose = () => {
         cleanup()
-        setCloudStatus('offline')
+        // Don't set cloud status to offline here — let HTTP polling be authoritative
+        // WebSocket is an enhancement, not the source of truth for connectivity
         scheduleReconnect()
       }
 
@@ -86,6 +88,7 @@ export function useWebSocket() {
   }, [])
 
   const scheduleReconnect = useCallback(() => {
+    if (reconnectAttempt.current >= MAX_RECONNECT_ATTEMPTS) return // Stop trying
     const delay = Math.min(
       RECONNECT_BASE_MS * Math.pow(2, reconnectAttempt.current),
       RECONNECT_MAX_MS,
