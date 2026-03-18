@@ -26,17 +26,21 @@ type Filter = 'all' | 'pending' | 'confirmed' | 'failed'
 export default function SuperAdminBankTransfersPage() {
   const navigate = useNavigate()
   const [transfers, setTransfers] = useState<BankTransfer[]>([])
+  const [total, setTotal] = useState(0)
+  const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
   const [actionId, setActionId] = useState<string | null>(null)
   const [filter, setFilter] = useState<Filter>('all')
+  const pageSize = 20
 
   const load = useCallback(() => {
     setLoading(true)
-    getSuperAdminBankTransfers()
-      .then(setTransfers)
+    const status = filter === 'all' ? undefined : filter
+    getSuperAdminBankTransfers(page, pageSize, status)
+      .then((res) => { setTransfers(res.transfers); setTotal(res.total) })
       .catch(() => toast.error('Errore caricamento bonifici'))
       .finally(() => setLoading(false))
-  }, [])
+  }, [page, filter])
 
   useEffect(load, [load])
 
@@ -66,8 +70,7 @@ export default function SuperAdminBankTransfersPage() {
     }
   }
 
-  const filtered = filter === 'all' ? transfers : transfers.filter((t) => t.status === filter)
-  const pendingCount = transfers.filter((t) => t.status === 'pending').length
+  const totalPages = Math.ceil(total / pageSize)
 
   const chipStyle = (active: boolean): React.CSSProperties => ({
     padding: '5px 12px', borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: 'pointer',
@@ -109,21 +112,14 @@ export default function SuperAdminBankTransfersPage() {
               </svg>
             </button>
             <h1 style={{ fontSize: 22, fontWeight: 800 }}>Bonifici Bancari</h1>
-            {pendingCount > 0 && (
-              <span style={{
-                padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700,
-                background: 'rgba(245,158,11,0.15)', color: '#f59e0b',
-              }}>
-                {pendingCount} in attesa
-              </span>
-            )}
+            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>{total} risultati</span>
           </div>
         </div>
 
         {/* Filters */}
         <div className="flex items-center gap-2" style={{ marginBottom: 16 }}>
           {(['all', 'pending', 'confirmed', 'failed'] as Filter[]).map((f) => (
-            <button key={f} style={chipStyle(filter === f)} onClick={() => setFilter(f)}>
+            <button key={f} style={chipStyle(filter === f)} onClick={() => { setFilter(f); setPage(1) }}>
               {f === 'all' ? 'Tutti' : STATUS_COLORS[f]?.label || f}
             </button>
           ))}
@@ -159,14 +155,14 @@ export default function SuperAdminBankTransfersPage() {
                 Array.from({ length: 6 }).map((_, i) => (
                   <tr key={i}><td colSpan={6} style={{ padding: '8px 16px' }}><SkeletonRow /></td></tr>
                 ))
-              ) : filtered.length === 0 ? (
+              ) : transfers.length === 0 ? (
                 <tr>
                   <td colSpan={6} style={{ padding: 40, textAlign: 'center', color: 'rgba(255,255,255,0.25)' }}>
                     Nessun bonifico trovato
                   </td>
                 </tr>
               ) : (
-                filtered.map((t) => {
+                transfers.map((t) => {
                   const statusInfo = STATUS_COLORS[t.status] || { label: t.status, color: 'rgba(255,255,255,0.5)' }
                   const busy = actionId === t.id
                   return (
@@ -220,6 +216,14 @@ export default function SuperAdminBankTransfersPage() {
             </tbody>
           </table>
         </div>
+
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2" style={{ marginTop: 16 }}>
+            <button disabled={page <= 1} onClick={() => setPage(page - 1)} style={{ ...chipStyle(false), opacity: page <= 1 ? 0.3 : 1, cursor: page <= 1 ? 'default' : 'pointer' }}>← Prec</button>
+            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', padding: '0 8px' }}>{page} / {totalPages}</span>
+            <button disabled={page >= totalPages} onClick={() => setPage(page + 1)} style={{ ...chipStyle(false), opacity: page >= totalPages ? 0.3 : 1, cursor: page >= totalPages ? 'default' : 'pointer' }}>Succ →</button>
+          </div>
+        )}
       </div>
     </div>
   )

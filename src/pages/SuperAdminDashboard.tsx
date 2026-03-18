@@ -9,6 +9,7 @@ import { logout as cloudLogout } from '@/services/cloudApi'
 import {
   getCrossVenueAnalytics,
   getSuperAdminVenues,
+  getSuperAdminLicenses,
   createVenue,
   updateVenue,
   creditVenueTokens,
@@ -18,6 +19,7 @@ import {
   type CloudVenue,
   type CreateVenuePayload,
   type VenueGame,
+  type VenueLicense,
 } from '@/services/cloudApi'
 
 const RANGE_OPTIONS = [
@@ -51,6 +53,8 @@ export default function SuperAdminDashboard() {
   const [error, setError] = useState('')
   const [venueGamesList, setVenueGamesList] = useState<VenueGame[]>([])
   const [venueGamesLoading, setVenueGamesLoading] = useState(false)
+  const [licenses, setLicenses] = useState<VenueLicense[]>([])
+  const onlineCount = licenses.filter((l) => l.lastSeenAgoMs !== null && l.lastSeenAgoMs < 60 * 60 * 1000).length
 
   const loadData = () => {
     setLoading(true)
@@ -60,9 +64,10 @@ export default function SuperAdminDashboard() {
     Promise.all([
       getCrossVenueAnalytics(startDate, endDate),
       getSuperAdminVenues(),
+      getSuperAdminLicenses(),
     ])
-      .then(([a, v]) => { setAnalytics(a); setVenues(v) })
-      .catch(() => {})
+      .then(([a, v, l]) => { setAnalytics(a); setVenues(v); setLicenses(l) })
+      .catch(() => { import('sonner').then(({ toast }) => toast.error('Errore caricamento dati')) })
       .finally(() => setLoading(false))
   }
 
@@ -237,6 +242,26 @@ export default function SuperAdminDashboard() {
                 Gettoni
               </button>
               <button
+                onClick={() => navigate('/super-admin/audit-log')}
+                style={{
+                  padding: '6px 14px', borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                  border: '1px solid rgba(123,100,169,0.15)',
+                  background: 'transparent', color: 'rgba(255,255,255,0.4)',
+                }}
+              >
+                Audit
+              </button>
+              <button
+                onClick={() => navigate('/super-admin/licenses')}
+                style={{
+                  padding: '6px 14px', borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                  border: '1px solid rgba(123,100,169,0.15)',
+                  background: 'transparent', color: 'rgba(255,255,255,0.4)',
+                }}
+              >
+                Licenze
+              </button>
+              <button
                 onClick={() => navigate('/super-admin/royalties')}
                 style={{
                   padding: '6px 14px', borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: 'pointer',
@@ -297,6 +322,7 @@ export default function SuperAdminDashboard() {
               <div className="grid grid-cols-4 gap-4">
                 <KpiCard label="Sedi totali" value={kpis?.totalVenues ?? 0} />
                 <KpiCard label="Sedi attive" value={kpis?.activeVenues ?? 0} color="#44ff88" />
+                <KpiCard label="Sedi online" value={`${onlineCount}/${licenses.length}`} color={onlineCount === licenses.length ? '#44ff88' : '#f59e0b'} />
                 <KpiCard label="Sessioni totali" value={kpis?.totalSessions ?? 0} />
                 <KpiCard label="Gettoni consumati" value={kpis?.totalTokens ?? 0} accent />
               </div>

@@ -4,6 +4,7 @@ import { logger } from '../../lib/logger'
 import { requireAuth, requireSuperAdmin } from '../../middleware/auth'
 import { createError } from '../../middleware/errorHandler'
 import { z } from 'zod'
+import { logAudit, actorFromReq } from '../../lib/audit'
 import type { Request, Response, NextFunction } from 'express'
 
 const router = Router()
@@ -124,6 +125,10 @@ router.patch(
         .single()
 
       if (error) return next(createError(500, 'DB_ERROR', 'Failed to update venue'))
+
+      if (parsed.data.status) {
+        logAudit({ ...actorFromReq(req), action: 'venue_status_change', targetType: 'venue', targetId: req.params.id, targetName: data.name, details: { status: parsed.data.status } }, req)
+      }
 
       res.json({ venue: data })
     } catch (err) {

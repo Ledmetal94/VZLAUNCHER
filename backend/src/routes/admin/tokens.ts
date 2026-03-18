@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase'
 import { requireAuth, requireAdmin } from '../../middleware/auth'
 import { createError } from '../../middleware/errorHandler'
 import { manualCreditSchema } from '../../schemas/tokens'
+import { logAudit, actorFromReq } from '../../lib/audit'
 import type { Request, Response, NextFunction } from 'express'
 
 const router = Router()
@@ -74,6 +75,7 @@ router.post(
         return next(createError(500, 'DB_ERROR', 'Failed to record token transaction'))
       }
 
+      logAudit({ ...actorFromReq(req), action: 'token_credit', targetType: 'venue', targetId: venueId, details: { amount, reason, newBalance } }, req)
       res.json({ success: true, balance: newBalance })
     } catch (err) {
       next(err)

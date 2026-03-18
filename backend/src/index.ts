@@ -22,6 +22,8 @@ import superAdminOperatorsRouter from './routes/superAdmin/operators'
 import superAdminTokensRouter from './routes/superAdmin/tokens'
 import superAdminVenueGamesRouter from './routes/superAdmin/venueGames'
 import superAdminRoyaltiesRouter from './routes/superAdmin/royalties'
+import superAdminLicensesRouter from './routes/superAdmin/licenses'
+import superAdminAuditLogsRouter from './routes/superAdmin/auditLogs'
 import licenseRouter from './routes/license'
 import bankTransferRouter from './routes/bankTransfer'
 
@@ -62,6 +64,8 @@ app.use(superAdminOperatorsRouter)
 app.use(superAdminTokensRouter)
 app.use(superAdminVenueGamesRouter)
 app.use(superAdminRoyaltiesRouter)
+app.use(superAdminLicensesRouter)
+app.use(superAdminAuditLogsRouter)
 app.use(licenseRouter)
 app.use(bankTransferRouter)
 

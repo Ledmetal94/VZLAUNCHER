@@ -448,9 +448,21 @@ export interface BankTransfer {
   created_at: string
 }
 
-export async function getSuperAdminBankTransfers(): Promise<BankTransfer[]> {
-  const data = await request<{ transfers: BankTransfer[] }>('/super-admin/bank-transfers')
-  return data.transfers
+export interface BankTransferListResponse {
+  transfers: BankTransfer[]
+  total: number
+  page: number
+  pageSize: number
+}
+
+export async function getSuperAdminBankTransfers(
+  page = 1,
+  pageSize = 20,
+  status?: string,
+): Promise<BankTransferListResponse> {
+  const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) })
+  if (status) params.set('status', status)
+  return request<BankTransferListResponse>(`/super-admin/bank-transfers?${params}`)
 }
 
 export async function confirmBankTransfer(id: string): Promise<void> {
@@ -462,6 +474,60 @@ export async function rejectBankTransfer(id: string, reason?: string): Promise<v
     method: 'POST',
     body: JSON.stringify({ reason }),
   })
+}
+
+// Audit logs (super-admin)
+
+export interface AuditLog {
+  id: string
+  actor_id: string | null
+  actor_type: string
+  actor_name: string | null
+  action: string
+  target_type: string | null
+  target_id: string | null
+  target_name: string | null
+  details: Record<string, unknown> | null
+  ip_address: string | null
+  created_at: string
+}
+
+export interface AuditLogListResponse {
+  logs: AuditLog[]
+  total: number
+  page: number
+  pageSize: number
+}
+
+export async function getAuditLogs(
+  page = 1,
+  pageSize = 25,
+  filters?: { action?: string; startDate?: string; endDate?: string; search?: string },
+): Promise<AuditLogListResponse> {
+  const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) })
+  if (filters?.action) params.set('action', filters.action)
+  if (filters?.startDate) params.set('startDate', filters.startDate)
+  if (filters?.endDate) params.set('endDate', filters.endDate)
+  if (filters?.search) params.set('search', filters.search)
+  return request<AuditLogListResponse>(`/super-admin/audit-logs?${params}`)
+}
+
+// Licenses (super-admin)
+
+export interface VenueLicense {
+  venueId: string
+  venueName: string
+  status: string
+  lastRenewedAt: string | null
+  validUntil: string | null
+  daysRemaining: number | null
+  lastSeenAgoMs: number | null
+  graceHoursRemaining: number
+}
+
+export async function getSuperAdminLicenses(): Promise<VenueLicense[]> {
+  const data = await request<{ licenses: VenueLicense[] }>('/super-admin/licenses')
+  return data.licenses
 }
 
 // Venue games (super-admin)

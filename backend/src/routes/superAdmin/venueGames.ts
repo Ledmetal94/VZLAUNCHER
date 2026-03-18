@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { supabase } from '../../lib/supabase'
 import { requireAuth, requireSuperAdmin } from '../../middleware/auth'
 import { createError } from '../../middleware/errorHandler'
+import { venueGamesBodySchema } from '../../schemas/superAdmin'
 import type { Request, Response, NextFunction } from 'express'
 
 const router = Router()
@@ -63,11 +64,12 @@ router.put(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const venueId = req.params.id
-      const { games } = req.body as { games: Array<{ gameId: string; enabled: boolean }> }
-
-      if (!Array.isArray(games)) {
-        return next(createError(400, 'VALIDATION_ERROR', 'games array required'))
+      const parsed = venueGamesBodySchema.safeParse(req.body)
+      if (!parsed.success) {
+        return next(createError(400, 'VALIDATION_ERROR', 'Invalid request',
+          parsed.error.issues.map((i) => ({ field: String(i.path[0]), issue: i.message }))))
       }
+      const { games } = parsed.data
 
       // Upsert all mappings
       const rows = games.map((g) => ({

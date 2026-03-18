@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { supabase } from '../../lib/supabase'
 import { requireAuth, requireSuperAdmin } from '../../middleware/auth'
 import { createError } from '../../middleware/errorHandler'
+import { superAdminTokensQuerySchema } from '../../schemas/superAdmin'
 import type { Request, Response, NextFunction } from 'express'
 
 const router = Router()
@@ -13,12 +14,12 @@ router.get(
   requireSuperAdmin,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const page = Math.max(1, parseInt(req.query.page as string, 10) || 1)
-      const pageSize = Math.min(50, Math.max(1, parseInt(req.query.pageSize as string, 10) || 20))
-      const type = req.query.type as string | undefined
-      const venueId = req.query.venueId as string | undefined
-      const startDate = req.query.startDate as string | undefined
-      const endDate = req.query.endDate as string | undefined
+      const parsed = superAdminTokensQuerySchema.safeParse(req.query)
+      if (!parsed.success) {
+        return next(createError(400, 'VALIDATION_ERROR', 'Invalid query parameters',
+          parsed.error.issues.map((i) => ({ field: String(i.path[0]), issue: i.message }))))
+      }
+      const { page, pageSize, type, venueId, startDate, endDate } = parsed.data
 
       let query = supabase
         .from('token_transactions')

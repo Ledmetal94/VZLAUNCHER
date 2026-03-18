@@ -7,6 +7,7 @@ import { loginSchema } from '../schemas/auth'
 import { createError } from '../middleware/errorHandler'
 import { rateLimit } from '../middleware/rateLimit'
 import { requireAuth } from '../middleware/auth'
+import { logAudit } from '../lib/audit'
 import type { Request, Response, NextFunction } from 'express'
 
 const router = Router()
@@ -99,6 +100,16 @@ router.post(
         maxAge: REFRESH_TOKEN_DAYS * 24 * 60 * 60 * 1000,
         path: '/api/v1/auth',
       })
+
+      logAudit({
+        actorId: operator.id,
+        actorType: 'operator',
+        actorName: operator.name,
+        action: 'login',
+        targetType: 'venue',
+        targetId: operator.venue_id,
+        targetName: venue?.name || undefined,
+      }, req)
 
       res.json({
         accessToken,

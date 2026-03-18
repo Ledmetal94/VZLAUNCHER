@@ -4,6 +4,8 @@ import { logger } from '../lib/logger'
 import { requireAuth, requireAdmin, requireSuperAdmin } from '../middleware/auth'
 import { createError } from '../middleware/errorHandler'
 import { z } from 'zod'
+import { logAudit, actorFromReq } from '../lib/audit'
+import { bankTransferRejectSchema, bankTransfersQuerySchema } from '../schemas/superAdmin'
 import type { Request, Response, NextFunction } from 'express'
 
 const router = Router()
@@ -68,19 +70,30 @@ router.post(
   },
 )
 
-// GET /api/v1/super-admin/bank-transfers — list pending bank transfers
+// GET /api/v1/super-admin/bank-transfers — list bank transfers (paginated, server-side status filter)
 router.get(
   '/api/v1/super-admin/bank-transfers',
   requireAuth,
   requireSuperAdmin,
-  async (_req: Request, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { data, error } = await supabase
+      const qParsed = bankTransfersQuerySchema.safeParse(req.query)
+      if (!qParsed.success) {
+        return next(createError(400, 'VALIDATION_ERROR', 'Invalid query parameters',
+          qParsed.error.issues.map((i) => ({ field: String(i.path[0]), issue: i.message }))))
+      }
+      const { page, pageSize, status } = qParsed.data
+
+      let query = supabase
         .from('token_transactions')
-        .select('id, venue_id, amount, payment_reference, status, created_at')
+        .select('id, venue_id, amount, payment_reference, status, created_at', { count: 'exact' })
         .eq('payment_method', 'bank_transfer')
         .order('created_at', { ascending: false })
-        .limit(50)
+        .range((page - 1) * pageSize, page * pageSize - 1)
+
+      if (status) query = query.eq('status', status)
+
+      const { data, error, count } = await query
 
       if (error) {
         logger.error({ error }, 'Failed to fetch bank transfers')
@@ -88,7 +101,8 @@ router.get(
       }
 
       // Get venue names
-      const venueIds = [...new Set((data || []).map((t) => t.venue_id))]
+      const transfers = data || []
+      const venueIds = [...new Set(transfers.map((t) => t.venue_id))]
       let venueNames: Record<string, string> = {}
       if (venueIds.length > 0) {
         const { data: venues } = await supabase
@@ -101,10 +115,13 @@ router.get(
       }
 
       res.json({
-        transfers: (data || []).map((t) => ({
+        transfers: transfers.map((t) => ({
           ...t,
           venueName: venueNames[t.venue_id] || t.venue_id.slice(0, 8),
         })),
+        total: count || 0,
+        page,
+        pageSize,
       })
     } catch (err) {
       next(err)
@@ -166,6 +183,7 @@ router.post(
       }
 
       logger.info(`Bank transfer confirmed: ${tx.amount} tokens to venue ${tx.venue_id}`)
+      logAudit({ ...actorFromReq(req), action: 'bank_transfer_confirm', targetType: 'transfer', targetId: txId, details: { amount: tx.amount, venueId: tx.venue_id } }, req)
       res.json({ success: true, credited: tx.amount })
     } catch (err) {
       next(err)
@@ -197,9 +215,12 @@ router.post(
         return next(createError(400, 'INVALID_OPERATION', `Transfer already ${tx.status}`))
       }
 
+      const rejectParsed = bankTransferRejectSchema.safeParse(req.body)
+      const reason = rejectParsed.success ? rejectParsed.data.reason : undefined
+
       const { error: updateError } = await supabase
         .from('token_transactions')
-        .update({ status: 'failed', notes: req.body.reason || 'Rejected by admin' })
+        .update({ status: 'failed', notes: reason || 'Rejected by admin' })
         .eq('id', txId)
 
       if (updateError) {
@@ -208,6 +229,7 @@ router.post(
       }
 
       logger.info(`Bank transfer rejected: ${tx.amount} tokens for venue ${tx.venue_id}`)
+      logAudit({ ...actorFromReq(req), action: 'bank_transfer_reject', targetType: 'transfer', targetId: txId, details: { amount: tx.amount, venueId: tx.venue_id } }, req)
       res.json({ success: true })
     } catch (err) {
       next(err)

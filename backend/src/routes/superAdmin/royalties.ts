@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { supabase } from '../../lib/supabase'
 import { requireAuth, requireSuperAdmin } from '../../middleware/auth'
 import { createError } from '../../middleware/errorHandler'
+import { royaltiesQuerySchema } from '../../schemas/superAdmin'
 import type { Request, Response, NextFunction } from 'express'
 
 const router = Router()
@@ -16,12 +17,15 @@ router.get(
   requireSuperAdmin,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const monthParam = req.query.month as string
-      // Default to current month
+      const parsed = royaltiesQuerySchema.safeParse(req.query)
+      if (!parsed.success) {
+        return next(createError(400, 'VALIDATION_ERROR', 'Invalid query parameters',
+          parsed.error.issues.map((i) => ({ field: String(i.path[0]), issue: i.message }))))
+      }
+
       const now = new Date()
-      const month = monthParam && /^\d{4}-\d{2}$/.test(monthParam)
-        ? monthParam
-        : `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+      const month = parsed.data.month
+        || `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
 
       const startDate = `${month}-01T00:00:00.000Z`
       // End of month: parse year/month, go to next month day 1
@@ -74,7 +78,7 @@ router.get(
       }
 
       // Build report rows
-      const tokenRate = parseFloat(req.query.rate as string) || DEFAULT_TOKEN_RATE
+      const tokenRate = parsed.data.rate || DEFAULT_TOKEN_RATE
       let totalTokens = 0
       let totalSessions = 0
       let totalRevenue = 0

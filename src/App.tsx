@@ -19,6 +19,8 @@ const SuperAdminDashboard = lazy(() => import('@/pages/SuperAdminDashboard'))
 const SuperAdminOperatorsPage = lazy(() => import('@/pages/SuperAdminOperatorsPage'))
 const SuperAdminBankTransfersPage = lazy(() => import('@/pages/SuperAdminBankTransfersPage'))
 const SuperAdminRoyaltiesPage = lazy(() => import('@/pages/SuperAdminRoyaltiesPage'))
+const SuperAdminLicensesPage = lazy(() => import('@/pages/SuperAdminLicensesPage'))
+const SuperAdminAuditLogPage = lazy(() => import('@/pages/SuperAdminAuditLogPage'))
 const SuperAdminTokensPage = lazy(() => import('@/pages/SuperAdminTokensPage'))
 import { useAlerts } from '@/hooks/useAlerts'
 import { useWebSocket } from '@/hooks/useWebSocket'
@@ -157,6 +159,26 @@ export default function App() {
           <RequireAuth>
             <RequireSuperAdmin>
               <SuperAdminTokensPage />
+            </RequireSuperAdmin>
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/super-admin/audit-log"
+        element={
+          <RequireAuth>
+            <RequireSuperAdmin>
+              <SuperAdminAuditLogPage />
+            </RequireSuperAdmin>
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/super-admin/licenses"
+        element={
+          <RequireAuth>
+            <RequireSuperAdmin>
+              <SuperAdminLicensesPage />
             </RequireSuperAdmin>
           </RequireAuth>
         }
