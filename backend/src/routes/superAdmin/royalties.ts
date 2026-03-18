@@ -41,10 +41,11 @@ router.get(
         return next(createError(500, 'DB_ERROR', 'Failed to fetch transactions'))
       }
 
-      // Get session counts per venue for the month
+      // Get completed session counts per venue for the month
       const { data: sessionData, error: sessionError } = await supabase
         .from('sessions')
         .select('venue_id, id')
+        .eq('status', 'completed')
         .gte('started_at', startDate)
         .lt('started_at', endDate)
 

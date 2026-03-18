@@ -28,11 +28,15 @@ router.get(
       // Filter by venue-specific game enablement (skip for super-admins)
       const venueId = req.user?.venueId
       if (venueId) {
-        const { data: venueGames } = await supabase
+        const { data: venueGames, error: vgError } = await supabase
           .from('venue_games')
           .select('game_id')
           .eq('venue_id', venueId)
           .eq('enabled', false)
+
+        if (vgError) {
+          return next(createError(500, 'DB_ERROR', 'Failed to fetch venue game settings'))
+        }
 
         if (venueGames && venueGames.length > 0) {
           const disabledIds = new Set(venueGames.map((vg) => vg.game_id))
