@@ -44,7 +44,7 @@ interface TokenState {
   verifyIntegrity: () => boolean
 }
 
-const CLOUD_URL = import.meta.env.VITE_CLOUD_URL || 'http://localhost:3002'
+import { CLOUD_URL } from '@/config/cloudUrl'
 const MAX_RETRIES = 5
 const CHECKSUM_SECRET = 'vz-token-integrity-2026'
 

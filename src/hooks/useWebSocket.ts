@@ -2,9 +2,9 @@ import { useEffect, useRef } from 'react'
 import { useConnectionStore } from '@/store/connectionStore'
 import { useTokenStore } from '@/store/tokenStore'
 import { useLicenseStore } from '@/store/licenseStore'
+import { CLOUD_URL } from '@/config/cloudUrl'
 
-const WS_URL = (import.meta.env.VITE_CLOUD_URL || 'http://localhost:3002')
-  .replace(/^http/, 'ws')
+const WS_URL = CLOUD_URL.replace(/^http/, 'ws')
 
 const RECONNECT_BASE_MS = 2000
 const RECONNECT_MAX_MS = 60000
@@ -40,8 +40,14 @@ export function useWebSocket() {
     async function connect() {
       if (!mounted) return
       try {
-        const { getAccessToken } = await import('@/services/cloudApi')
-        const token = getAccessToken()
+        const { getAccessToken, refreshToken } = await import('@/services/cloudApi')
+        let token = getAccessToken()
+
+        // On reconnect attempts, try refreshing the token first
+        if (!token && reconnectAttempt.current > 0) {
+          await refreshToken()
+          token = getAccessToken()
+        }
         if (!token) return
 
         // Skip WS in dev if cloud backend doesn't support it

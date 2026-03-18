@@ -18,7 +18,7 @@ interface LicenseState {
   isDegraded: () => boolean
 }
 
-const CLOUD_URL = import.meta.env.VITE_CLOUD_URL || 'http://localhost:3002'
+import { CLOUD_URL } from '@/config/cloudUrl'
 
 export const useLicenseStore = create<LicenseState>()(
   persist(

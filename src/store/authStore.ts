@@ -18,7 +18,6 @@ interface AuthState {
     venueName: string | null
   }, token?: string) => void
   logout: () => void
-  rehydrateToken: () => void
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -55,13 +54,6 @@ export const useAuthStore = create<AuthState>()(
           accessToken: null,
         })
       },
-      // Restore in-memory token from persisted state on app load
-      rehydrateToken: () => {
-        const token = get().accessToken
-        if (token) {
-          setAccessToken(token)
-        }
-      },
     }),
     {
       name: 'vz-auth',
@@ -74,6 +66,13 @@ export const useAuthStore = create<AuthState>()(
         venueName: state.venueName,
         accessToken: state.accessToken,
       }),
+      onRehydrateStorage: () => (state) => {
+        // Restore in-memory token as soon as localStorage is loaded
+        // This runs before any useEffect, preventing race conditions
+        if (state?.accessToken) {
+          setAccessToken(state.accessToken)
+        }
+      },
     },
   ),
 )

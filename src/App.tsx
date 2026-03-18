@@ -24,19 +24,16 @@ const SuperAdminAuditLogPage = lazy(() => import('@/pages/SuperAdminAuditLogPage
 const SuperAdminTokensPage = lazy(() => import('@/pages/SuperAdminTokensPage'))
 import { useAlerts } from '@/hooks/useAlerts'
 import { useWebSocket } from '@/hooks/useWebSocket'
+import { useConnectionPolling } from '@/hooks/useConnectionPolling'
 import { initWsBridge, destroyWsBridge } from '@/services/wsbridge'
 import { useSessionStore } from '@/store/sessionStore'
 import { useLicenseStore } from '@/store/licenseStore'
-import { useAuthStore } from '@/store/authStore'
+
 
 export default function App() {
-  // Rehydrate access token from persisted auth store on app load
-  useEffect(() => {
-    useAuthStore.getState().rehydrateToken()
-  }, [])
-
   useAlerts()
   useWebSocket()
+  useConnectionPolling()
 
   // Bridge WebSocket — real-time session/automation updates
   useEffect(() => {

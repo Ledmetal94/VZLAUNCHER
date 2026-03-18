@@ -1,6 +1,7 @@
 import type { LoginResponse } from '@/types/auth'
+import { CLOUD_URL } from '@/config/cloudUrl'
 
-const BASE_URL = import.meta.env.VITE_CLOUD_URL || 'http://localhost:3002'
+const BASE_URL = CLOUD_URL
 
 export async function checkCloudHealth(): Promise<boolean> {
   try {
@@ -41,7 +42,7 @@ async function request<T>(
     signal: options.signal ?? AbortSignal.timeout(30000),
   })
 
-  if (res.status === 401 && path !== '/auth/refresh') {
+  if (res.status === 401 && path !== '/auth/refresh' && path !== '/auth/login' && path !== '/super-admin/auth/login') {
     const refreshed = await refreshToken()
     if (refreshed) {
       headers['Authorization'] = `Bearer ${_accessToken}`
@@ -57,6 +58,9 @@ async function request<T>(
       return retry.json()
     }
     _accessToken = null
+    // Clear persisted auth state before redirect
+    const { useAuthStore } = await import('@/store/authStore')
+    useAuthStore.getState().logout()
     window.location.href = '/login'
     throw new Error('Session expired')
   }
@@ -264,6 +268,8 @@ export async function uploadGameThumbnail(file: File): Promise<string> {
       res = await doUpload()
     } else {
       _accessToken = null
+      const { useAuthStore } = await import('@/store/authStore')
+      useAuthStore.getState().logout()
       window.location.href = '/login'
       throw new Error('Session expired')
     }
