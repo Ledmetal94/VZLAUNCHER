@@ -509,6 +509,39 @@ export async function updateSuperAdminOperator(
   return data.operator
 }
 
+// ─── Token Transactions (admin) ──────────────────────────────
+
+export interface TokenTransaction {
+  id: string
+  venue_id: string
+  type: 'purchase' | 'consume' | 'adjustment' | 'refund'
+  amount: number
+  payment_method: string | null
+  payment_reference: string | null
+  status: string
+  notes: string | null
+  created_at: string
+}
+
+export interface TokenTransactionListResponse {
+  transactions: TokenTransaction[]
+  total: number
+  page: number
+  pageSize: number
+}
+
+export async function getTokenTransactions(
+  page = 1,
+  pageSize = 20,
+  filters?: { type?: string; startDate?: string; endDate?: string },
+): Promise<TokenTransactionListResponse> {
+  const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) })
+  if (filters?.type) params.set('type', filters.type)
+  if (filters?.startDate) params.set('startDate', filters.startDate)
+  if (filters?.endDate) params.set('endDate', filters.endDate)
+  return request<TokenTransactionListResponse>(`/admin/tokens/transactions?${params}`)
+}
+
 // ─── Analytics (admin) ──────────────────────────────────────
 
 export interface AnalyticsSummary {

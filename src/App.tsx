@@ -9,6 +9,7 @@ import RequireSuperAdmin from '@/components/auth/RequireSuperAdmin'
 
 
 // Lazy-load admin-only pages
+const TokenHistoryPage = lazy(() => import('@/pages/TokenHistoryPage'))
 const CheckoutReturnPage = lazy(() => import('@/pages/CheckoutReturnPage'))
 const OperatorsPage = lazy(() => import('@/pages/OperatorsPage'))
 const AnalyticsPage = lazy(() => import('@/pages/AnalyticsPage'))
@@ -74,6 +75,16 @@ export default function App() {
         element={
           <RequireAuth>
             <HistoryPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/tokens"
+        element={
+          <RequireAuth>
+            <RequireAdmin>
+              <TokenHistoryPage />
+            </RequireAdmin>
           </RequireAuth>
         }
       />

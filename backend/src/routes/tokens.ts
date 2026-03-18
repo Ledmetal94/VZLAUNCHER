@@ -39,7 +39,19 @@ router.get(
         return next(createError(500, 'DB_ERROR', 'Failed to fetch token balance'))
       }
 
-      res.json({ balance: venue.token_balance })
+      // Include recently confirmed credits (last 5 min) for notification purposes
+      const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString()
+      const { data: recentCredits } = await supabase
+        .from('token_transactions')
+        .select('id, type, amount, payment_method, created_at')
+        .eq('venue_id', venueId)
+        .eq('status', 'confirmed')
+        .gt('amount', 0)
+        .gte('created_at', fiveMinAgo)
+        .order('created_at', { ascending: false })
+        .limit(5)
+
+      res.json({ balance: venue.token_balance, recentCredits: recentCredits || [] })
     } catch (err) {
       next(err)
     }

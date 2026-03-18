@@ -7,26 +7,25 @@ type LicenseStatus = 'active' | 'suspended' | 'expired' | 'unknown'
 interface LicenseState {
   status: LicenseStatus
   lastValidatedAt: number | null
+  lastRenewedAt: string | null
   validUntil: string | null
   offlineGraceHours: number
   emergencyOverride: boolean
   loading: boolean
   validate: () => Promise<void>
-  setEmergencyOverride: (pin: string) => boolean
+  setEmergencyOverride: (pin: string) => Promise<boolean>
   getOfflineTimeRemaining: () => number // ms remaining in offline grace
   isDegraded: () => boolean
 }
 
 const CLOUD_URL = import.meta.env.VITE_CLOUD_URL || 'http://localhost:3002'
-// Emergency PIN should be configured per-venue, not hardcoded
-// This is a fallback — production should use server-side validation
-const EMERGENCY_PIN = import.meta.env.VITE_EMERGENCY_PIN || '999999'
 
 export const useLicenseStore = create<LicenseState>()(
   persist(
     (set, get) => ({
       status: 'unknown',
       lastValidatedAt: null,
+      lastRenewedAt: null,
       validUntil: null,
       offlineGraceHours: 48,
       emergencyOverride: false,
@@ -62,6 +61,7 @@ export const useLicenseStore = create<LicenseState>()(
             set({
               status: newStatus,
               lastValidatedAt: Date.now(),
+              lastRenewedAt: data.lastRenewedAt || null,
               validUntil: data.validUntil,
               offlineGraceHours: data.offlineGraceHours || 48,
               emergencyOverride: false,
@@ -83,14 +83,41 @@ export const useLicenseStore = create<LicenseState>()(
         }
       },
 
-      setEmergencyOverride: (pin: string) => {
-        if (pin === EMERGENCY_PIN) {
-          set({ emergencyOverride: true, status: 'active', lastValidatedAt: Date.now() })
-          toast.success('Override di emergenza attivato — 48h aggiuntive')
-          return true
+      setEmergencyOverride: async (pin: string) => {
+        try {
+          const { getAccessToken } = await import('@/services/cloudApi')
+          const token = getAccessToken()
+
+          const res = await fetch(`${CLOUD_URL}/api/v1/license/emergency-override`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+            credentials: 'include',
+            body: JSON.stringify({ pin }),
+            signal: AbortSignal.timeout(10000),
+          })
+
+          if (res.ok) {
+            const data = await res.json()
+            set({
+              emergencyOverride: true,
+              status: 'active',
+              lastValidatedAt: Date.now(),
+              offlineGraceHours: data.graceHours || 24,
+            })
+            toast.success(`Override di emergenza attivato — ${data.graceHours || 24}h aggiuntive`)
+            return true
+          }
+
+          const body = await res.json().catch(() => ({}))
+          toast.error(body.error?.message || 'PIN non valido')
+          return false
+        } catch {
+          toast.error('Impossibile verificare il PIN — controllare la connessione')
+          return false
         }
-        toast.error('PIN non valido')
-        return false
       },
 
       getOfflineTimeRemaining: () => {
@@ -112,6 +139,7 @@ export const useLicenseStore = create<LicenseState>()(
       partialize: (state) => ({
         status: state.status,
         lastValidatedAt: state.lastValidatedAt,
+        lastRenewedAt: state.lastRenewedAt,
         validUntil: state.validUntil,
         offlineGraceHours: state.offlineGraceHours,
         emergencyOverride: state.emergencyOverride,

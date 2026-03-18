@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
 import { useAuthStore } from '@/store/authStore'
 import { useConnectionStore } from '@/store/connectionStore'
+import { useLicenseStore } from '@/store/licenseStore'
 
 interface SettingsModalProps {
   onClose: () => void
@@ -102,6 +103,29 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
   const { venueName, venueId, role, logout } = useAuthStore()
   const bridgeStatus = useConnectionStore((s) => s.bridgeStatus)
   const cloudStatus = useConnectionStore((s) => s.cloudStatus)
+  const licenseStatus = useLicenseStore((s) => s.status)
+  const lastValidatedAt = useLicenseStore((s) => s.lastValidatedAt)
+  const lastRenewedAt = useLicenseStore((s) => s.lastRenewedAt)
+  const validUntil = useLicenseStore((s) => s.validUntil)
+  const getOfflineTimeRemaining = useLicenseStore((s) => s.getOfflineTimeRemaining)
+  const emergencyOverride = useLicenseStore((s) => s.emergencyOverride)
+
+  const offlineRemaining = getOfflineTimeRemaining()
+  const offlineHours = Math.floor(offlineRemaining / (1000 * 60 * 60))
+  const offlineMinutes = Math.floor((offlineRemaining % (1000 * 60 * 60)) / (1000 * 60))
+
+  const licenseColor =
+    licenseStatus === 'active' ? '#44ff88' :
+    licenseStatus === 'suspended' ? '#ff4444' :
+    licenseStatus === 'expired' ? '#ff4444' :
+    '#f59e0b' // unknown
+
+  const licenseLabel =
+    licenseStatus === 'active'
+      ? (cloudStatus === 'online' ? 'Attiva' : emergencyOverride ? 'Override emergenza' : 'Attiva (offline)')
+      : licenseStatus === 'suspended' ? 'Sospesa'
+      : licenseStatus === 'expired' ? 'Scaduta'
+      : 'Sconosciuto'
 
   function handleLogout() {
     logout()
@@ -170,17 +194,42 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
         <SectionLabel mt>Licenza</SectionLabel>
         <SetRow>
           <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>Stato</span>
-          <span style={{ fontSize: 10, color: '#44ff88', fontWeight: 600 }}>Attiva — online</span>
+          <div className="flex items-center gap-1.5">
+            <StatusDot color={licenseColor} />
+            <span style={{ fontSize: 10, color: licenseColor, fontWeight: 600 }}>{licenseLabel}</span>
+          </div>
         </SetRow>
         <SetRow>
           <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>Ultimo rinnovo</span>
           <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>
-            {new Date().toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric' })}
+            {lastRenewedAt
+              ? new Date(lastRenewedAt).toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+              : 'Mai'}
           </span>
         </SetRow>
         <SetRow>
-          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>Offline rimasto</span>
-          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>48h disponibili</span>
+          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>Valida fino a</span>
+          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>
+            {validUntil
+              ? new Date(validUntil).toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric' })
+              : '—'}
+          </span>
+        </SetRow>
+        <SetRow>
+          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>Grazia offline</span>
+          <span style={{
+            fontSize: 10,
+            fontWeight: 600,
+            color: cloudStatus === 'online'
+              ? 'rgba(255,255,255,0.35)'
+              : offlineHours < 6 ? '#ff6b6b' : offlineHours < 24 ? '#f59e0b' : 'rgba(255,255,255,0.35)',
+          }}>
+            {cloudStatus === 'online'
+              ? '48h disponibili'
+              : offlineRemaining <= 0
+                ? 'Scaduto'
+                : `${offlineHours}h ${offlineMinutes}m rimanenti`}
+          </span>
         </SetRow>
 
         {/* Sistema */}

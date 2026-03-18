@@ -81,4 +81,47 @@ router.post(
   },
 )
 
+// GET /api/v1/admin/tokens/transactions — paginated transaction history
+router.get(
+  '/api/v1/admin/tokens/transactions',
+  requireAuth,
+  requireAdmin,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const venueId = req.user!.venueId
+      const page = Math.max(1, parseInt(req.query.page as string, 10) || 1)
+      const pageSize = Math.min(50, Math.max(1, parseInt(req.query.pageSize as string, 10) || 20))
+      const type = req.query.type as string | undefined
+      const startDate = req.query.startDate as string | undefined
+      const endDate = req.query.endDate as string | undefined
+
+      let query = supabase
+        .from('token_transactions')
+        .select('*', { count: 'exact' })
+        .eq('venue_id', venueId)
+        .order('created_at', { ascending: false })
+        .range((page - 1) * pageSize, page * pageSize - 1)
+
+      if (type) query = query.eq('type', type)
+      if (startDate) query = query.gte('created_at', startDate)
+      if (endDate) query = query.lte('created_at', endDate + 'T23:59:59.999Z')
+
+      const { data, error, count } = await query
+
+      if (error) {
+        return next(createError(500, 'DB_ERROR', 'Failed to fetch transactions'))
+      }
+
+      res.json({
+        transactions: data || [],
+        total: count || 0,
+        page,
+        pageSize,
+      })
+    } catch (err) {
+      next(err)
+    }
+  },
+)
+
 export default router

@@ -37,6 +37,7 @@ interface TokenState {
   setBalance: (balance: number) => void
   syncBalance: () => Promise<void>
   consumeLocal: (amount: number, gameId: string, sessionId?: string) => boolean
+  refundLocal: (amount: number, gameId: string, sessionId?: string) => void
   topup: (amount: number, reason?: string) => void
   reconcile: () => Promise<void>
   getTransactionLog: () => TokenTransaction[]
@@ -138,6 +139,28 @@ export const useTokenStore = create<TokenState>()(
             } else {
               set({ lastSyncedAt: Date.now() })
             }
+
+            // Notify about recently confirmed credits (bank transfers, purchases)
+            const recentCredits = data.recentCredits as Array<{ id: string; type: string; amount: number; payment_method: string; created_at: string }> | undefined
+            if (recentCredits?.length) {
+              const seenKey = 'vz-seen-credits'
+              const seen: Set<string> = new Set(JSON.parse(localStorage.getItem(seenKey) || '[]'))
+              const newCredits = recentCredits.filter(c => !seen.has(c.id))
+
+              for (const c of newCredits) {
+                seen.add(c.id)
+                const method = c.payment_method === 'bank_transfer' ? 'Bonifico confermato'
+                  : c.payment_method === 'stripe' ? 'Pagamento ricevuto'
+                  : 'Credito ricevuto'
+                toast.success(`${method}: +${c.amount} gettoni`)
+              }
+
+              if (newCredits.length) {
+                // Keep only last 50 seen IDs to prevent unbounded growth
+                const seenArr = [...seen].slice(-50)
+                localStorage.setItem(seenKey, JSON.stringify(seenArr))
+              }
+            }
           }
         } catch {
           // Offline — keep local balance
@@ -197,6 +220,52 @@ export const useTokenStore = create<TokenState>()(
         })
 
         return true
+      },
+
+      refundLocal: (amount, gameId, sessionId) => {
+        if (amount <= 0) return
+        const state = get()
+        const tx: TokenTransaction = {
+          id: crypto.randomUUID(),
+          type: 'correction',
+          amount,
+          gameId,
+          sessionId,
+          operatorId: getOperatorId(),
+          timestamp: Date.now(),
+          syncedToCloud: false,
+          retryCount: 0,
+        }
+        const newTxs = [...state.transactions, tx]
+        const checksum = computeChecksum(state.initialBalance, newTxs)
+        setWithBalance(set, get, { transactions: newTxs, _checksum: checksum })
+
+        // Sync refund to cloud in background
+        import('@/services/cloudApi').then(({ getAccessToken: getToken }) => {
+          const token = getToken()
+          if (token) {
+            fetch(`${CLOUD_URL}/api/v1/tokens/consume`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+              },
+              credentials: 'include',
+              body: JSON.stringify({ amount: -amount, gameId, sessionId, reason: 'launch_failed' }),
+              signal: AbortSignal.timeout(10000),
+            })
+              .then((res) => {
+                if (res.ok) {
+                  set((s) => ({
+                    transactions: s.transactions.map(t =>
+                      t.id === tx.id ? { ...t, syncedToCloud: true } : t
+                    ),
+                  }))
+                }
+              })
+              .catch(() => { /* Will retry on reconcile */ })
+          }
+        })
       },
 
       topup: (amount, reason) => {

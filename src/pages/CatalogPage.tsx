@@ -4,6 +4,7 @@ import Header from '@/components/catalog/Header'
 import CategoryFilters from '@/components/catalog/CategoryFilters'
 import GameGrid from '@/components/catalog/GameGrid'
 import LaunchModal from '@/components/catalog/LaunchModal'
+import LicenseBlockedModal from '@/components/catalog/LicenseBlockedModal'
 import SessionBar from '@/components/catalog/SessionBar'
 import SettingsModal from '@/components/catalog/SettingsModal'
 import TokenModal from '@/components/catalog/TokenModal'
@@ -14,6 +15,7 @@ import { useConnectionStore } from '@/store/connectionStore'
 import { useGameStore } from '@/store/gameStore'
 import { useTokenStore } from '@/store/tokenStore'
 import { useAuthStore } from '@/store/authStore'
+import { useLicenseStore } from '@/store/licenseStore'
 import type { Category, Game } from '@/types/models'
 
 export default function CatalogPage() {
@@ -23,6 +25,7 @@ export default function CatalogPage() {
   const [ending, setEnding] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [tokenModalOpen, setTokenModalOpen] = useState(false)
+  const [licenseModalOpen, setLicenseModalOpen] = useState(false)
   const isAdmin = useAuthStore((s) => s.role) === 'admin'
 
   const activeSession = useSessionStore((s) => s.activeSession)
@@ -33,6 +36,10 @@ export default function CatalogPage() {
   const cloudStatus = useConnectionStore((s) => s.cloudStatus)
   const syncAllPending = useSessionStore((s) => s.syncAllPending)
 
+  const licenseStatus = useLicenseStore((s) => s.status)
+  const validateLicense = useLicenseStore((s) => s.validate)
+  const isLicenseBlocked = licenseStatus === 'expired' || licenseStatus === 'suspended'
+
   const games = useGameStore((s) => s.games)
   const fetchGames = useGameStore((s) => s.fetchGames)
   const startAutoRefresh = useGameStore((s) => s.startAutoRefresh)
@@ -40,6 +47,7 @@ export default function CatalogPage() {
   const tokenBalance = useTokenStore((s) => s.balance)
   const syncBalance = useTokenStore((s) => s.syncBalance)
   const consumeLocal = useTokenStore((s) => s.consumeLocal)
+  const refundLocal = useTokenStore((s) => s.refundLocal)
 
   // Fetch games + token balance on mount, start auto-refresh
   useEffect(() => {
@@ -80,13 +88,35 @@ export default function CatalogPage() {
     return () => { active = false; clearInterval(interval) }
   }, [setCloudStatus, syncAllPending])
 
+  // Poll license status
+  useEffect(() => {
+    validateLicense()
+    const interval = setInterval(validateLicense, 60000) // every 60s
+    return () => clearInterval(interval)
+  }, [validateLicense])
+
   const filteredGames = useMemo(() => {
     if (selectedCategory === 'all') return games
     return games.filter((g) => g.category === selectedCategory)
   }, [selectedCategory, games])
 
+  // Intercept game card click — block if license invalid
+  const handleGameClick = useCallback((game: Game) => {
+    if (isLicenseBlocked) {
+      setLicenseModalOpen(true)
+      return
+    }
+    setSelectedGame(game)
+  }, [isLicenseBlocked])
+
   const handleLaunch = useCallback(async (players: number) => {
     if (!selectedGame) return
+
+    // Double-check license before launch
+    if (isLicenseBlocked) {
+      setLicenseModalOpen(true)
+      return
+    }
 
     // Check and consume tokens locally first
     const consumed = consumeLocal(selectedGame.tokenCost, selectedGame.id)
@@ -101,13 +131,19 @@ export default function CatalogPage() {
       if (result.success && result.session) {
         startSession(selectedGame, players, result.session.id)
         setSelectedGame(null)
+      } else {
+        // Bridge returned failure — refund tokens
+        refundLocal(selectedGame.tokenCost, selectedGame.id)
+        toast.error('Avvio gioco fallito — gettoni rimborsati')
       }
     } catch (err) {
-      toast.error('Avvio gioco fallito')
+      // Network/bridge error — refund tokens
+      refundLocal(selectedGame.tokenCost, selectedGame.id)
+      toast.error('Avvio gioco fallito — gettoni rimborsati')
     } finally {
       setLaunching(false)
     }
-  }, [selectedGame, startSession, consumeLocal])
+  }, [selectedGame, startSession, consumeLocal, refundLocal, isLicenseBlocked])
 
   const handleEnd = useCallback(async () => {
     setEnding(true)
@@ -140,7 +176,7 @@ export default function CatalogPage() {
           onSelect={setSelectedCategory}
           gameCount={filteredGames.length}
         />
-        <GameGrid games={filteredGames} onGameClick={setSelectedGame} />
+        <GameGrid games={filteredGames} onGameClick={handleGameClick} />
 
         {activeSession && (
           <SessionBar onEnd={handleEnd} ending={ending} />
@@ -152,6 +188,10 @@ export default function CatalogPage() {
 
         {isAdmin && tokenModalOpen && (
           <TokenModal balance={tokenBalance} onClose={() => setTokenModalOpen(false)} />
+        )}
+
+        {licenseModalOpen && (
+          <LicenseBlockedModal onClose={() => setLicenseModalOpen(false)} />
         )}
 
         {selectedGame && !activeSession && (
