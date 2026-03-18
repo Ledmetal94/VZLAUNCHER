@@ -163,7 +163,7 @@ export const useSessionStore = create<SessionState>()(
         })
       },
 
-      updateFromWs: (elapsedSeconds, remainingSeconds) => {
+      updateFromWs: (elapsedSeconds, _remainingSeconds) => {
         const session = get().activeSession
         if (!session) return
         set({

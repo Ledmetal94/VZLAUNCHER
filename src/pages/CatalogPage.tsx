@@ -10,7 +10,6 @@ import SettingsModal from '@/components/catalog/SettingsModal'
 import TokenModal from '@/components/catalog/TokenModal'
 import { launchGame, stopSession } from '@/services/bridgeApi'
 import { useSessionStore } from '@/store/sessionStore'
-import { useConnectionStore } from '@/store/connectionStore'
 import { useGameStore } from '@/store/gameStore'
 import { useTokenStore } from '@/store/tokenStore'
 import { useAuthStore } from '@/store/authStore'
@@ -30,8 +29,6 @@ export default function CatalogPage() {
   const activeSession = useSessionStore((s) => s.activeSession)
   const startSession = useSessionStore((s) => s.startSession)
   const endSession = useSessionStore((s) => s.endSession)
-  const cloudStatus = useConnectionStore((s) => s.cloudStatus)
-
   const licenseStatus = useLicenseStore((s) => s.status)
   const isLicenseBlocked = licenseStatus === 'expired' || licenseStatus === 'suspended'
 

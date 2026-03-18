@@ -1,5 +1,4 @@
 import { create } from 'zustand'
-import { toast } from 'sonner'
 import { getAccessToken } from '@/services/cloudApi'
 import type { Game } from '@/types/models'
 import { SAMPLE_GAMES, GAMES_WITH_POSTERS } from '@/data/games'
@@ -58,15 +57,7 @@ function mapCloudGame(g: {
   }
 }
 
-function loadCache(): Game[] | null {
-  try {
-    const raw = localStorage.getItem(CACHE_KEY)
-    if (!raw) return null
-    return JSON.parse(raw) as Game[]
-  } catch {
-    return null
-  }
-}
+
 
 function saveCache(games: Game[]) {
   try {

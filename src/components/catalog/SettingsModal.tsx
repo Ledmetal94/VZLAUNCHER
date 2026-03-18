@@ -104,7 +104,6 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
   const bridgeStatus = useConnectionStore((s) => s.bridgeStatus)
   const cloudStatus = useConnectionStore((s) => s.cloudStatus)
   const licenseStatus = useLicenseStore((s) => s.status)
-  const lastValidatedAt = useLicenseStore((s) => s.lastValidatedAt)
   const lastRenewedAt = useLicenseStore((s) => s.lastRenewedAt)
   const validUntil = useLicenseStore((s) => s.validUntil)
   const getOfflineTimeRemaining = useLicenseStore((s) => s.getOfflineTimeRemaining)

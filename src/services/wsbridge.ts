@@ -64,7 +64,7 @@ export async function restoreSessionState() {
     const connStore = useConnectionStore.getState()
     connStore.setBridgeState(status.state || status.status)
     if (status.automationProgress) {
-      connStore.setAutomationStep(status.automationProgress)
+      connStore.setAutomationStep({ ...status.automationProgress, label: status.automationProgress.label || '' })
     }
   } catch {
     // Will retry on next reconnect

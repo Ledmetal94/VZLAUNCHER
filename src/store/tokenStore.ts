@@ -82,7 +82,7 @@ function getOperatorId(): string | undefined {
 }
 
 /** Helper: set state and recompute balance */
-function setWithBalance(set: Function, get: Function, partial: Record<string, unknown>) {
+function setWithBalance(set: Function, _get: Function, partial: Record<string, unknown>) {
   set((state: TokenState) => {
     const merged = { ...state, ...partial }
     const initial = merged.initialBalance ?? state.initialBalance
@@ -268,7 +268,7 @@ export const useTokenStore = create<TokenState>()(
         })
       },
 
-      topup: (amount, reason) => {
+      topup: (amount, _reason) => {
         if (amount <= 0) return
         const state = get()
         const tx: TokenTransaction = {
@@ -374,7 +374,7 @@ export const useTokenStore = create<TokenState>()(
       onRehydrateStorage: () => (state) => {
         if (!state) return
         // Recompute balance from transactions
-        state.balance = computeBalance(state.initialBalance, state.transactions)
+        ;(state as { balance: number }).balance = computeBalance(state.initialBalance, state.transactions)
         // Verify integrity
         const expected = computeChecksum(state.initialBalance, state.transactions)
         if (state._checksum && state._checksum !== expected) {

@@ -11,6 +11,9 @@ export function useAlerts() {
   const prevBalance = useRef(balance)
   const prevCloud = useRef(cloudStatus)
   const lastCloudToast = useRef(0)
+  // Only show "restored" after a confirmed online→offline→online cycle
+  const hasBeenOnline = useRef(false)
+  const hasDisconnected = useRef(false)
 
   // Low token warning
   useEffect(() => {
@@ -28,21 +31,31 @@ export function useAlerts() {
     }
   }, [balance])
 
-  // Reconnection notification (debounced — min 5s between toasts)
+  // Reconnection notification
+  // Only shows "restored" after a real disconnect (was online, went offline, came back)
   useEffect(() => {
-    const prev = prevCloud.current
     prevCloud.current = cloudStatus
-    const now = Date.now()
 
-    if (now - lastCloudToast.current < 5000) return
-
-    if (prev === 'offline' && cloudStatus === 'online') {
-      toast.success('Connessione ripristinata', { duration: 3000 })
-      lastCloudToast.current = now
+    if (cloudStatus === 'online') {
+      if (hasDisconnected.current) {
+        // Real reconnection — was online, went offline, now back
+        const now = Date.now()
+        if (now - lastCloudToast.current >= 5000) {
+          toast.success('Connessione ripristinata', { duration: 3000 })
+          lastCloudToast.current = now
+        }
+        hasDisconnected.current = false
+      }
+      hasBeenOnline.current = true
     }
-    if (prev === 'online' && cloudStatus === 'offline') {
-      toast.warning('Connessione al cloud persa', { duration: 5000 })
-      lastCloudToast.current = now
+
+    if (cloudStatus === 'offline' && hasBeenOnline.current) {
+      hasDisconnected.current = true
+      const now = Date.now()
+      if (now - lastCloudToast.current >= 5000) {
+        toast.warning('Connessione al cloud persa', { duration: 5000 })
+        lastCloudToast.current = now
+      }
     }
   }, [cloudStatus])
 }
