@@ -13,7 +13,7 @@ router.get(
   requireAuth,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { data, error } = await supabase
+      const { data: allGames, error } = await supabase
         .from('game_configs')
         .select('*')
         .eq('enabled', true)
@@ -23,8 +23,25 @@ router.get(
         return next(createError(500, 'DB_ERROR', 'Failed to fetch games'))
       }
 
+      let games = allGames || []
+
+      // Filter by venue-specific game enablement (skip for super-admins)
+      const venueId = req.user?.venueId
+      if (venueId) {
+        const { data: venueGames } = await supabase
+          .from('venue_games')
+          .select('game_id')
+          .eq('venue_id', venueId)
+          .eq('enabled', false)
+
+        if (venueGames && venueGames.length > 0) {
+          const disabledIds = new Set(venueGames.map((vg) => vg.game_id))
+          games = games.filter((g) => !disabledIds.has(g.id))
+        }
+      }
+
       // Generate ETag from data content
-      const hash = crypto.createHash('md5').update(JSON.stringify(data)).digest('hex')
+      const hash = crypto.createHash('md5').update(JSON.stringify(games)).digest('hex')
       const etag = `"${hash}"`
 
       // Check If-None-Match header
@@ -34,7 +51,7 @@ router.get(
       }
 
       res.setHeader('ETag', etag)
-      res.json({ games: data })
+      res.json({ games })
     } catch (err) {
       next(err)
     }

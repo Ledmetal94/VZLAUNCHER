@@ -17,6 +17,9 @@ const GamesAdminPage = lazy(() => import('@/pages/GamesAdminPage'))
 const SuperAdminLoginPage = lazy(() => import('@/pages/SuperAdminLoginPage'))
 const SuperAdminDashboard = lazy(() => import('@/pages/SuperAdminDashboard'))
 const SuperAdminOperatorsPage = lazy(() => import('@/pages/SuperAdminOperatorsPage'))
+const SuperAdminBankTransfersPage = lazy(() => import('@/pages/SuperAdminBankTransfersPage'))
+const SuperAdminRoyaltiesPage = lazy(() => import('@/pages/SuperAdminRoyaltiesPage'))
+const SuperAdminTokensPage = lazy(() => import('@/pages/SuperAdminTokensPage'))
 import { useAlerts } from '@/hooks/useAlerts'
 import { useWebSocket } from '@/hooks/useWebSocket'
 import { initWsBridge, destroyWsBridge } from '@/services/wsbridge'
@@ -134,6 +137,46 @@ export default function App() {
           <RequireAuth>
             <RequireSuperAdmin>
               <SuperAdminDashboard />
+            </RequireSuperAdmin>
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/super-admin/games"
+        element={
+          <RequireAuth>
+            <RequireSuperAdmin>
+              <GamesAdminPage backUrl="/super-admin" />
+            </RequireSuperAdmin>
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/super-admin/tokens"
+        element={
+          <RequireAuth>
+            <RequireSuperAdmin>
+              <SuperAdminTokensPage />
+            </RequireSuperAdmin>
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/super-admin/royalties"
+        element={
+          <RequireAuth>
+            <RequireSuperAdmin>
+              <SuperAdminRoyaltiesPage />
+            </RequireSuperAdmin>
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/super-admin/bank-transfers"
+        element={
+          <RequireAuth>
+            <RequireSuperAdmin>
+              <SuperAdminBankTransfersPage />
             </RequireSuperAdmin>
           </RequireAuth>
         }

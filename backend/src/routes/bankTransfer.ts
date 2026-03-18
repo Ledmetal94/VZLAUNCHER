@@ -173,4 +173,46 @@ router.post(
   },
 )
 
+// POST /api/v1/super-admin/bank-transfers/:id/reject — reject a bank transfer
+router.post(
+  '/api/v1/super-admin/bank-transfers/:id/reject',
+  requireAuth,
+  requireSuperAdmin,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const txId = req.params.id
+
+      const { data: tx, error: findError } = await supabase
+        .from('token_transactions')
+        .select('id, venue_id, amount, status')
+        .eq('id', txId)
+        .eq('payment_method', 'bank_transfer')
+        .single()
+
+      if (findError || !tx) {
+        return next(createError(404, 'NOT_FOUND', 'Transfer not found'))
+      }
+
+      if (tx.status !== 'pending') {
+        return next(createError(400, 'INVALID_OPERATION', `Transfer already ${tx.status}`))
+      }
+
+      const { error: updateError } = await supabase
+        .from('token_transactions')
+        .update({ status: 'failed', notes: req.body.reason || 'Rejected by admin' })
+        .eq('id', txId)
+
+      if (updateError) {
+        logger.error({ error: updateError }, 'Failed to reject transfer')
+        return next(createError(500, 'DB_ERROR', 'Failed to reject transfer'))
+      }
+
+      logger.info(`Bank transfer rejected: ${tx.amount} tokens for venue ${tx.venue_id}`)
+      res.json({ success: true })
+    } catch (err) {
+      next(err)
+    }
+  },
+)
+
 export default router

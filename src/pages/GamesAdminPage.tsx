@@ -33,7 +33,7 @@ const EMPTY_FORM: CreateGamePayload = {
   bg: '',
 }
 
-export default function GamesAdminPage() {
+export default function GamesAdminPage({ backUrl = '/' }: { backUrl?: string }) {
   const navigate = useNavigate()
   const [games, setGames] = useState<CloudGame[]>([])
   const [loading, setLoading] = useState(true)
@@ -143,7 +143,7 @@ export default function GamesAdminPage() {
         >
           <div className="flex items-center gap-4">
             <button
-              onClick={() => navigate('/')}
+              onClick={() => navigate(backUrl)}
               style={{
                 height: 36, borderRadius: 8,
                 border: '1px solid rgba(123,100,169,0.18)',

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
 } from 'recharts'
+import { downloadCsv } from '@/lib/export'
 import { useAuthStore } from '@/store/authStore'
 import { logout as cloudLogout } from '@/services/cloudApi'
 import {
@@ -11,9 +12,12 @@ import {
   createVenue,
   updateVenue,
   creditVenueTokens,
+  getVenueGames,
+  updateVenueGames,
   type CrossVenueAnalytics,
   type CloudVenue,
   type CreateVenuePayload,
+  type VenueGame,
 } from '@/services/cloudApi'
 
 const RANGE_OPTIONS = [
@@ -38,13 +42,15 @@ export default function SuperAdminDashboard() {
   const [rangeDays, setRangeDays] = useState(30)
 
   // Modal state
-  const [modal, setModal] = useState<'create' | 'edit' | 'credit' | null>(null)
+  const [modal, setModal] = useState<'create' | 'edit' | 'credit' | 'games' | null>(null)
   const [editVenue, setEditVenue] = useState<CloudVenue | null>(null)
   const [form, setForm] = useState<CreateVenuePayload>({ name: '' })
   const [creditAmount, setCreditAmount] = useState(0)
   const [creditReason, setCreditReason] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [venueGamesList, setVenueGamesList] = useState<VenueGame[]>([])
+  const [venueGamesLoading, setVenueGamesLoading] = useState(false)
 
   const loadData = () => {
     setLoading(true)
@@ -116,6 +122,38 @@ export default function SuperAdminDashboard() {
     }
   }
 
+  const openGames = async (v: CloudVenue) => {
+    setEditVenue(v)
+    setError('')
+    setModal('games')
+    setVenueGamesLoading(true)
+    try {
+      const games = await getVenueGames(v.id)
+      setVenueGamesList(games)
+    } catch { setError('Errore caricamento giochi') }
+    finally { setVenueGamesLoading(false) }
+  }
+
+  const toggleVenueGame = (gameId: string) => {
+    setVenueGamesList((prev) => prev.map((g) =>
+      g.id === gameId ? { ...g, venueEnabled: !g.venueEnabled } : g
+    ))
+  }
+
+  const toggleAllVenueGames = (enabled: boolean) => {
+    setVenueGamesList((prev) => prev.map((g) => ({ ...g, venueEnabled: enabled })))
+  }
+
+  const handleSaveGames = async () => {
+    if (!editVenue) return
+    setSaving(true)
+    try {
+      await updateVenueGames(editVenue.id, venueGamesList.map((g) => ({ gameId: g.id, enabled: g.venueEnabled })))
+      closeModal()
+    } catch { setError('Errore salvataggio') }
+    finally { setSaving(false) }
+  }
+
   const handleCredit = async () => {
     if (!editVenue || creditAmount === 0) return
     setSaving(true)
@@ -177,6 +215,46 @@ export default function SuperAdminDashboard() {
                 }}
               >
                 Operatori
+              </button>
+              <button
+                onClick={() => navigate('/super-admin/games')}
+                style={{
+                  padding: '6px 14px', borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                  border: '1px solid rgba(123,100,169,0.15)',
+                  background: 'transparent', color: 'rgba(255,255,255,0.4)',
+                }}
+              >
+                Giochi
+              </button>
+              <button
+                onClick={() => navigate('/super-admin/tokens')}
+                style={{
+                  padding: '6px 14px', borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                  border: '1px solid rgba(123,100,169,0.15)',
+                  background: 'transparent', color: 'rgba(255,255,255,0.4)',
+                }}
+              >
+                Gettoni
+              </button>
+              <button
+                onClick={() => navigate('/super-admin/royalties')}
+                style={{
+                  padding: '6px 14px', borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                  border: '1px solid rgba(123,100,169,0.15)',
+                  background: 'transparent', color: 'rgba(255,255,255,0.4)',
+                }}
+              >
+                Royalty
+              </button>
+              <button
+                onClick={() => navigate('/super-admin/bank-transfers')}
+                style={{
+                  padding: '6px 14px', borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                  border: '1px solid rgba(123,100,169,0.15)',
+                  background: 'transparent', color: 'rgba(255,255,255,0.4)',
+                }}
+              >
+                Bonifici
               </button>
             </div>
           </div>
@@ -273,7 +351,23 @@ export default function SuperAdminDashboard() {
 
               {/* Venue breakdown table */}
               <div style={{ background: 'rgba(22,20,45,0.6)', border: '1px solid rgba(123,100,169,0.12)', borderRadius: 16, padding: '16px 20px' }}>
-                <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '.08em' }}>Dettaglio sedi</span>
+                <div className="flex items-center justify-between">
+                  <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '.08em' }}>Dettaglio sedi</span>
+                  {analytics?.venueBreakdown && analytics.venueBreakdown.length > 0 && (
+                    <button
+                      onClick={() => {
+                        const headers = ['Sede', 'Stato', 'Saldo', 'Sessioni', 'Gettoni', 'Giocatori']
+                        const rows = analytics!.venueBreakdown.map((v) => [
+                          v.venueName, v.status, String(v.tokenBalance), String(v.sessions), String(v.tokens), String(v.players),
+                        ])
+                        downloadCsv('analytics-sedi', headers, rows)
+                      }}
+                      style={{ fontSize: 10, fontWeight: 600, padding: '3px 10px', borderRadius: 6, cursor: 'pointer', border: '1px solid rgba(123,100,169,0.15)', background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.4)', fontFamily: 'Outfit, sans-serif' }}
+                    >
+                      CSV
+                    </button>
+                  )}
+                </div>
                 <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 12 }}>
                   <thead>
                     <tr style={{ borderBottom: '1px solid rgba(123,100,169,0.12)' }}>
@@ -331,6 +425,7 @@ export default function SuperAdminDashboard() {
                         <div className="flex gap-2">
                           <Btn onClick={() => openEdit(v)}>Modifica</Btn>
                           <Btn onClick={() => openCredit(v)} accent>Gettoni</Btn>
+                          <Btn onClick={() => openGames(v)}>Giochi</Btn>
                         </div>
                       </td>
                     </tr>
@@ -396,6 +491,61 @@ export default function SuperAdminDashboard() {
             </Field>
           </div>
           <ModalActions onCancel={closeModal} onSave={handleCredit} saving={saving} label={`Credita ${creditAmount > 0 ? '+' : ''}${creditAmount}`} />
+        </ModalOverlay>
+      )}
+
+      {/* Venue games modal */}
+      {modal === 'games' && editVenue && (
+        <ModalOverlay onClose={closeModal}>
+          <h2 style={{ fontSize: 18, fontWeight: 800, marginBottom: 4 }}>Giochi abilitati</h2>
+          <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 16 }}>{editVenue.name}</p>
+          {error && <ErrorBanner msg={error} />}
+          {venueGamesLoading ? (
+            <div style={{ padding: 20, textAlign: 'center', color: 'rgba(255,255,255,0.3)' }}>Caricamento...</div>
+          ) : (
+            <>
+              <div className="flex gap-2" style={{ marginBottom: 12 }}>
+                <button onClick={() => toggleAllVenueGames(true)} style={{ fontSize: 10, fontWeight: 600, padding: '4px 10px', borderRadius: 6, cursor: 'pointer', border: '1px solid rgba(68,255,136,0.25)', background: 'rgba(68,255,136,0.06)', color: '#44ff88' }}>
+                  Abilita tutti
+                </button>
+                <button onClick={() => toggleAllVenueGames(false)} style={{ fontSize: 10, fontWeight: 600, padding: '4px 10px', borderRadius: 6, cursor: 'pointer', border: '1px solid rgba(255,68,68,0.25)', background: 'rgba(255,68,68,0.06)', color: '#ff4444' }}>
+                  Disabilita tutti
+                </button>
+              </div>
+              <div style={{ maxHeight: 360, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 2 }}>
+                {venueGamesList.map((g) => (
+                  <div
+                    key={g.id}
+                    onClick={() => toggleVenueGame(g.id)}
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      padding: '8px 12px', borderRadius: 8, cursor: 'pointer',
+                      background: g.venueEnabled ? 'rgba(68,255,136,0.04)' : 'rgba(255,255,255,0.02)',
+                      border: `1px solid ${g.venueEnabled ? 'rgba(68,255,136,0.12)' : 'rgba(123,100,169,0.06)'}`,
+                    }}
+                  >
+                    <div>
+                      <span style={{ fontSize: 13, fontWeight: 600 }}>{g.name}</span>
+                      <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginLeft: 8 }}>{g.category}</span>
+                    </div>
+                    <div style={{
+                      width: 36, height: 20, borderRadius: 10, padding: 2,
+                      background: g.venueEnabled ? '#44ff88' : 'rgba(123,100,169,0.2)',
+                      transition: 'background 0.15s',
+                      display: 'flex', alignItems: 'center',
+                    }}>
+                      <div style={{
+                        width: 16, height: 16, borderRadius: '50%', background: '#fff',
+                        transform: g.venueEnabled ? 'translateX(16px)' : 'translateX(0)',
+                        transition: 'transform 0.15s',
+                      }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+          <ModalActions onCancel={closeModal} onSave={handleSaveGames} saving={saving} label="Salva" />
         </ModalOverlay>
       )}
     </div>

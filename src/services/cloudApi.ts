@@ -436,6 +436,114 @@ export async function creditVenueTokens(venueId: string, amount: number, reason?
   })
 }
 
+// Bank transfers (super-admin)
+
+export interface BankTransfer {
+  id: string
+  venue_id: string
+  venueName: string
+  amount: number
+  payment_reference: string
+  status: string
+  created_at: string
+}
+
+export async function getSuperAdminBankTransfers(): Promise<BankTransfer[]> {
+  const data = await request<{ transfers: BankTransfer[] }>('/super-admin/bank-transfers')
+  return data.transfers
+}
+
+export async function confirmBankTransfer(id: string): Promise<void> {
+  await request(`/super-admin/bank-transfers/${id}/confirm`, { method: 'POST' })
+}
+
+export async function rejectBankTransfer(id: string, reason?: string): Promise<void> {
+  await request(`/super-admin/bank-transfers/${id}/reject`, {
+    method: 'POST',
+    body: JSON.stringify({ reason }),
+  })
+}
+
+// Venue games (super-admin)
+
+export interface VenueGame {
+  id: string
+  name: string
+  platform: string
+  category: string
+  globalEnabled: boolean
+  venueEnabled: boolean
+}
+
+export async function getVenueGames(venueId: string): Promise<VenueGame[]> {
+  const data = await request<{ games: VenueGame[] }>(`/super-admin/venues/${venueId}/games`)
+  return data.games
+}
+
+export async function updateVenueGames(
+  venueId: string,
+  games: Array<{ gameId: string; enabled: boolean }>,
+): Promise<void> {
+  await request(`/super-admin/venues/${venueId}/games`, {
+    method: 'PUT',
+    body: JSON.stringify({ games }),
+  })
+}
+
+// Royalties (super-admin)
+
+export interface RoyaltyReport {
+  month: string
+  tokenRate: number
+  totals: {
+    venues: number
+    sessions: number
+    tokensConsumed: number
+    revenue: number
+  }
+  breakdown: Array<{
+    venueId: string
+    venueName: string
+    status: string
+    sessions: number
+    tokensConsumed: number
+    revenue: number
+  }>
+}
+
+export async function getRoyaltyReport(month?: string): Promise<RoyaltyReport> {
+  const params = new URLSearchParams()
+  if (month) params.set('month', month)
+  const qs = params.toString()
+  return request<RoyaltyReport>(`/super-admin/royalties${qs ? `?${qs}` : ''}`)
+}
+
+// Cross-venue token transactions (super-admin)
+
+export interface SuperAdminTokenTransaction extends TokenTransaction {
+  venueName: string
+}
+
+export interface SuperAdminTokenTransactionListResponse {
+  transactions: SuperAdminTokenTransaction[]
+  total: number
+  page: number
+  pageSize: number
+}
+
+export async function getSuperAdminTokenTransactions(
+  page = 1,
+  pageSize = 20,
+  filters?: { venueId?: string; type?: string; startDate?: string; endDate?: string },
+): Promise<SuperAdminTokenTransactionListResponse> {
+  const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) })
+  if (filters?.venueId) params.set('venueId', filters.venueId)
+  if (filters?.type) params.set('type', filters.type)
+  if (filters?.startDate) params.set('startDate', filters.startDate)
+  if (filters?.endDate) params.set('endDate', filters.endDate)
+  return request<SuperAdminTokenTransactionListResponse>(`/super-admin/tokens/transactions?${params}`)
+}
+
 // Cross-venue analytics
 
 export interface CrossVenueAnalytics {
