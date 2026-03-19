@@ -13,9 +13,11 @@ export async function checkCloudHealth(): Promise<boolean> {
 }
 
 let _accessToken: string | null = null
+let _isSuperAdmin = false
 
-export function setAccessToken(token: string | null) {
+export function setAccessToken(token: string | null, superAdmin = false) {
   _accessToken = token
+  if (token) _isSuperAdmin = superAdmin
 }
 
 export function getAccessToken() {
@@ -82,12 +84,14 @@ export async function login(
     body: JSON.stringify({ username, password }),
   })
   _accessToken = data.accessToken
+  _isSuperAdmin = false
   return data
 }
 
 export async function refreshToken(): Promise<boolean> {
   try {
-    const res = await fetch(`${BASE_URL}/api/v1/auth/refresh`, {
+    const refreshPath = _isSuperAdmin ? '/api/v1/super-admin/auth/refresh' : '/api/v1/auth/refresh'
+    const res = await fetch(`${BASE_URL}${refreshPath}`, {
       method: 'POST',
       credentials: 'include',
     })
@@ -383,6 +387,7 @@ export async function superAdminLogin(
     body: JSON.stringify({ username, password }),
   })
   _accessToken = data.accessToken
+  _isSuperAdmin = true
   return data
 }
 

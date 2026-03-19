@@ -50,13 +50,9 @@ export function useWebSocket() {
         }
         if (!token) return
 
-        // Skip WS in dev if cloud backend doesn't support it
-        if (import.meta.env.DEV) {
-          try {
-            const res = await fetch(`${WS_URL.replace(/^ws/, 'http')}/health`, { signal: AbortSignal.timeout(2000) })
-            if (!res.ok) return
-          } catch { return }
-        }
+        // Cloud backend doesn't have a WebSocket endpoint yet — skip entirely
+        // Real-time updates come via the bridge WebSocket (wsbridge.ts)
+        return
 
         const ws = new WebSocket(`${WS_URL}/ws?token=${token}`)
         wsRef.current = ws

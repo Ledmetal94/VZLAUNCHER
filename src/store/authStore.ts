@@ -31,7 +31,7 @@ export const useAuthStore = create<AuthState>()(
       venueName: null,
       accessToken: null,
       login: (user, token) => {
-        if (token) setAccessToken(token)
+        if (token) setAccessToken(token, user.role === 'super_admin')
         set({
           isAuthenticated: true,
           userId: user.id,
@@ -70,7 +70,7 @@ export const useAuthStore = create<AuthState>()(
         // Restore in-memory token as soon as localStorage is loaded
         // This runs before any useEffect, preventing race conditions
         if (state?.accessToken) {
-          setAccessToken(state.accessToken)
+          setAccessToken(state.accessToken, state.role === 'super_admin')
         }
       },
     },
