@@ -5,6 +5,7 @@ import { readFileSync, existsSync } from 'fs'
 import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import os from 'os'
+import QRCode from 'qrcode'
 import { logger, sessionLogger } from './logging/logger.js'
 import { createStateMachine } from './automation/state-machine.js'
 import { createProcessManager } from './automation/process-manager.js'
@@ -416,38 +417,43 @@ app.post('/api/restart-platform', async (req, res) => {
   res.json({ success: true, platform, action: 'killed', results })
 })
 
-// GET /connect — LAN connection page with QR code for tablet
-app.get('/connect', (_req, res) => {
+// GET /connect — LAN connection page with QR code for tablet (generated server-side)
+app.get('/connect', async (_req, res) => {
   const lanIp = getLanIp()
   const url = `http://${lanIp}:${PORT}`
-  res.send(`<!DOCTYPE html>
+  try {
+    const qrDataUrl = await QRCode.toDataURL(url, { width: 220, margin: 2, color: { dark: '#000000', light: '#ffffff' } })
+    res.send(`<!DOCTYPE html>
 <html lang="it">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>VZ Launcher — Connetti Tablet</title>
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
   <style>
-    body{font-family:system-ui,sans-serif;background:#0D0C1A;color:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}
-    .card{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:40px;text-align:center;max-width:400px}
-    h1{margin:0 0 8px;font-size:22px}
-    p{color:rgba(255,255,255,0.5);margin:0 0 24px;font-size:14px}
-    .url{background:rgba(230,0,126,0.1);border:1px solid rgba(230,0,126,0.3);border-radius:10px;padding:12px 20px;font-size:18px;font-weight:700;color:#E6007E;margin-bottom:24px;word-break:break-all}
-    canvas{border-radius:12px;background:#fff;padding:12px}
-    .hint{margin-top:20px;font-size:12px;color:rgba(255,255,255,0.3)}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:system-ui,sans-serif;background:#0D0C1A;color:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh}
+    .card{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:40px 36px;text-align:center;max-width:420px;width:90vw}
+    h1{font-size:22px;font-weight:800;margin-bottom:6px}
+    .sub{color:rgba(255,255,255,0.45);font-size:14px;margin-bottom:28px}
+    .url{background:rgba(230,0,126,0.1);border:1px solid rgba(230,0,126,0.3);border-radius:10px;padding:12px 16px;font-size:17px;font-weight:700;color:#E6007E;margin-bottom:28px;word-break:break-all}
+    .qr{background:#fff;border-radius:14px;padding:14px;display:inline-block}
+    .qr img{display:block;width:220px;height:220px}
+    .hint{margin-top:20px;font-size:12px;color:rgba(255,255,255,0.25);line-height:1.5}
   </style>
 </head>
 <body>
   <div class="card">
     <h1>VZ Launcher</h1>
-    <p>Connetti il tablet alla stessa rete WiFi e apri:</p>
+    <p class="sub">Connetti il tablet alla stessa rete WiFi e apri:</p>
     <div class="url">${url}</div>
-    <canvas id="qr"></canvas>
-    <p class="hint">Oppure scansiona il QR code con la fotocamera del tablet</p>
+    <div class="qr"><img src="${qrDataUrl}" alt="QR Code"/></div>
+    <p class="hint">Scansiona il QR code con la fotocamera del tablet<br>oppure digita l'URL nel browser</p>
   </div>
-  <script>QRCode.toCanvas(document.getElementById('qr'),'${url}',{width:200,margin:1})</script>
 </body>
 </html>`)
+  } catch (err) {
+    res.status(500).send(`<pre>QR error: ${err.message}</pre>`)
+  }
 })
 
 // SPA fallback — serve index.html for all non-API routes (when frontend is present)

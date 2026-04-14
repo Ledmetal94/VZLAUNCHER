@@ -27,7 +27,9 @@
       "utils/**/*",
       "scripts/**/*"
     ],
-    "targets": ["node22-win-x64"],
+    "targets": [
+      "node22-win-x64"
+    ],
     "outputPath": "../dist-exe"
   },
   "dependencies": {
@@ -35,6 +37,7 @@
     "express": "^4.21.0",
     "pino": "^9.0.0",
     "pino-pretty": "^11.0.0",
+    "qrcode": "^1.5.4",
     "ws": "^8.18.0"
   },
   "devDependencies": {
