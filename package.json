@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:exe": "tsc -b && vite build --outDir bridge/public --emptyOutDir",
     "lint": "eslint .",
     "preview": "vite preview"
   },

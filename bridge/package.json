@@ -10,7 +10,25 @@
     "test:launch": "node scripts/test-launch.js",
     "calibrate": "node scripts/calibrate.js",
     "coords": "node scripts/coord-finder.js",
-    "setup:herozone": "node scripts/setup-herozone.js"
+    "setup:herozone": "node scripts/setup-herozone.js",
+    "build:exe": "cd .. && npm run build:exe",
+    "package": "npx pkg . --out-path ../dist-exe",
+    "build:full": "npm run build:exe && npm run package"
+  },
+  "pkg": {
+    "scripts": "server.js",
+    "assets": [
+      "public/**/*",
+      "config/**/*",
+      "automation/actions/**/*",
+      "automation/python/**/*",
+      "ws/**/*",
+      "logging/**/*",
+      "utils/**/*",
+      "scripts/**/*"
+    ],
+    "targets": ["node22-win-x64"],
+    "outputPath": "../dist-exe"
   },
   "dependencies": {
     "cors": "^2.8.5",
@@ -18,5 +36,8 @@
     "pino": "^9.0.0",
     "pino-pretty": "^11.0.0",
     "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "pkg": "^5.8.1"
   }
 }

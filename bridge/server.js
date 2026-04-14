@@ -1,9 +1,10 @@
 import express from 'express'
 import cors from 'cors'
 import { createServer } from 'http'
-import { readFileSync } from 'fs'
+import { readFileSync, existsSync } from 'fs'
 import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
+import os from 'os'
 import { logger, sessionLogger } from './logging/logger.js'
 import { createStateMachine } from './automation/state-machine.js'
 import { createProcessManager } from './automation/process-manager.js'
@@ -26,6 +27,13 @@ app.use(express.json())
 
 // Serve error screenshots as static files
 app.use('/api/screenshots', express.static(resolve(__dirname, 'logging', 'screenshots')))
+
+// --- Serve frontend (when built into bridge/public) ---
+const PUBLIC_DIR = resolve(__dirname, 'public')
+const hasFrontend = existsSync(resolve(PUBLIC_DIR, 'index.html'))
+if (hasFrontend) {
+  app.use(express.static(PUBLIC_DIR))
+}
 
 // Serve game assets (posters, reference screenshots)
 app.use('/api/games/assets', express.static(resolve(__dirname, 'games')))
@@ -408,6 +416,49 @@ app.post('/api/restart-platform', async (req, res) => {
   res.json({ success: true, platform, action: 'killed', results })
 })
 
+// GET /connect — LAN connection page with QR code for tablet
+app.get('/connect', (_req, res) => {
+  const lanIp = getLanIp()
+  const url = `http://${lanIp}:${PORT}`
+  res.send(`<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>VZ Launcher — Connetti Tablet</title>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
+  <style>
+    body{font-family:system-ui,sans-serif;background:#0D0C1A;color:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}
+    .card{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:40px;text-align:center;max-width:400px}
+    h1{margin:0 0 8px;font-size:22px}
+    p{color:rgba(255,255,255,0.5);margin:0 0 24px;font-size:14px}
+    .url{background:rgba(230,0,126,0.1);border:1px solid rgba(230,0,126,0.3);border-radius:10px;padding:12px 20px;font-size:18px;font-weight:700;color:#E6007E;margin-bottom:24px;word-break:break-all}
+    canvas{border-radius:12px;background:#fff;padding:12px}
+    .hint{margin-top:20px;font-size:12px;color:rgba(255,255,255,0.3)}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>VZ Launcher</h1>
+    <p>Connetti il tablet alla stessa rete WiFi e apri:</p>
+    <div class="url">${url}</div>
+    <canvas id="qr"></canvas>
+    <p class="hint">Oppure scansiona il QR code con la fotocamera del tablet</p>
+  </div>
+  <script>QRCode.toCanvas(document.getElementById('qr'),'${url}',{width:200,margin:1})</script>
+</body>
+</html>`)
+})
+
+// SPA fallback — serve index.html for all non-API routes (when frontend is present)
+if (hasFrontend) {
+  app.get('*', (req, res) => {
+    if (!req.path.startsWith('/api') && !req.path.startsWith('/connect')) {
+      res.sendFile(resolve(PUBLIC_DIR, 'index.html'))
+    }
+  })
+}
+
 // --- Graceful shutdown ---
 function shutdown(signal) {
   logger.info({ signal }, 'Shutting down bridge server')
@@ -420,7 +471,32 @@ function shutdown(signal) {
 process.on('SIGTERM', () => shutdown('SIGTERM'))
 process.on('SIGINT', () => shutdown('SIGINT'))
 
+// --- LAN IP helper ---
+function getLanIp() {
+  const nets = os.networkInterfaces()
+  for (const name of Object.keys(nets)) {
+    for (const net of nets[name]) {
+      if (net.family === 'IPv4' && !net.internal) return net.address
+    }
+  }
+  return 'localhost'
+}
+
 // --- Start server ---
-server.listen(PORT, () => {
-  logger.info({ port: PORT, dryRun: DRY_RUN }, `Bridge server running on http://localhost:${PORT}`)
+server.listen(PORT, '0.0.0.0', () => {
+  const lanIp = getLanIp()
+  const tabletUrl = `http://${lanIp}:${PORT}`
+  logger.info({ port: PORT, dryRun: DRY_RUN, tabletUrl }, 'Bridge server running')
+  console.log('\n╔══════════════════════════════════════════════╗')
+  console.log('║          VZ Launcher Bridge — Online         ║')
+  console.log('╠══════════════════════════════════════════════╣')
+  console.log(`║  Tablet URL : ${tabletUrl.padEnd(30)} ║`)
+  console.log(`║  QR Code   : ${tabletUrl}/connect`.padEnd(47) + ' ║')
+  console.log(`║  API health : http://localhost:${PORT}/api/health`.padEnd(47) + ' ║')
+  if (hasFrontend) {
+    console.log('║  Frontend  : ✓ embedded                        ║')
+  } else {
+    console.log('║  Frontend  : ✗ not built (run npm run build:exe)║')
+  }
+  console.log('╚══════════════════════════════════════════════╝\n')
 })

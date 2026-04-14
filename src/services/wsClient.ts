@@ -1,5 +1,5 @@
-const BRIDGE_URL = import.meta.env.VITE_BRIDGE_URL || 'http://localhost:8000'
-const WS_URL = BRIDGE_URL.replace(/^http/, 'ws') + '/ws/status'
+const BRIDGE_URL = import.meta.env.VITE_BRIDGE_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8000')
+const WS_URL = BRIDGE_URL.replace(/^https/, 'wss').replace(/^http/, 'ws') + '/ws/status'
 
 type WsMessage =
   | { type: 'heartbeat'; status: 'idle'; platforms: Record<string, string>; uptime_seconds: number }

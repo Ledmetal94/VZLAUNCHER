@@ -1,4 +1,6 @@
-const BRIDGE_URL = import.meta.env.VITE_BRIDGE_URL || 'http://localhost:8000'
+// When served by the local bridge .exe, VITE_BRIDGE_URL is not set at build time
+// → fall back to same-origin (window.location.origin) so tablet calls go to the bridge PC
+const BRIDGE_URL = import.meta.env.VITE_BRIDGE_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8000')
 
 export { BRIDGE_URL }
 
