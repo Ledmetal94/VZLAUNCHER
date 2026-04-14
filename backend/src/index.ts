@@ -32,8 +32,19 @@ const PORT = parseInt(process.env.PORT || '3002', 10)
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173'
 
 app.use(requestId)
+const allowedOrigins = FRONTEND_URL.split(',').map(u => u.trim())
+const LAN_ORIGIN = /^http:\/\/(localhost|127\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)(:\d+)?$/
+
 app.use(cors({
-  origin: FRONTEND_URL.split(',').map(u => u.trim()),
+  origin: (origin, callback) => {
+    // Allow no-origin requests (native apps, Postman, etc.)
+    if (!origin) return callback(null, true)
+    // Allow explicitly listed origins (Vercel deployments)
+    if (allowedOrigins.includes(origin)) return callback(null, true)
+    // Allow any LAN/local IP (bridge .exe on same network)
+    if (LAN_ORIGIN.test(origin)) return callback(null, true)
+    callback(new Error(`CORS: origin ${origin} not allowed`))
+  },
   credentials: true,
 }))
 
