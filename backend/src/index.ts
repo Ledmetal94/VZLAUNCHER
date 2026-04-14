@@ -40,9 +40,9 @@ app.use(cors({
     // Allow no-origin requests (native apps, Postman, etc.)
     if (!origin) return callback(null, true)
     // Allow explicitly listed origins (Vercel deployments)
-    if (allowedOrigins.includes(origin)) return callback(null, true)
+    if (allowedOrigins.includes(origin)) return callback(null, origin)
     // Allow any LAN/local IP (bridge .exe on same network)
-    if (LAN_ORIGIN.test(origin)) return callback(null, true)
+    if (LAN_ORIGIN.test(origin)) return callback(null, origin)
     callback(new Error(`CORS: origin ${origin} not allowed`))
   },
   credentials: true,
