@@ -33,20 +33,31 @@ const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173'
 
 app.use(requestId)
 const allowedOrigins = FRONTEND_URL.split(',').map(u => u.trim())
-const LAN_ORIGIN = /^http:\/\/(localhost|127\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)(:\d+)?$/
+const LAN_ORIGIN = /^https?:\/\/(localhost|127\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)(:\d+)?$/
 
-app.use(cors({
-  origin: (origin, callback) => {
-    // Allow no-origin requests (native apps, Postman, etc.)
-    if (!origin) return callback(null, true)
-    // Allow explicitly listed origins (Vercel deployments)
-    if (allowedOrigins.includes(origin)) return callback(null, origin)
-    // Allow any LAN/local IP (bridge .exe on same network)
-    if (LAN_ORIGIN.test(origin)) return callback(null, origin)
-    callback(new Error(`CORS: origin ${origin} not allowed`))
-  },
-  credentials: true,
-}))
+function isAllowedOrigin(origin: string | undefined): boolean {
+  if (!origin) return true
+  if (allowedOrigins.includes(origin)) return true
+  if (LAN_ORIGIN.test(origin)) return true
+  return false
+}
+
+// Manual CORS middleware — cors package doesn't reliably set ACAO with credentials+function
+app.use((req, res, next) => {
+  const origin = req.headers.origin
+  if (isAllowedOrigin(origin)) {
+    if (origin) res.setHeader('Access-Control-Allow-Origin', origin)
+    res.setHeader('Access-Control-Allow-Credentials', 'true')
+    res.setHeader('Vary', 'Origin')
+  }
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS')
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Api-Key,X-Super-Admin-Secret')
+    res.setHeader('Access-Control-Max-Age', '86400')
+    return res.status(204).end()
+  }
+  next()
+})
 
 // Webhook route needs raw body for Stripe signature verification — mount before json parser
 app.use(webhooksRouter)
