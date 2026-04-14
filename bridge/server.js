@@ -6,6 +6,7 @@ import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import os from 'os'
 import QRCode from 'qrcode'
+import { createProxyMiddleware } from 'http-proxy-middleware'
 import { logger, sessionLogger } from './logging/logger.js'
 import { createStateMachine } from './automation/state-machine.js'
 import { createProcessManager } from './automation/process-manager.js'
@@ -25,6 +26,20 @@ const DRY_RUN = process.env.BRIDGE_DRY_RUN === 'true'
 
 app.use(cors())
 app.use(express.json())
+
+// --- Cloud API proxy — forwards /cloud/* to Vercel backend (eliminates CORS entirely) ---
+const CLOUD_URL = process.env.CLOUD_URL || 'https://vzlauncher-backend.vercel.app'
+app.use('/cloud', createProxyMiddleware({
+  target: CLOUD_URL,
+  changeOrigin: true,
+  pathRewrite: { '^/cloud': '' },
+  on: {
+    error: (err, req, res) => {
+      logger.error({ err: err.message }, 'Cloud proxy error')
+      res.status(502).json({ error: { code: 'CLOUD_UNAVAILABLE', message: 'Cloud backend unreachable' } })
+    }
+  }
+}))
 
 // Serve error screenshots as static files
 app.use('/api/screenshots', express.static(resolve(__dirname, 'logging', 'screenshots')))
