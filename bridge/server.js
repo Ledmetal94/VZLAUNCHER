@@ -6,7 +6,6 @@ import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import os from 'os'
 import QRCode from 'qrcode'
-import { createProxyMiddleware } from 'http-proxy-middleware'
 import { logger, sessionLogger } from './logging/logger.js'
 import { createStateMachine } from './automation/state-machine.js'
 import { createProcessManager } from './automation/process-manager.js'
@@ -29,17 +28,39 @@ app.use(express.json())
 
 // --- Cloud API proxy — forwards /cloud/* to Vercel backend (eliminates CORS entirely) ---
 const CLOUD_URL = process.env.CLOUD_URL || 'https://vzlauncher-backend.vercel.app'
-app.use('/cloud', createProxyMiddleware({
-  target: CLOUD_URL,
-  changeOrigin: true,
-  pathRewrite: { '^/cloud': '' },
-  on: {
-    error: (err, req, res) => {
-      logger.error({ err: err.message }, 'Cloud proxy error')
-      res.status(502).json({ error: { code: 'CLOUD_UNAVAILABLE', message: 'Cloud backend unreachable' } })
+app.use('/cloud', express.json(), async (req, res) => {
+  const targetUrl = CLOUD_URL + req.originalUrl.replace(/^\/cloud/, '')
+  try {
+    const forwardHeaders = {}
+    for (const [k, v] of Object.entries(req.headers)) {
+      if (['host', 'connection', 'content-length', 'origin', 'referer'].includes(k.toLowerCase())) continue
+      if (typeof v === 'string') forwardHeaders[k] = v
     }
+
+    const fetchOpts = {
+      method: req.method,
+      headers: forwardHeaders,
+      signal: AbortSignal.timeout(60000),
+    }
+    if (req.method !== 'GET' && req.method !== 'HEAD' && req.body && Object.keys(req.body).length > 0) {
+      fetchOpts.body = JSON.stringify(req.body)
+      fetchOpts.headers['content-type'] = 'application/json'
+    }
+
+    const upstream = await fetch(targetUrl, fetchOpts)
+    res.status(upstream.status)
+    upstream.headers.forEach((val, key) => {
+      if (!['content-encoding', 'transfer-encoding', 'connection'].includes(key.toLowerCase())) {
+        res.setHeader(key, val)
+      }
+    })
+    const body = await upstream.arrayBuffer()
+    res.send(Buffer.from(body))
+  } catch (err) {
+    logger.error({ err: err.message, targetUrl }, 'Cloud proxy error')
+    res.status(502).json({ error: { code: 'CLOUD_UNAVAILABLE', message: 'Cloud backend unreachable' } })
   }
-}))
+})
 
 // Serve error screenshots as static files
 app.use('/api/screenshots', express.static(resolve(__dirname, 'logging', 'screenshots')))
@@ -48,6 +69,15 @@ app.use('/api/screenshots', express.static(resolve(__dirname, 'logging', 'screen
 const PUBLIC_DIR = resolve(__dirname, 'public')
 const hasFrontend = existsSync(resolve(PUBLIC_DIR, 'index.html'))
 if (hasFrontend) {
+  // No-cache for HTML + service worker — always fresh on reload
+  app.use((req, res, next) => {
+    if (req.path === '/' || req.path.endsWith('.html') || req.path === '/sw.js' || req.path === '/registerSW.js' || req.path === '/manifest.webmanifest') {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
+      res.setHeader('Pragma', 'no-cache')
+      res.setHeader('Expires', '0')
+    }
+    next()
+  })
   app.use(express.static(PUBLIC_DIR))
 }
 
@@ -430,6 +460,39 @@ app.post('/api/restart-platform', async (req, res) => {
   }
 
   res.json({ success: true, platform, action: 'killed', results })
+})
+
+// GET /reset — unregister service worker + clear caches (for stuck tablets)
+app.get('/reset', (_req, res) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
+  res.send(`<!DOCTYPE html>
+<html><head><meta charset="UTF-8"/>
+<title>Reset cache…</title>
+<style>body{font-family:system-ui;background:#0D0C1A;color:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;text-align:center;padding:20px}
+.box{max-width:400px}h1{font-size:20px}p{color:rgba(255,255,255,0.6)}</style>
+</head><body><div class="box">
+<h1>Reset cache in corso…</h1>
+<p id="s">Attendere</p>
+<script>
+(async () => {
+  const s = document.getElementById('s')
+  try {
+    if ('serviceWorker' in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations()
+      for (const r of regs) await r.unregister()
+      s.textContent = 'Service Worker rimossi: ' + regs.length
+    }
+    if ('caches' in window) {
+      const keys = await caches.keys()
+      await Promise.all(keys.map(k => caches.delete(k)))
+      s.textContent += ' | Cache svuotate: ' + keys.length
+    }
+    try { localStorage.clear(); sessionStorage.clear() } catch {}
+    s.textContent += ' | Redirect…'
+    setTimeout(() => { window.location.href = '/?t=' + Date.now() }, 1500)
+  } catch (e) { s.textContent = 'Errore: ' + e.message }
+})()
+</script></div></body></html>`)
 })
 
 // GET /connect — LAN connection page with QR code for tablet (generated server-side)

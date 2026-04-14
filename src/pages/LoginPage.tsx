@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router'
 import { useAuthStore } from '@/store/authStore'
 import { login as cloudLogin } from '@/services/cloudApi'
 
+const BUILD_TAG = 'BUILD-ALERT-v1'
 export default function LoginPage() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -32,6 +33,7 @@ export default function LoginPage() {
       className="noise-overlay relative flex items-center justify-center overflow-hidden"
       style={{ width: '100vw', height: '100vh', background: 'var(--color-surface)' }}
     >
+      <div style={{ position: 'fixed', top: 8, left: 8, fontSize: 11, color: '#E6007E', fontWeight: 700, zIndex: 9999, background: 'rgba(0,0,0,0.6)', padding: '4px 8px', borderRadius: 4 }}>{BUILD_TAG}</div>
       {/* Ambient blobs */}
       <div className="blob" style={{ width: 700, height: 700, filter: 'blur(160px)', background: 'rgba(82,49,137,0.2)', top: -200, left: -200 }} />
       <div className="blob" style={{ width: 500, height: 500, filter: 'blur(140px)', background: 'rgba(230,0,126,0.1)', bottom: -150, right: -150 }} />

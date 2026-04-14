@@ -67,16 +67,11 @@ export default function CatalogPage() {
   }, [isLicenseBlocked])
 
   const handleLaunch = useCallback(async (players: number) => {
-    if (!selectedGame) return
+    if (!selectedGame) { alert('DEBUG: no selectedGame'); return }
+    if (isLicenseBlocked) { alert('DEBUG: license blocked'); setLicenseModalOpen(true); return }
 
-    // Double-check license before launch
-    if (isLicenseBlocked) {
-      setLicenseModalOpen(true)
-      return
-    }
-
-    // Check and consume tokens locally first
     const consumed = consumeLocal(selectedGame.tokenCost, selectedGame.id)
+    alert(`DEBUG 1: consumed=${consumed}, cost=${selectedGame.tokenCost}`)
     if (!consumed) {
       toast.warning('Gettoni insufficienti!')
       return
@@ -85,18 +80,17 @@ export default function CatalogPage() {
     setLaunching(true)
     try {
       const result = await launchGame(selectedGame.id, players)
+      alert(`DEBUG 2: result=${JSON.stringify(result).slice(0, 200)}`)
       if (result.success && result.session) {
         startSession(selectedGame, players, result.session.id)
         setSelectedGame(null)
       } else {
-        // Bridge returned failure — refund tokens
         refundLocal(selectedGame.tokenCost, selectedGame.id)
-        toast.error('Avvio gioco fallito — gettoni rimborsati')
+        toast.error(`Avvio fallito: ${result.error?.message ?? 'unknown'}`)
       }
     } catch (err) {
-      // Network/bridge error — refund tokens
+      alert(`DEBUG catch: ${err instanceof Error ? err.message : String(err)}`)
       refundLocal(selectedGame.tokenCost, selectedGame.id)
-      toast.error('Avvio gioco fallito — gettoni rimborsati')
     } finally {
       setLaunching(false)
     }
