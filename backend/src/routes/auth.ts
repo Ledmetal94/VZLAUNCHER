@@ -18,8 +18,8 @@ const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET
 if (!JWT_SECRET || !JWT_REFRESH_SECRET) {
   throw new Error('Missing JWT_SECRET or JWT_REFRESH_SECRET environment variables')
 }
-const ACCESS_TOKEN_EXPIRY = '1h'
-const REFRESH_TOKEN_DAYS = 7
+const ACCESS_TOKEN_EXPIRY = '72h'  // 3 days — covers 2-day offline requirement
+const REFRESH_TOKEN_DAYS = 30      // 30 days refresh token
 
 function generateRefreshToken(): string {
   return crypto.randomUUID() + '-' + crypto.randomBytes(32).toString('hex')

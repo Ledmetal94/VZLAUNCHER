@@ -17,8 +17,8 @@ if (!JWT_SECRET || !JWT_REFRESH_SECRET) {
   throw new Error('Missing JWT_SECRET or JWT_REFRESH_SECRET environment variables')
 }
 
-const ACCESS_TOKEN_EXPIRY = '1h'
-const REFRESH_TOKEN_DAYS = 7
+const ACCESS_TOKEN_EXPIRY = '24h'  // super admin: 24h (shorter for security)
+const REFRESH_TOKEN_DAYS = 30
 
 function generateRefreshToken(): string {
   return crypto.randomUUID() + '-' + crypto.randomBytes(32).toString('hex')
