@@ -8,6 +8,7 @@ import LicenseBlockedModal from '@/components/catalog/LicenseBlockedModal'
 import SessionBar from '@/components/catalog/SessionBar'
 import SettingsModal from '@/components/catalog/SettingsModal'
 import TokenModal from '@/components/catalog/TokenModal'
+import TokenHistoryModal from '@/components/catalog/TokenHistoryModal'
 import { launchGame, stopSession } from '@/services/bridgeApi'
 import { useSessionStore } from '@/store/sessionStore'
 import { useGameStore } from '@/store/gameStore'
@@ -24,6 +25,7 @@ export default function CatalogPage() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [tokenModalOpen, setTokenModalOpen] = useState(false)
   const [licenseModalOpen, setLicenseModalOpen] = useState(false)
+  const [tokenHistoryOpen, setTokenHistoryOpen] = useState(false)
   const isAdmin = useAuthStore((s) => s.role) === 'admin'
 
   const activeSession = useSessionStore((s) => s.activeSession)
@@ -113,7 +115,7 @@ export default function CatalogPage() {
   }, [endSession])
 
   return (
-    <div className="noise-overlay relative flex flex-col overflow-hidden" style={{ width: 1920, height: 1080, background: 'var(--color-surface)' }}>
+    <div className="noise-overlay relative flex flex-col w-full min-h-dvh xl:h-screen xl:overflow-hidden" style={{ background: 'var(--color-surface)' }}>
       {/* Ambient blobs */}
       <div className="blob" style={{ width: 800, height: 800, filter: 'blur(160px)', background: 'rgba(82,49,137,0.18)', top: -300, left: -300 }} />
       <div className="blob" style={{ width: 600, height: 600, filter: 'blur(150px)', background: 'rgba(230,0,126,0.08)', bottom: -250, right: -200 }} />
@@ -138,7 +140,10 @@ export default function CatalogPage() {
         )}
 
         {isAdmin && settingsOpen && (
-          <SettingsModal onClose={() => setSettingsOpen(false)} />
+          <SettingsModal
+            onClose={() => setSettingsOpen(false)}
+            onHistoryClick={() => setTokenHistoryOpen(true)}
+          />
         )}
 
         {isAdmin && tokenModalOpen && (
@@ -147,6 +152,10 @@ export default function CatalogPage() {
 
         {licenseModalOpen && (
           <LicenseBlockedModal onClose={() => setLicenseModalOpen(false)} />
+        )}
+
+        {isAdmin && tokenHistoryOpen && (
+          <TokenHistoryModal onClose={() => setTokenHistoryOpen(false)} />
         )}
 
         {selectedGame && !activeSession && (

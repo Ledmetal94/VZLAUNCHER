@@ -23,13 +23,9 @@ export default function SessionBar({ onEnd, ending }: SessionBarProps) {
 
   return (
     <div
+      className="flex shrink-0 items-center gap-4 xl:gap-6 px-5 xl:px-6"
       style={{
-        height: 56,
-        flexShrink: 0,
-        display: 'flex',
-        alignItems: 'center',
-        gap: 24,
-        padding: '0 24px',
+        minHeight: 56,
         background: 'rgba(15,14,31,0.75)',
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
@@ -38,27 +34,27 @@ export default function SessionBar({ onEnd, ending }: SessionBarProps) {
       }}
     >
       {/* Status dot */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#E6007E', animation: 'pulse 2s ease-in-out infinite', flexShrink: 0 }} />
-        <span style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>Attivo</span>
+      <div className="flex items-center gap-2 shrink-0">
+        <span className="w-2 h-2 rounded-full bg-[#E6007E] animate-pulse shrink-0" />
+        <span className="text-sm font-bold text-white">Attivo</span>
       </div>
 
       {/* Game info */}
-      <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', fontWeight: 500 }}>
+      <span className="hidden sm:block text-sm font-medium text-white/70 truncate">
         {session.gameName} · {session.category.replace('_', ' ')}
       </span>
 
       {/* Players */}
-      <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>
+      <span className="hidden md:block text-xs font-medium text-white/40 shrink-0">
         Giocatori: {session.players}
       </span>
 
       {/* Timer + progress bar */}
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 12 }}>
-        <span style={{ fontSize: 13, fontWeight: 700, color: '#fff', fontVariantNumeric: 'tabular-nums', minWidth: 50 }}>
+      <div className="flex flex-1 items-center gap-3 min-w-0">
+        <span className="text-sm font-bold text-white tabular-nums shrink-0 min-w-[48px]">
           {formatDuration(session.elapsed)}
         </span>
-        <div style={{ flex: 1, height: 6, borderRadius: 3, background: 'rgba(123,100,169,0.15)', overflow: 'hidden' }}>
+        <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(123,100,169,0.15)' }}>
           <div
             style={{
               height: '100%',
@@ -70,30 +66,27 @@ export default function SessionBar({ onEnd, ending }: SessionBarProps) {
             }}
           />
         </div>
-        <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', fontVariantNumeric: 'tabular-nums', minWidth: 50 }}>
+        <span className="text-xs text-white/35 tabular-nums shrink-0 min-w-[48px] hidden sm:block">
           {formatDuration(Math.max(0, session.durationPlanned - session.elapsed))}
         </span>
       </div>
 
-      {/* End button */}
+      {/* End button — large touch target */}
       <button
         onClick={onEnd}
         disabled={ending}
+        className="
+          shrink-0 min-h-[44px] px-4 xl:px-5 rounded-lg text-sm font-bold
+          transition-all duration-150
+          hover:bg-[rgba(255,68,68,0.2)] active:scale-95
+          disabled:opacity-50 disabled:cursor-not-allowed
+        "
         style={{
-          padding: '6px 16px',
-          borderRadius: 8,
           border: '1px solid rgba(255,68,68,0.25)',
           background: 'rgba(255,68,68,0.1)',
           color: '#ff4444',
-          fontSize: 12,
-          fontWeight: 700,
-          cursor: ending ? 'not-allowed' : 'pointer',
-          opacity: ending ? 0.5 : 1,
           fontFamily: 'Outfit, sans-serif',
-          transition: 'all 0.15s',
         }}
-        onMouseEnter={(e) => { if (!ending) { e.currentTarget.style.background = 'rgba(255,68,68,0.2)' } }}
-        onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,68,68,0.1)' }}
       >
         {ending ? 'Arresto...' : 'Termina'}
       </button>

@@ -1,0 +1,68 @@
+{
+  "game_id": "hz-arrowsong",
+  "game_name": "ArrowSong",
+  "resolution": "1920x1080",
+  "_note": "Usa coord-finder per catturare immagini. Immagini condivise in games/_herozone/screenshots/",
+  "actions": {
+    "navigate_to_game": [
+      {
+        "type": "click",
+        "image": "arrow_back.png",
+        "confidence": 0.75,
+        "fallback_x": 0,
+        "fallback_y": 0,
+        "label": "click_back_arrow",
+        "onError": "skip"
+      },
+      {
+        "type": "wait",
+        "seconds": 2,
+        "label": "wait_game_grid"
+      },
+      {
+        "type": "click",
+        "image": "tile_arrowsong.png",
+        "confidence": 0.75,
+        "fallback_x": 0,
+        "fallback_y": 0,
+        "label": "select_game_tile"
+      }
+    ],
+    "launch_game": [
+      {
+        "type": "wait_for_image",
+        "image": "btn_launch_game.png",
+        "confidence": 0.75,
+        "timeout": 8,
+        "label": "wait_launch_ready"
+      },
+      {
+        "type": "click",
+        "image": "difficulty_normal.png",
+        "confidence": 0.75,
+        "fallback_x": 0,
+        "fallback_y": 0,
+        "label": "select_normal",
+        "onError": "skip"
+      },
+      {
+        "type": "click",
+        "image": "btn_launch_game.png",
+        "confidence": 0.8,
+        "fallback_x": 0,
+        "fallback_y": 0,
+        "label": "click_launch_game"
+      }
+    ],
+    "stop_game": [
+      {
+        "type": "click",
+        "image": "btn_quit.png",
+        "confidence": 0.8,
+        "fallback_x": 0,
+        "fallback_y": 0,
+        "label": "click_quit"
+      }
+    ]
+  }
+}

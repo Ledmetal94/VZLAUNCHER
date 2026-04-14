@@ -8,19 +8,15 @@ interface CategoryFiltersProps {
   gameCount: number
 }
 
-export default function CategoryFilters({
-  selected,
-  onSelect,
-  gameCount,
-}: CategoryFiltersProps) {
+export default function CategoryFilters({ selected, onSelect, gameCount }: CategoryFiltersProps) {
   return (
     <div
-      className="flex shrink-0 items-center"
+      className="flex shrink-0 items-center overflow-x-auto scrollbar-none px-6 xl:px-8"
       style={{
-        height: 44,
-        gap: 5,
-        padding: '0 32px',
+        height: 48,
+        gap: 6,
         borderBottom: '1px solid rgba(123,100,169,0.06)',
+        touchAction: 'pan-x',
       }}
     >
       {CATEGORIES.map((cat) => {
@@ -29,26 +25,16 @@ export default function CategoryFilters({
           <button
             key={cat.id}
             onClick={() => onSelect(cat.id as Category | 'all')}
-            className={cn('transition-colors')}
+            className={cn(
+              'shrink-0 min-h-[44px] px-4 xl:px-5 rounded-lg text-xs xl:text-sm font-semibold tracking-wide transition-colors active:scale-95',
+              isActive
+                ? 'text-white'
+                : 'text-white/30 hover:text-white/55'
+            )}
             style={{
-              padding: '7px 22px',
-              borderRadius: 8,
-              fontSize: 12,
-              fontWeight: 600,
-              letterSpacing: '.03em',
               border: isActive ? '1px solid #7B64A9' : '1px solid transparent',
               background: isActive ? 'rgba(82,49,137,0.28)' : 'transparent',
-              color: isActive ? '#fff' : 'rgba(255,255,255,0.28)',
-            }}
-            onMouseEnter={(e) => {
-              if (!isActive) {
-                e.currentTarget.style.color = 'rgba(255,255,255,0.5)'
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!isActive) {
-                e.currentTarget.style.color = 'rgba(255,255,255,0.28)'
-              }
+              letterSpacing: '.03em',
             }}
           >
             {cat.label}
@@ -56,12 +42,7 @@ export default function CategoryFilters({
         )
       })}
       <span
-        style={{
-          fontSize: 11,
-          color: 'rgba(255,255,255,0.15)',
-          fontWeight: 500,
-          marginLeft: 'auto',
-        }}
+        className="ml-auto shrink-0 text-[11px] font-medium text-white/15 pl-2"
       >
         {gameCount} giochi
       </span>

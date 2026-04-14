@@ -19,13 +19,8 @@ export default function LaunchModal({ game, onLaunch, onClose, launching }: Laun
 
   return (
     <div
+      className="fixed inset-0 z-50 flex items-center justify-center"
       style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 50,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
         background: 'rgba(10,8,30,0.85)',
         backdropFilter: 'blur(8px)',
         WebkitBackdropFilter: 'blur(8px)',
@@ -38,10 +33,9 @@ export default function LaunchModal({ game, onLaunch, onClose, launching }: Laun
 
       {/* Modal card */}
       <div
-        className="relative z-10"
+        className="relative z-10 w-[92vw] max-w-md xl:max-w-[440px]"
         style={{
-          width: 440,
-          padding: '32px 36px',
+          padding: '28px 28px 24px',
           background: 'rgba(22,20,45,0.85)',
           border: '1px solid rgba(123,100,169,0.2)',
           borderRadius: 24,
@@ -52,26 +46,33 @@ export default function LaunchModal({ game, onLaunch, onClose, launching }: Laun
         }}
       >
         {/* Header */}
-        <div style={{ marginBottom: 20 }}>
-          <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#7B64A9' }}>
+        <div className="mb-4 xl:mb-5">
+          <span className="block text-[10px] font-bold tracking-[0.12em] uppercase text-[#7B64A9]">
             {game.category.replace('_', ' ')}
           </span>
-          <h2 style={{ fontSize: 24, fontWeight: 800, color: '#fff', margin: '4px 0 0', letterSpacing: '-0.01em' }}>
+          <h2 className="mt-1 text-2xl xl:text-3xl font-extrabold text-white tracking-tight">
             {game.name}
           </h2>
           {game.description && (
-            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 6, lineHeight: 1.4 }}>{game.description}</p>
+            <p className="mt-1.5 text-sm text-white/40 leading-snug">{game.description}</p>
           )}
         </div>
 
         {/* Game info pills */}
-        <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
+        <div className="flex flex-wrap gap-2 mb-4 xl:mb-5">
           {[
             `${game.durationMinutes} min`,
             `Costo: ${game.tokenCost} gettoni`,
             `Saldo: ${tokenBalance} gettoni`,
           ].map((label) => (
-            <span key={label} style={{ fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 8, background: 'rgba(82,49,137,0.1)', border: '1px solid rgba(123,100,169,0.15)', color: 'rgba(255,255,255,0.5)' }}>
+            <span
+              key={label}
+              className="text-xs font-semibold px-2.5 py-1.5 rounded-lg text-white/50"
+              style={{
+                background: 'rgba(82,49,137,0.1)',
+                border: '1px solid rgba(123,100,169,0.15)',
+              }}
+            >
               {label}
             </span>
           ))}
@@ -79,35 +80,59 @@ export default function LaunchModal({ game, onLaunch, onClose, launching }: Laun
 
         {/* Insufficient tokens warning */}
         {insufficientTokens && (
-          <div style={{ marginBottom: 16, padding: '10px 14px', borderRadius: 10, background: 'rgba(255,68,68,0.08)', border: '1px solid rgba(255,68,68,0.2)', color: '#ff6b6b', fontSize: 12, fontWeight: 600 }}>
+          <div
+            className="mb-4 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#ff6b6b]"
+            style={{ background: 'rgba(255,68,68,0.08)', border: '1px solid rgba(255,68,68,0.2)' }}
+          >
             Gettoni insufficienti — servono {game.tokenCost}, hai {tokenBalance}
           </div>
         )}
 
         {/* Player count */}
-        <div style={{ marginBottom: 24 }}>
-          <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.4)', marginBottom: 10, letterSpacing: '0.04em' }}>
+        <div className="mb-6 xl:mb-7">
+          <label className="block text-[11px] font-semibold text-white/40 mb-3 tracking-[0.04em]">
             Giocatori
           </label>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <div className="flex items-center gap-4">
             <button
               onClick={() => setPlayers((p) => Math.max(game.minPlayers, p - 1))}
               disabled={players <= game.minPlayers}
-              style={{ width: 42, height: 42, borderRadius: 10, border: '1px solid rgba(123,100,169,0.2)', background: 'rgba(255,255,255,0.04)', color: '#fff', fontSize: 20, fontWeight: 700, cursor: players <= game.minPlayers ? 'not-allowed' : 'pointer', opacity: players <= game.minPlayers ? 0.3 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s', fontFamily: 'Outfit, sans-serif' }}
+              className="
+                w-12 h-12 xl:w-14 xl:h-14 rounded-xl flex items-center justify-center
+                text-xl font-bold text-white transition-all duration-150
+                hover:bg-white/10 active:scale-95
+                disabled:opacity-30 disabled:cursor-not-allowed
+              "
+              style={{ border: '1px solid rgba(123,100,169,0.2)', background: 'rgba(255,255,255,0.04)' }}
             >
               −
             </button>
-            <div style={{ width: 52, height: 52, borderRadius: 14, background: 'linear-gradient(135deg, rgba(230,0,126,0.15), rgba(82,49,137,0.15))', border: '1px solid rgba(230,0,126,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 900, color: '#fff' }}>
+
+            <div
+              className="w-14 h-14 xl:w-16 xl:h-16 rounded-2xl flex items-center justify-center text-3xl xl:text-4xl font-black text-white"
+              style={{
+                background: 'linear-gradient(135deg, rgba(230,0,126,0.15), rgba(82,49,137,0.15))',
+                border: '1px solid rgba(230,0,126,0.3)',
+              }}
+            >
               {players}
             </div>
+
             <button
               onClick={() => setPlayers((p) => Math.min(game.maxPlayers, p + 1))}
               disabled={players >= game.maxPlayers}
-              style={{ width: 42, height: 42, borderRadius: 10, border: '1px solid rgba(123,100,169,0.2)', background: 'rgba(255,255,255,0.04)', color: '#fff', fontSize: 20, fontWeight: 700, cursor: players >= game.maxPlayers ? 'not-allowed' : 'pointer', opacity: players >= game.maxPlayers ? 0.3 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s', fontFamily: 'Outfit, sans-serif' }}
+              className="
+                w-12 h-12 xl:w-14 xl:h-14 rounded-xl flex items-center justify-center
+                text-xl font-bold text-white transition-all duration-150
+                hover:bg-white/10 active:scale-95
+                disabled:opacity-30 disabled:cursor-not-allowed
+              "
+              style={{ border: '1px solid rgba(123,100,169,0.2)', background: 'rgba(255,255,255,0.04)' }}
             >
               +
             </button>
-            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>
+
+            <span className="text-xs text-white/30">
               ({game.minPlayers}–{game.maxPlayers})
             </span>
           </div>
@@ -115,25 +140,43 @@ export default function LaunchModal({ game, onLaunch, onClose, launching }: Laun
 
         {/* Bridge offline warning */}
         {bridgeOffline && (
-          <div style={{ marginBottom: 16, padding: '10px 14px', borderRadius: 10, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', color: '#f59e0b', fontSize: 12, fontWeight: 600 }}>
+          <div
+            className="mb-4 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#f59e0b]"
+            style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)' }}
+          >
             Bridge offline — impossibile avviare i giochi
           </div>
         )}
 
         {/* Actions */}
-        <div style={{ display: 'flex', gap: 12 }}>
+        <div className="flex gap-3">
           <button
             onClick={onClose}
-            style={{ flex: 1, height: 44, borderRadius: 12, border: '1px solid rgba(123,100,169,0.2)', background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.5)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'Outfit, sans-serif', transition: 'all 0.15s' }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = '#fff' }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = 'rgba(255,255,255,0.5)' }}
+            className="
+              flex-1 min-h-[52px] xl:min-h-[56px] rounded-xl text-sm xl:text-base font-semibold text-white/50
+              transition-all duration-150 hover:bg-white/[0.08] hover:text-white active:scale-[0.98]
+            "
+            style={{
+              border: '1px solid rgba(123,100,169,0.2)',
+              background: 'rgba(255,255,255,0.04)',
+            }}
           >
             Annulla
           </button>
           <button
             onClick={() => onLaunch(players)}
             disabled={bridgeOffline || launching || insufficientTokens}
-            style={{ flex: 1, height: 44, borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #E6007E, #523189)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: (bridgeOffline || launching || insufficientTokens) ? 'not-allowed' : 'pointer', opacity: (bridgeOffline || launching || insufficientTokens) ? 0.5 : 1, fontFamily: 'Outfit, sans-serif', boxShadow: '0 4px 20px rgba(230,0,126,0.3)', transition: 'all 0.2s', letterSpacing: '0.02em' }}
+            className="
+              flex-1 min-h-[52px] xl:min-h-[56px] rounded-xl text-sm xl:text-base font-bold text-white
+              transition-all duration-200 active:scale-[0.98]
+              disabled:opacity-50 disabled:cursor-not-allowed
+            "
+            style={{
+              border: 'none',
+              background: 'linear-gradient(135deg, #E6007E, #523189)',
+              boxShadow: '0 4px 20px rgba(230,0,126,0.3)',
+              letterSpacing: '0.02em',
+            }}
           >
             {launching ? 'Avvio...' : 'Avvia sessione'}
           </button>

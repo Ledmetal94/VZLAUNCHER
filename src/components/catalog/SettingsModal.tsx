@@ -6,6 +6,7 @@ import { useLicenseStore } from '@/store/licenseStore'
 
 interface SettingsModalProps {
   onClose: () => void
+  onHistoryClick?: () => void
 }
 
 function StatusDot({ color }: { color: string }) {
@@ -27,13 +28,8 @@ function StatusDot({ color }: { color: string }) {
 function SetRow({ children }: { children: React.ReactNode }) {
   return (
     <div
+      className="flex items-center justify-between mb-1.5 px-3.5 py-3 rounded-xl"
       style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '11px 14px',
-        borderRadius: 9,
-        marginBottom: 5,
         background: 'rgba(82,49,137,0.05)',
         border: '1px solid rgba(123,100,169,0.06)',
       }}
@@ -75,22 +71,12 @@ function ActionBtn({
   return (
     <button
       onClick={onClick}
+      className="min-h-[44px] flex items-center justify-center gap-1.5 px-3.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:bg-white/[0.06] active:scale-95"
       style={{
-        height: 36,
-        borderRadius: 8,
         border: `1px solid ${danger ? 'rgba(255,68,68,0.2)' : accent ? 'rgba(100,200,255,0.2)' : 'rgba(123,100,169,0.18)'}`,
         background: 'rgba(255,255,255,0.025)',
-        cursor: 'pointer',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 7,
-        padding: '0 14px',
         color: danger ? 'rgba(255,100,100,0.6)' : accent ? 'rgba(100,200,255,0.7)' : 'rgba(255,255,255,0.5)',
-        fontSize: 11,
-        fontWeight: 600,
         fontFamily: 'Outfit, sans-serif',
-        transition: 'all 0.15s',
       }}
     >
       {children}
@@ -98,7 +84,7 @@ function ActionBtn({
   )
 }
 
-export default function SettingsModal({ onClose }: SettingsModalProps) {
+export default function SettingsModal({ onClose, onHistoryClick }: SettingsModalProps) {
   const navigate = useNavigate()
   const { venueName, venueId, role, logout } = useAuthStore()
   const bridgeStatus = useConnectionStore((s) => s.bridgeStatus)
@@ -134,7 +120,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
 
   return (
     <div
-      className="absolute inset-0 z-[200] flex items-center justify-center"
+      className="fixed inset-0 z-[200] flex items-center justify-center"
       style={{
         background: 'rgba(10,8,30,0.92)',
         backdropFilter: 'blur(16px)',
@@ -142,9 +128,8 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
       <div
+        className="w-[92vw] max-w-lg xl:max-w-[500px] px-6 xl:px-8 py-7"
         style={{
-          width: 500,
-          padding: '28px 34px',
           background: 'rgba(22,20,45,0.98)',
           border: '1px solid rgba(123,100,169,0.25)',
           borderRadius: 20,
@@ -156,17 +141,8 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
           <div style={{ fontSize: 20, fontWeight: 800 }}>Impostazioni</div>
           <button
             onClick={onClose}
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: '50%',
-              border: 'none',
-              background: 'rgba(255,255,255,0.05)',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
+            className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full transition-colors hover:bg-white/10 active:scale-95"
+            style={{ border: 'none', background: 'rgba(255,255,255,0.05)' }}
           >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round">
               <path d="M18 6L6 18M6 6l12 12" />
@@ -304,24 +280,28 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                 </svg>
                 Schermo PC (VNC)
               </ActionBtn>
+              {onHistoryClick && (
+                <ActionBtn accent onClick={() => { onClose(); onHistoryClick() }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <path d="M12 8v4l3 3" />
+                    <path d="M3.05 11a9 9 0 1 1 .5 4" />
+                    <path d="M3 3v4h4" />
+                  </svg>
+                  Storico gettoni
+                </ActionBtn>
+              )}
             </div>
           </>
         )}
 
         {/* Logout */}
-        <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid rgba(123,100,169,0.12)' }}>
+        <div className="mt-5 pt-4" style={{ borderTop: '1px solid rgba(123,100,169,0.12)' }}>
           <button
             onClick={handleLogout}
+            className="w-full min-h-[48px] rounded-lg text-sm font-semibold text-[#ff4444] transition-all duration-150 hover:bg-[rgba(255,68,68,0.12)] active:scale-[0.98]"
             style={{
-              width: '100%',
-              padding: '10px',
-              borderRadius: 8,
               border: '1px solid rgba(255,68,68,0.2)',
               background: 'rgba(255,68,68,0.06)',
-              color: '#ff4444',
-              fontSize: 12,
-              fontWeight: 600,
-              cursor: 'pointer',
               fontFamily: 'Outfit, sans-serif',
             }}
           >

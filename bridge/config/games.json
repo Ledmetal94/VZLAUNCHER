@@ -4,10 +4,10 @@
     "game_id": "hz-dead-ahead",
     "name": "Dead Ahead",
     "platform": "herozone",
-    "window_title": "Hero Zone",
-    "exePath": "C:\\HeroZone\\HeroZone.exe",
+    "window_title": "HERO ZONE",
+    "exePath": "C:\\Users\\giaco\\AppData\\Local\\Programs\\hero-launcher\\Hero Launcher.exe",
     "exeArgs": [],
-    "processName": "HeroZone",
+    "processName": "Hero Launcher",
     "category": "arcade_full",
     "minPlayers": 1,
     "maxPlayers": 6,
@@ -18,50 +18,22 @@
     "pre_checks": [],
     "launch_sequence": [
       { "type": "launch", "label": "start_herozone" },
-      { "type": "wait", "seconds": 5, "label": "splash_screen" },
-      { "type": "focus_window", "title": "Hero Zone", "label": "focus_game" },
-      "launch"
+      { "type": "wait", "seconds": 5, "label": "wait_load" },
+      { "type": "focus_window", "title": "HERO ZONE", "label": "focus" },
+      "navigate_to_game",
+      "launch_game"
     ],
-    "stop_sequence": [
-      "stop"
-    ]
-  },
-  {
-    "profile_version": 2,
-    "game_id": "hz-singularity",
-    "name": "Singularity",
-    "platform": "herozone",
-    "window_title": "Hero Zone",
-    "exePath": "C:\\HeroZone\\HeroZone.exe",
-    "exeArgs": [],
-    "processName": "HeroZone",
-    "category": "avventura",
-    "minPlayers": 1,
-    "maxPlayers": 6,
-    "durationMinutes": 25,
-    "tokenCost": 3,
-    "description": "Sci-fi adventure through space anomalies",
-    "badge": "NEW",
-    "pre_checks": [],
-    "launch_sequence": [
-      { "type": "launch", "label": "start_herozone" },
-      { "type": "wait", "seconds": 5, "label": "splash_screen" },
-      { "type": "focus_window", "title": "Hero Zone", "label": "focus_game" },
-      "launch"
-    ],
-    "stop_sequence": [
-      "stop"
-    ]
+    "stop_sequence": ["stop_game"]
   },
   {
     "profile_version": 2,
     "game_id": "hz-arrowsong",
     "name": "ArrowSong",
     "platform": "herozone",
-    "window_title": "Hero Zone",
-    "exePath": "C:\\HeroZone\\HeroZone.exe",
+    "window_title": "HERO ZONE",
+    "exePath": "C:\\Users\\giaco\\AppData\\Local\\Programs\\hero-launcher\\Hero Launcher.exe",
     "exeArgs": [],
-    "processName": "HeroZone",
+    "processName": "Hero Launcher",
     "category": "avventura",
     "minPlayers": 1,
     "maxPlayers": 6,
@@ -72,23 +44,22 @@
     "pre_checks": [],
     "launch_sequence": [
       { "type": "launch", "label": "start_herozone" },
-      { "type": "wait", "seconds": 5, "label": "splash_screen" },
-      { "type": "focus_window", "title": "Hero Zone", "label": "focus_game" },
-      "launch"
+      { "type": "wait", "seconds": 5, "label": "wait_load" },
+      { "type": "focus_window", "title": "HERO ZONE", "label": "focus" },
+      "navigate_to_game",
+      "launch_game"
     ],
-    "stop_sequence": [
-      "stop"
-    ]
+    "stop_sequence": ["stop_game"]
   },
   {
     "profile_version": 2,
     "game_id": "hz-cookd-up",
     "name": "Cook'd Up: Burger Beef",
     "platform": "herozone",
-    "window_title": "Hero Zone",
-    "exePath": "C:\\HeroZone\\HeroZone.exe",
+    "window_title": "HERO ZONE",
+    "exePath": "C:\\Users\\giaco\\AppData\\Local\\Programs\\hero-launcher\\Hero Launcher.exe",
     "exeArgs": [],
-    "processName": "HeroZone",
+    "processName": "Hero Launcher",
     "category": "arcade_light",
     "minPlayers": 1,
     "maxPlayers": 4,
@@ -99,23 +70,22 @@
     "pre_checks": [],
     "launch_sequence": [
       { "type": "launch", "label": "start_herozone" },
-      { "type": "wait", "seconds": 5, "label": "splash_screen" },
-      { "type": "focus_window", "title": "Hero Zone", "label": "focus_game" },
-      "launch"
+      { "type": "wait", "seconds": 5, "label": "wait_load" },
+      { "type": "focus_window", "title": "HERO ZONE", "label": "focus" },
+      "navigate_to_game",
+      "launch_game"
     ],
-    "stop_sequence": [
-      "stop"
-    ]
+    "stop_sequence": ["stop_game"]
   },
   {
     "profile_version": 2,
     "game_id": "hz-cops-vs-robbers",
     "name": "Cops vs Robbers",
     "platform": "herozone",
-    "window_title": "Hero Zone",
-    "exePath": "C:\\HeroZone\\HeroZone.exe",
+    "window_title": "HERO ZONE",
+    "exePath": "C:\\Users\\giaco\\AppData\\Local\\Programs\\hero-launcher\\Hero Launcher.exe",
     "exeArgs": [],
-    "processName": "HeroZone",
+    "processName": "Hero Launcher",
     "category": "arcade_full",
     "minPlayers": 2,
     "maxPlayers": 6,
@@ -126,23 +96,22 @@
     "pre_checks": [],
     "launch_sequence": [
       { "type": "launch", "label": "start_herozone" },
-      { "type": "wait", "seconds": 5, "label": "splash_screen" },
-      { "type": "focus_window", "title": "Hero Zone", "label": "focus_game" },
-      "launch"
+      { "type": "wait", "seconds": 5, "label": "wait_load" },
+      { "type": "focus_window", "title": "HERO ZONE", "label": "focus" },
+      "navigate_to_game",
+      "launch_game"
     ],
-    "stop_sequence": [
-      "stop"
-    ]
+    "stop_sequence": ["stop_game"]
   },
   {
     "profile_version": 2,
     "game_id": "hz-cybershock",
     "name": "CyberShock",
     "platform": "herozone",
-    "window_title": "Hero Zone",
-    "exePath": "C:\\HeroZone\\HeroZone.exe",
+    "window_title": "HERO ZONE",
+    "exePath": "C:\\Users\\giaco\\AppData\\Local\\Programs\\hero-launcher\\Hero Launcher.exe",
     "exeArgs": [],
-    "processName": "HeroZone",
+    "processName": "Hero Launcher",
     "category": "arcade_full",
     "minPlayers": 1,
     "maxPlayers": 6,
@@ -153,23 +122,22 @@
     "pre_checks": [],
     "launch_sequence": [
       { "type": "launch", "label": "start_herozone" },
-      { "type": "wait", "seconds": 5, "label": "splash_screen" },
-      { "type": "focus_window", "title": "Hero Zone", "label": "focus_game" },
-      "launch"
+      { "type": "wait", "seconds": 5, "label": "wait_load" },
+      { "type": "focus_window", "title": "HERO ZONE", "label": "focus" },
+      "navigate_to_game",
+      "launch_game"
     ],
-    "stop_sequence": [
-      "stop"
-    ]
+    "stop_sequence": ["stop_game"]
   },
   {
     "profile_version": 2,
     "game_id": "hz-plush-rush",
     "name": "Plush Rush",
     "platform": "herozone",
-    "window_title": "Hero Zone",
-    "exePath": "C:\\HeroZone\\HeroZone.exe",
+    "window_title": "HERO ZONE",
+    "exePath": "C:\\Users\\giaco\\AppData\\Local\\Programs\\hero-launcher\\Hero Launcher.exe",
     "exeArgs": [],
-    "processName": "HeroZone",
+    "processName": "Hero Launcher",
     "category": "arcade_light",
     "minPlayers": 1,
     "maxPlayers": 4,
@@ -180,23 +148,22 @@
     "pre_checks": [],
     "launch_sequence": [
       { "type": "launch", "label": "start_herozone" },
-      { "type": "wait", "seconds": 5, "label": "splash_screen" },
-      { "type": "focus_window", "title": "Hero Zone", "label": "focus_game" },
-      "launch"
+      { "type": "wait", "seconds": 5, "label": "wait_load" },
+      { "type": "focus_window", "title": "HERO ZONE", "label": "focus" },
+      "navigate_to_game",
+      "launch_game"
     ],
-    "stop_sequence": [
-      "stop"
-    ]
+    "stop_sequence": ["stop_game"]
   },
   {
     "profile_version": 2,
     "game_id": "hz-quantum-arena",
     "name": "Quantum Arena",
     "platform": "herozone",
-    "window_title": "Hero Zone",
-    "exePath": "C:\\HeroZone\\HeroZone.exe",
+    "window_title": "HERO ZONE",
+    "exePath": "C:\\Users\\giaco\\AppData\\Local\\Programs\\hero-launcher\\Hero Launcher.exe",
     "exeArgs": [],
-    "processName": "HeroZone",
+    "processName": "Hero Launcher",
     "category": "arcade_full",
     "minPlayers": 2,
     "maxPlayers": 6,
@@ -207,23 +174,22 @@
     "pre_checks": [],
     "launch_sequence": [
       { "type": "launch", "label": "start_herozone" },
-      { "type": "wait", "seconds": 5, "label": "splash_screen" },
-      { "type": "focus_window", "title": "Hero Zone", "label": "focus_game" },
-      "launch"
+      { "type": "wait", "seconds": 5, "label": "wait_load" },
+      { "type": "focus_window", "title": "HERO ZONE", "label": "focus" },
+      "navigate_to_game",
+      "launch_game"
     ],
-    "stop_sequence": [
-      "stop"
-    ]
+    "stop_sequence": ["stop_game"]
   },
   {
     "profile_version": 2,
     "game_id": "hz-wayfinders",
     "name": "Wayfinders: Escape From Aurora",
     "platform": "herozone",
-    "window_title": "Hero Zone",
-    "exePath": "C:\\HeroZone\\HeroZone.exe",
+    "window_title": "HERO ZONE",
+    "exePath": "C:\\Users\\giaco\\AppData\\Local\\Programs\\hero-launcher\\Hero Launcher.exe",
     "exeArgs": [],
-    "processName": "HeroZone",
+    "processName": "Hero Launcher",
     "category": "avventura",
     "minPlayers": 1,
     "maxPlayers": 4,
@@ -234,23 +200,22 @@
     "pre_checks": [],
     "launch_sequence": [
       { "type": "launch", "label": "start_herozone" },
-      { "type": "wait", "seconds": 5, "label": "splash_screen" },
-      { "type": "focus_window", "title": "Hero Zone", "label": "focus_game" },
-      "launch"
+      { "type": "wait", "seconds": 5, "label": "wait_load" },
+      { "type": "focus_window", "title": "HERO ZONE", "label": "focus" },
+      "navigate_to_game",
+      "launch_game"
     ],
-    "stop_sequence": [
-      "stop"
-    ]
+    "stop_sequence": ["stop_game"]
   },
   {
     "profile_version": 2,
     "game_id": "hz-wizard-academy",
     "name": "Wizard Academy",
     "platform": "herozone",
-    "window_title": "Hero Zone",
-    "exePath": "C:\\HeroZone\\HeroZone.exe",
+    "window_title": "HERO ZONE",
+    "exePath": "C:\\Users\\giaco\\AppData\\Local\\Programs\\hero-launcher\\Hero Launcher.exe",
     "exeArgs": [],
-    "processName": "HeroZone",
+    "processName": "Hero Launcher",
     "category": "arcade_light",
     "minPlayers": 1,
     "maxPlayers": 4,
@@ -261,23 +226,22 @@
     "pre_checks": [],
     "launch_sequence": [
       { "type": "launch", "label": "start_herozone" },
-      { "type": "wait", "seconds": 5, "label": "splash_screen" },
-      { "type": "focus_window", "title": "Hero Zone", "label": "focus_game" },
-      "launch"
+      { "type": "wait", "seconds": 5, "label": "wait_load" },
+      { "type": "focus_window", "title": "HERO ZONE", "label": "focus" },
+      "navigate_to_game",
+      "launch_game"
     ],
-    "stop_sequence": [
-      "stop"
-    ]
+    "stop_sequence": ["stop_game"]
   },
   {
     "profile_version": 2,
     "game_id": "hz-monkey-madness",
     "name": "Monkey Madness: Jungle Games",
     "platform": "herozone",
-    "window_title": "Hero Zone",
-    "exePath": "C:\\HeroZone\\HeroZone.exe",
+    "window_title": "HERO ZONE",
+    "exePath": "C:\\Users\\giaco\\AppData\\Local\\Programs\\hero-launcher\\Hero Launcher.exe",
     "exeArgs": [],
-    "processName": "HeroZone",
+    "processName": "Hero Launcher",
     "category": "arcade_light",
     "minPlayers": 1,
     "maxPlayers": 4,
@@ -288,23 +252,22 @@
     "pre_checks": [],
     "launch_sequence": [
       { "type": "launch", "label": "start_herozone" },
-      { "type": "wait", "seconds": 5, "label": "splash_screen" },
-      { "type": "focus_window", "title": "Hero Zone", "label": "focus_game" },
-      "launch"
+      { "type": "wait", "seconds": 5, "label": "wait_load" },
+      { "type": "focus_window", "title": "HERO ZONE", "label": "focus" },
+      "navigate_to_game",
+      "launch_game"
     ],
-    "stop_sequence": [
-      "stop"
-    ]
+    "stop_sequence": ["stop_game"]
   },
   {
     "profile_version": 2,
     "game_id": "hz-terminator-uprising",
     "name": "Terminator Uprising",
     "platform": "herozone",
-    "window_title": "Hero Zone",
-    "exePath": "C:\\HeroZone\\HeroZone.exe",
+    "window_title": "HERO ZONE",
+    "exePath": "C:\\Users\\giaco\\AppData\\Local\\Programs\\hero-launcher\\Hero Launcher.exe",
     "exeArgs": [],
-    "processName": "HeroZone",
+    "processName": "Hero Launcher",
     "category": "arcade_full",
     "minPlayers": 1,
     "maxPlayers": 6,
@@ -315,12 +278,11 @@
     "pre_checks": [],
     "launch_sequence": [
       { "type": "launch", "label": "start_herozone" },
-      { "type": "wait", "seconds": 5, "label": "splash_screen" },
-      { "type": "focus_window", "title": "Hero Zone", "label": "focus_game" },
-      "launch"
+      { "type": "wait", "seconds": 5, "label": "wait_load" },
+      { "type": "focus_window", "title": "HERO ZONE", "label": "focus" },
+      "navigate_to_game",
+      "launch_game"
     ],
-    "stop_sequence": [
-      "stop"
-    ]
+    "stop_sequence": ["stop_game"]
   }
 ]

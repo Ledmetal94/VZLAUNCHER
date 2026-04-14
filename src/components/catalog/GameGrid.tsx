@@ -1,4 +1,3 @@
-import { useMemo } from 'react'
 import type { Game } from '@/types/models'
 import GameCard from './GameCard'
 
@@ -7,45 +6,23 @@ interface GameGridProps {
   onGameClick: (game: Game) => void
 }
 
-// Fixed 1920x1080 layout calculations
-const PADDING_H = 32
-const PADDING_TOP = 10
-const GAP = 14
-
 export default function GameGrid({ games, onGameClick }: GameGridProps) {
-  const { cols, cardWidth, cardHeight } = useMemo(() => {
-    const availW = 1920 - PADDING_H * 2 // 1856
-    // Always 6 columns — card size stays consistent when filtering
-    const c = 6
-    const cw = (availW - (c - 1) * GAP) / c
-    const ch = cw * 1.35
-    return { cols: c, cardWidth: cw, cardHeight: ch }
-  }, [])
-
   return (
-    <div
-      style={{
-        padding: `${PADDING_TOP}px ${PADDING_H}px 0`,
-        position: 'relative',
-        zIndex: 5,
-        flex: '1 1 0',
-        minHeight: 0,
-        overflow: 'hidden',
-      }}
-    >
+    <div className="relative z-[5] flex-1 min-h-0 px-6 xl:px-8 pt-2.5 overflow-y-auto xl:overflow-hidden">
       <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: `repeat(${cols}, ${cardWidth}px)`,
-          gridAutoRows: cardHeight,
-          gap: GAP,
-          justifyContent: 'center',
-          overflow: 'hidden',
-          height: '100%',
-        }}
+        className="
+          grid gap-3 xl:gap-[14px]
+          grid-cols-3
+          md:grid-cols-4
+          xl:grid-cols-6
+          xl:h-full xl:grid-rows-2
+          justify-center
+        "
       >
         {games.map((game) => (
-          <GameCard key={game.id} game={game} onClick={onGameClick} />
+          <div key={game.id} className="aspect-[1/1.35] xl:aspect-auto">
+            <GameCard game={game} onClick={onGameClick} />
+          </div>
         ))}
       </div>
     </div>

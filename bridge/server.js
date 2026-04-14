@@ -392,7 +392,7 @@ app.post('/api/restart-platform', async (req, res) => {
   for (const processName of processNames) {
     try {
       const { execSync } = await import('child_process')
-      execSync(`taskkill /F /IM ${processName}.exe`, { windowsHide: true, timeout: 5000 })
+      execSync(`taskkill /F /IM "${processName}.exe"`, { windowsHide: true, timeout: 5000 })
       results.push({ processName, killed: true })
     } catch {
       results.push({ processName, killed: false, reason: 'not_running_or_failed' })

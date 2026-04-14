@@ -2,6 +2,11 @@ import { getAction, isPythonAction } from './actions/index.js'
 import { createPythonRunner } from './actions/python-action.js'
 import { captureScreenshot } from './screenshot.js'
 import { loadGameActions, resolveSequence } from './action-resolver.js'
+import { resolve, dirname } from 'path'
+import { fileURLToPath } from 'url'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const GAMES_DIR = resolve(__dirname, '..', 'games')
 
 /**
  * Core sequential step runner
@@ -76,7 +81,13 @@ export async function runAutomation(profile, opts) {
           } else if (!pythonRunner) {
             throw new Error(`Python runner unavailable for action "${step.type}"`)
           } else {
-            const result = await pythonRunner.execute(step, signal)
+            // Inject screenshot dirs so Python can resolve relative image paths
+            const augmentedStep = {
+              ...step,
+              _base_dir: resolve(GAMES_DIR, profile.game_id, 'screenshots').replace(/\\/g, '/'),
+              _shared_dir: resolve(GAMES_DIR, `_${profile.platform || 'shared'}`, 'screenshots').replace(/\\/g, '/'),
+            }
+            const result = await pythonRunner.execute(augmentedStep, signal)
             if (!result.success) {
               throw new Error(result.error || `Python action "${step.type}" failed`)
             }

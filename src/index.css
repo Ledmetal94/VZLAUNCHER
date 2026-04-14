@@ -50,15 +50,44 @@ body {
 }
 
 #root {
-  width: 1920px;
-  height: 1080px;
+  width: 100%;
+  max-width: 1920px;
+  height: 100dvh;
   overflow: hidden;
   background-color: var(--color-surface);
   position: relative;
-  flex-shrink: 0;
+}
+
+/* Tablet: unlock vertical scroll, allow layout to breathe */
+@media (max-width: 1279px) {
+  #root {
+    overflow-y: auto;
+  }
+}
+
+/* Global touch optimizations */
+button,
+a,
+[role="button"] {
+  touch-action: manipulation;
+}
+
+/* Prevent accidental pull-to-refresh on the main app container */
+#root {
+  overscroll-behavior: contain;
 }
 
 ::-webkit-scrollbar { display: none; }
+.scrollbar-none { scrollbar-width: none; }
+.scrollbar-none::-webkit-scrollbar { display: none; }
+
+/* Tablet typography — readable at arm's length */
+@media (max-width: 1279px) {
+  /* Prevent iOS auto-zoom on input focus */
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
 
 
 .glass {

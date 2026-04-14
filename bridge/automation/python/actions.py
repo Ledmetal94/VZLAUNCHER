@@ -2,8 +2,13 @@
 Python action handlers for VZLAUNCHER automation.
 
 Each action receives a step dict and returns a result dict.
+Image paths can be:
+  - Absolute: used as-is
+  - Relative filename: resolved against _base_dir (game screenshots dir),
+    then against _shared_dir (shared HeroZone screenshots dir)
 """
 
+import os
 import time
 import pyautogui
 from image_match import find as image_find
@@ -11,6 +16,38 @@ from image_match import find as image_find
 # Safety: don't let pyautogui move instantly (avoids accidental corner triggers)
 pyautogui.PAUSE = 0.1
 pyautogui.FAILSAFE = True
+
+
+def _resolve_image(image, step):
+    """
+    Resolve a relative image filename to a full path.
+    Search order:
+      1. Absolute path → use as-is
+      2. _base_dir (game-specific screenshots)
+      3. _shared_dir (shared platform screenshots, e.g. _herozone)
+    """
+    if not image:
+        return image
+    if os.path.isabs(image):
+        return image
+
+    base_dir = step.get("_base_dir", "")
+    shared_dir = step.get("_shared_dir", "")
+
+    if base_dir:
+        candidate = os.path.join(base_dir, image)
+        if os.path.exists(candidate):
+            return candidate
+
+    if shared_dir:
+        candidate = os.path.join(shared_dir, image)
+        if os.path.exists(candidate):
+            return candidate
+
+    # Return best-guess path even if not found (will fail at imread with clear error)
+    if base_dir:
+        return os.path.join(base_dir, image)
+    return image
 
 
 def _resolve_click_position(step):
@@ -22,18 +59,19 @@ def _resolve_click_position(step):
     confidence = step.get("confidence", 0.8)
 
     if image:
-        match = image_find(image, confidence)
+        resolved = _resolve_image(image, step)
+        match = image_find(resolved, confidence)
         if match:
             return match[0], match[1], "image_match"
 
     # Fallback coordinates
     fx = step.get("fallback_x")
     fy = step.get("fallback_y")
-    if fx is not None and fy is not None:
+    if fx is not None and fy is not None and (int(fx) != 0 or int(fy) != 0):
         return int(fx), int(fy), "fallback"
 
     raise RuntimeError(
-        f"Click failed: image {'not matched' if image else 'not specified'}, no fallback coordinates"
+        f"Click failed: image {'not matched' if image else 'not specified'}, no valid fallback coordinates"
     )
 
 
@@ -89,13 +127,14 @@ def action_wait_for_image(step):
     if not image:
         raise ValueError("wait_for_image requires 'image' field")
 
+    resolved = _resolve_image(image, step)
     confidence = step.get("confidence", 0.8)
     timeout = step.get("timeout", 10)
     poll_interval = step.get("poll_interval", 0.5)
 
     start = time.time()
     while time.time() - start < timeout:
-        match = image_find(image, confidence)
+        match = image_find(resolved, confidence)
         if match:
             return {
                 "success": True,
@@ -114,8 +153,9 @@ def action_verify(step):
     if not image:
         raise ValueError("verify requires 'image' field")
 
+    resolved = _resolve_image(image, step)
     confidence = step.get("confidence", 0.8)
-    match = image_find(image, confidence)
+    match = image_find(resolved, confidence)
     if match:
         return {"success": True, "found": True, "x": match[0], "y": match[1], "confidence": match[2]}
     return {"success": True, "found": False}

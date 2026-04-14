@@ -23,25 +23,21 @@ export default function GameCard({ game, onClick }: GameCardProps) {
   return (
     <button
       onClick={() => onClick(game)}
-      className="group relative flex w-full h-full flex-col overflow-hidden"
+      className="
+        group relative flex w-full h-full flex-col overflow-hidden
+        active:scale-[0.97] active:brightness-110
+        hover:scale-[1.03]
+        hover:shadow-[0_18px_45px_rgba(0,0,0,0.5),0_0_0_1px_rgba(230,0,126,0.4)]
+        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E6007E]
+      "
       style={{
         background: game.bg,
         borderRadius: 14,
         border: '1px solid rgba(123,100,169,0.18)',
         transition: 'all .22s cubic-bezier(0.4,0,0.2,1)',
       }}
-      onMouseEnter={(e) => {
-        const el = e.currentTarget
-        el.style.transform = 'scale(1.03)'
-        el.style.boxShadow = '0 18px 45px rgba(0,0,0,0.5),0 0 0 1px rgba(230,0,126,0.4)'
-        el.style.borderColor = 'rgba(230,0,126,0.5)'
-      }}
-      onMouseLeave={(e) => {
-        const el = e.currentTarget
-        el.style.transform = 'scale(1)'
-        el.style.boxShadow = 'none'
-        el.style.borderColor = 'rgba(123,100,169,0.18)'
-      }}
+      onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(230,0,126,0.5)' }}
+      onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(123,100,169,0.18)' }}
     >
       {/* Badge */}
       {game.badge && (
@@ -75,11 +71,7 @@ export default function GameCard({ game, onClick }: GameCardProps) {
       >
         <span
           className="rounded-full"
-          style={{
-            width: 6,
-            height: 6,
-            background: '#E6007E',
-          }}
+          style={{ width: 6, height: 6, background: '#E6007E' }}
         />
         {game.tokenCost} gett.
       </span>
@@ -120,21 +112,13 @@ export default function GameCard({ game, onClick }: GameCardProps) {
         </span>
         <h3
           className="text-white"
-          style={{
-            fontSize: 14,
-            fontWeight: 800,
-            lineHeight: 1.15,
-          }}
+          style={{ fontSize: 14, fontWeight: 800, lineHeight: 1.15 }}
         >
           {game.name}
         </h3>
         <div
           className="mt-1 flex items-center gap-3"
-          style={{
-            fontSize: 9,
-            color: 'rgba(255,255,255,0.32)',
-            fontWeight: 500,
-          }}
+          style={{ fontSize: 9, color: 'rgba(255,255,255,0.32)', fontWeight: 500 }}
         >
           <span className="flex items-center gap-1">
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -155,22 +139,26 @@ export default function GameCard({ game, onClick }: GameCardProps) {
         </div>
       </div>
 
-      {/* Hover overlay with play button */}
+      {/* Play overlay — visible on hover (desktop) and always on touch active */}
       <div
-        className="absolute inset-0 z-20 flex items-start justify-center opacity-0 transition-opacity group-hover:opacity-100"
+        className="
+          absolute inset-0 z-20 flex items-start justify-center
+          opacity-0 transition-opacity
+          group-hover:opacity-100 group-active:opacity-100
+        "
         style={{
           background: 'linear-gradient(to top,rgba(230,0,126,0.3) 0%,transparent 50%)',
         }}
       >
         <div
-          className="flex h-12 w-12 scale-0 items-center justify-center rounded-full bg-[#E6007E] shadow-lg transition-transform group-hover:scale-100"
+          className="
+            flex h-12 w-12 items-center justify-center rounded-full bg-[#E6007E] shadow-lg
+            scale-0 transition-transform
+            group-hover:scale-100 group-active:scale-100
+          "
           style={{ marginTop: '36%' }}
         >
-          <svg
-            className="h-5 w-5 text-white"
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
+          <svg className="h-5 w-5 text-white" fill="currentColor" viewBox="0 0 24 24">
             <path d="M8 5v14l11-7z" />
           </svg>
         </div>

@@ -9,7 +9,8 @@
     "dev:win": "set BRIDGE_DRY_RUN=true && node server.js",
     "test:launch": "node scripts/test-launch.js",
     "calibrate": "node scripts/calibrate.js",
-    "coords": "node scripts/coord-finder.js"
+    "coords": "node scripts/coord-finder.js",
+    "setup:herozone": "node scripts/setup-herozone.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
